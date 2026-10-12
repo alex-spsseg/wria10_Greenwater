@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>WRIA 10 - Greenwater Phase 4 — Tours</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; color: #e8eef7;
+      font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+      padding: 32px 24px 60px;
+      /* Drop a photo named tours-background.jpg in the repo root
+      (next to this file) to use it here -- the gradient on top keeps
+      the header and cards legible over whatever the photo looks like.
+      Falls back to the plain dark background if that file doesn't
+      exist, browsers just skip a missing background-image silently. */
+      background:
+          linear-gradient(180deg, rgba(9, 17, 36, 0.88) 0%, rgba(9, 17, 36, 0.72) 40%, rgba(9, 17, 36, 0.92) 100%),
+          url('tours-background.jpg') center center / cover no-repeat fixed,
+          #0e1b33;
+    }
+    header { max-width: 1000px; margin: 0 auto 28px; }
+    h1 { font-size: 24px; font-weight: 700; color: #ffffff; }
+    header p.tagline { margin-top: 6px; color: #9fb2cc; font-size: 14px; }
+    header p#description { margin-top: 14px; color: #cbd8ec; font-size: 14px; line-height: 1.5; max-width: 640px; }
+    header p#description:empty { display: none; }
+
+    .grid {
+      max-width: 1000px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .tour-card {
+      display: block; text-decoration: none; color: inherit;
+      background: #132447; border: 1px solid #1b3f95; border-radius: 10px;
+      padding: 18px; transition: border-color 0.15s, transform 0.15s;
+    }
+    .tour-card:hover { border-color: #019fc4; transform: translateY(-2px); }
+    .tour-card h2 { font-size: 16px; font-weight: 600; color: #ffffff; margin-bottom: 6px; }
+    .tour-card .meta { font-size: 12px; color: #9fb2cc; }
+
+    h2.section-heading {
+      max-width: 1000px; margin: 36px auto 14px; font-size: 15px; font-weight: 600;
+      color: #9fb2cc; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    h2.section-heading:first-of-type { margin-top: 0; }
+
+    #empty, #error {
+      max-width: 1000px; margin: 40px auto 0; color: #9fb2cc; font-size: 14px; text-align: center;
+    }
+    #error { color: #e0a5a5; }
+
+    /* background-attachment: fixed is unreliable/laggy on iOS Safari,
+    so scroll the background with the page on small screens instead --
+    the page is short enough there that it barely matters visually. */
+    @media (max-width: 700px) {
+      body { background-attachment: scroll, scroll; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WRIA 10 - Greenwater Phase 4</h1>
+    <p class="tagline">360° site tours</p>
+    <p id="description"></p>
+  </header>
+  <h2 class="section-heading" id="tours-heading" style="display:none;">Tours</h2>
+  <div id="tours-grid" class="grid"></div>
+  <h2 class="section-heading" id="locations-heading" style="display:none;">Site Comparison</h2>
+  <div id="locations-grid" class="grid"></div>
+  <div id="empty" style="display:none;">Nothing published yet.</div>
+  <div id="error" style="display:none;">Could not load the tour list.</div>
+
+  <script>
+    function escapeHtml(s) {
+      var d = document.createElement('div');
+      d.textContent = s == null ? '' : String(s);
+      return d.innerHTML;
+    }
+
+    function renderCards(gridEl, headingEl, items, buildCard) {
+      if (!items.length) return;
+      headingEl.style.display = 'block';
+      items.forEach(item => gridEl.appendChild(buildCard(item)));
+    }
+
+    Promise.all([
+      fetch('tours/_index.json', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : [])
+        .catch(() => []),
+      fetch('tiles/_locations.json', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : [])
+        .catch(() => []),
+    ]).then(([tours, locations]) => {
+      tours = Array.isArray(tours) ? tours : [];
+      locations = Array.isArray(locations) ? locations : [];
+
+      renderCards(document.getElementById('tours-grid'), document.getElementById('tours-heading'), tours, t => {
+        var a = document.createElement('a');
+        a.className = 'tour-card';
+        a.href = 'index.html?tour=' + encodeURIComponent(t.tour_id);
+        var siteCount = t.site_count != null ? t.site_count : 0;
+        var dateLabel = '';
+        if (t.field_visit_date) {
+          // Parsed as local midnight rather than UTC, so the date shown
+          // matches what was typed, not shifted a day by timezone.
+          var d = new Date(t.field_visit_date + 'T00:00:00');
+          dateLabel = 'visited ' + d.toLocaleDateString();
+        } else if (t.updated) {
+          dateLabel = 'updated ' + new Date(t.updated).toLocaleDateString();
+        }
+        a.innerHTML =
+          '<h2>' + escapeHtml(t.name || t.tour_id) + '</h2>' +
+          '<div class="meta">' + siteCount + ' stop' + (siteCount === 1 ? '' : 's') +
+          (dateLabel ? ' &middot; ' + escapeHtml(dateLabel) : '') + '</div>';
+        return a;
+      });
+
+      // Places photographed on more than one date: opens the compare page
+      // (side by side, swipe or toggle between any two dates).
+      renderCards(document.getElementById('locations-grid'), document.getElementById('locations-heading'), locations, l => {
+        var a = document.createElement('a');
+        a.className = 'tour-card';
+        a.href = 'index.html?site=' + encodeURIComponent(l.site_id) + '&view=compare';
+        var n = l.photos || (l.dates ? l.dates.length : 0);
+        // First and last date, e.g. "8/28/2026 to 9/30/2026". Dates are YYYY-MM-DD,
+        // read as local midnight so the day shown is the day typed.
+        var fmt = function (d) { return new Date(d + 'T00:00:00').toLocaleDateString(); };
+        var ds = (l.dates || []).filter(Boolean).slice().sort();
+        var range = '';
+        if (ds.length >= 2 && ds[0] !== ds[ds.length - 1]) range = fmt(ds[0]) + ' to ' + fmt(ds[ds.length - 1]);
+        else if (ds.length === 1) range = fmt(ds[0]);
+        a.innerHTML =
+          '<h2>' + escapeHtml(l.name || l.site_id) + '</h2>' +
+          '<div class="meta">' + n + ' dates' + (range ? ' &middot; ' + escapeHtml(range) : '') +
+          (l.aerial ? ' &middot; drone' : '') + '</div>';
+        return a;
+      });
+
+      if (!tours.length && !locations.length) {
+        document.getElementById('empty').style.display = 'block';
+      }
+    }).catch(() => {
+      document.getElementById('error').style.display = 'block';
+    });
+  </script>
+</body>
+</html>

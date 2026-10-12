@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting…</title>
+  <script>
+    // GitHub Pages serves this file for any URL that isn't a real file
+    // or folder in the repo -- used here to give tours a clean path
+    // like /wria10_Greenwater/20260828/ without needing an actual folder
+    // + index.html + vendor copy per tour. The path segment right
+    // after the repo name is read off and forwarded to index.html as
+    // ?tour=, so it always resolves to the one real, shared viewer.
+    // This means a tour's ID *is* its URL slug -- name tours whatever
+    // you want them reachable as (e.g. "20260828").
+    //
+    // RESERVED_TOP_LEVEL matters because this file also fires for any
+    // genuinely broken/missing link, not just clean tour URLs -- e.g.
+    // a mistyped or unpublished path under tours/, tiles/, or vendor/.
+    // Without this check, a bad link like /wria14_westoaklandbay/tours/
+    // (missing the .html, or a typo) gets its first segment ("tours")
+    // read as a tour slug and redirected to a nonexistent tour named
+    // "tours", producing a confusing "Tour Not Found" instead of just
+    // landing on the actual tours list.
+    var REPO_NAME = "wria10_Greenwater";
+    var RESERVED_TOP_LEVEL = ["tours", "tiles", "vendor"];
+    var parts = location.pathname.split('/').filter(Boolean);
+    var repoIdx = parts.indexOf(REPO_NAME);
+    var slug = repoIdx >= 0 ? parts[repoIdx + 1] : parts[0];
+    var base = repoIdx >= 0 ? '/' + parts.slice(0, repoIdx + 1).join('/') : '/' + REPO_NAME;
+    if (slug && RESERVED_TOP_LEVEL.indexOf(slug) === -1) {
+      location.replace(base + '/index.html?tour=' + encodeURIComponent(slug) + location.search);
+    } else {
+      location.replace(base + '/tours.html');
+    }
+  </script>
+</head>
+<body>
+  <p style="font-family: sans-serif; color: #9fb2cc; background: #0e1b33; padding: 24px;">Redirecting…</p>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "mode": "single",
+  "format": "raw",
+  "yaw_1": 0.0,
+  "pitch_1": 0.0,
+  "yaw_2": 0.0,
+  "pitch_2": 0.0,
+  "lat": 47.12561582125604,
+  "lng": -121.59601422061989,
+  "label_1": "IMG_20261002_131443_00_078 (2026/10/02)",
+  "label_2": "",
+  "autorotate": false,
+  "hotspots_1": [],
+  "hotspots_2": [],
+  "levels_1": [],
+  "levels_2": [],
+  "pin_style": "dot",
+  "basemap_type": "xyz_tile",
+  "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+  "mobile_1": 5000,
+  "mobile_2": 0,
+  "heading_offset": 118.07296414513337,
+  "overlays": [
+    {
+      "label": "Heli Jam Locations (Prelim Design)",
+      "url": "https://tiles.arcgis.com/tiles/buuvDFFARQiOEbVZ/arcgis/rest/services/LowerOhop_c20260210PmtDrawings_HelicopterJams/MapServer/tile/{z}/{y}/{x}",
+      "opacity": 0.8,
+      "default_on": false,
+      "type": "tile"
+    },
+    {
+      "label": "BDA Locations (Prelim Design)",
+      "url": "https://tiles.arcgis.com/tiles/buuvDFFARQiOEbVZ/arcgis/rest/services/LowerOhop_c20260210PmtDrawings_BDAlocations/MapServer/tile/{z}/{y}/{x}",
+      "opacity": 0.8,
+      "default_on": false,
+      "type": "tile"
+    },
+    {
+      "label": "Ortho (5/28/2025)",
+      "url": "https://tiles.arcgis.com/tiles/buuvDFFARQiOEbVZ/arcgis/rest/services/LowerOhop_20250528_clipped_tif/MapServer/tile/{z}/{y}/{x}",
+      "opacity": 1.0,
+      "default_on": false,
+      "type": "tile"
+    },
+    {
+      "label": "Ortho (11/01/2015)",
+      "url": "https://tiles.arcgis.com/tiles/buuvDFFARQiOEbVZ/arcgis/rest/services/LowerOhop_20151101_EntrixDeliverable/MapServer/tile/{z}/{y}/{x}",
+      "opacity": 1.0,
+      "default_on": true,
+      "type": "tile"
+    }
+  ],
+  "heading_confirmed": true
+}
