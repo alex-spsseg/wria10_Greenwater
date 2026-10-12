@@ -224,7 +224,7 @@
       background-repeat: no-repeat;
     }
 
-    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn {
+    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn {
       position: absolute; z-index: 1600; top: 8px;
       width: 30px; height: 30px; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2);
       background: #fff; color: #333; font-size: 15px; line-height: 1;
@@ -232,8 +232,11 @@
     }
     #site-map-fit-btn { right: 8px; }
     #site-map-zoomto-btn { right: 44px; }
+    #site-map-follow-btn { right: 116px; font-size: 17px; }
+    #site-map-follow-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
     #site-map-basemap-btn { right: 80px; font-size: 16px; display: none; }
-    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover { background: #f4f4f4; }
+    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover, #site-map-follow-btn:hover { background: #f4f4f4; }
+    #site-map-follow-btn.armed:hover { background: #019fc4; }
     /* Leaflet's own layers control (added for overlays -- see
     ensureMapInitialized) defaults to the same top-right corner as the
     fit/zoom/basemap buttons above, sitting directly behind them.
@@ -667,6 +670,8 @@
     #hdg-fast { margin-top: 10px; border-top: 1px solid rgba(179,102,255,0.35); padding-top: 8px; }
     #hdg-fast button { display: block; width: 100%; margin-bottom: 6px; }
     #hdg-fast label { color: #d9b3ff; font-size: 12px; display: block; margin-bottom: 6px; cursor: pointer; }
+    #hdg-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.15); overflow: hidden; margin-bottom: 8px; }
+    #hdg-bar-fill { height: 100%; width: 0%; background: #7CFC9A; transition: width 0.25s ease; }
     #hdg-progress { color: #b9a3d9; font-size: 11px; margin-bottom: 6px; }
     #hdg-keys { color: #b9a3d9; font-size: 10.5px; line-height: 1.4; margin-top: 4px; }
     .tour-stop-link.unsaved::after { content: ' \25CF'; color: #ffb84d; }
@@ -721,7 +726,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-12 14:05:45</div>
+  <div id="build-timestamp">Built 2026-10-12 15:09:03</div>
 
   <div id="status-banner"></div>
 
@@ -812,6 +817,7 @@
       <button id="site-map-fit-btn" type="button" title="Zoom to fit all points">&#10021;</button>
       <button id="site-map-zoomto-btn" type="button" title="Zoom to point (click, then click the map)">&#8982;</button>
       <button id="site-map-basemap-btn" type="button" title="Toggle basemap">&#128506;</button>
+      <button id="site-map-follow-btn" type="button" title="Zoom the map to each stop when it is selected (click to turn on or off)">&#9678;</button>
     </div>
 
     <div id="edit-tools-panel" style="display:none;">
@@ -842,6 +848,7 @@
         <button id="save-heading-btn" class="edit-tool-btn" type="button">Save Heading</button>
         <div id="hdg-fast">
           <div id="hdg-progress"></div>
+          <div id="hdg-bar"><div id="hdg-bar-fill"></div></div>
           <button id="hdg-map-btn" class="edit-tool-btn" type="button">Aim at Map Point (M)</button>
           <button id="hdg-aim-btn" class="edit-tool-btn" type="button">Aim at Next Stop (A)</button>
           <button id="hdg-saveadv-btn" class="edit-tool-btn" type="button">Save Dial Heading (Enter)</button>
@@ -1409,6 +1416,9 @@
             body:
               '<p><b>Show Map</b> opens an inset map of this location.</p>' +
               '<p>Use the layers control on the map to switch between orthoimagery from different dates and, where available, project design elements.</p>' +
+              (isShown('prev-stop-btn')
+                ? '<p>Picking a stop zooms the map in to it. <b>\u25CE</b> turns that on or off, and <b>\u2725</b> zooms back out to the whole site.</p>'
+                : '') +
               '<p><b>Resize it:</b> drag the grip in the map\u2019s top left corner to make the map larger or smaller.</p>'
           });
         }
@@ -2820,9 +2830,38 @@
       // someone who does.
       var activeMarker = tourMarkersBySite[activeTourSiteId];
       if (siteMap && activeMarker && siteMapPanel.style.display !== 'none') {
-        siteMap.panTo(activeMarker.getLatLng());
+        var firstStop = lastFollowedSiteId === null;
+        var changed = activeTourSiteId !== lastFollowedSiteId;
+        lastFollowedSiteId = activeTourSiteId;
+        // The first stop shown keeps the whole site view for orientation; after
+        // that, picking a stop zooms the map in to it (never zooms back out).
+        if (changed && !firstStop && autoZoomStops) zoomMapToStop(activeMarker.getLatLng());
+        else siteMap.panTo(activeMarker.getLatLng());
       }
     }
+
+    // -- zoom the map to each stop as it is selected -----------------------
+    var STOP_ZOOM = 18;            // the one number to change for a tighter or wider view
+    var autoZoomStops = true;
+    var lastFollowedSiteId = null;
+    try { if (localStorage.getItem('mapAutoZoomStops') === '0') autoZoomStops = false; } catch (e) {}
+    function zoomMapToStop(latlng) {
+      var z = Math.min(Math.max(siteMap.getZoom(), STOP_ZOOM), siteMap.getMaxZoom());
+      if (Math.abs(z - siteMap.getZoom()) > 1) siteMap.flyTo(latlng, z, { duration: 0.6 });
+      else siteMap.setView(latlng, z, { animate: true });
+    }
+    (function () {
+      var btn = document.getElementById('site-map-follow-btn');
+      btn.classList.toggle('armed', autoZoomStops);
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        autoZoomStops = !autoZoomStops;
+        btn.classList.toggle('armed', autoZoomStops);
+        try { localStorage.setItem('mapAutoZoomStops', autoZoomStops ? '1' : '0'); } catch (err) {}
+        var m = tourMarkersBySite[activeTourSiteId];
+        if (autoZoomStops && siteMap && m) zoomMapToStop(m.getLatLng());
+      });
+    })();
 
     // -- basemap toggle (only shown when a tour/site actually has a
     // non-OSM basemap configured -- nothing to toggle to otherwise) --
@@ -3462,6 +3501,8 @@
         if (!el || !tourSiteOptions) return;
         var n = tourSiteOptions.filter(function (s) { return doneSet[norm(s.site_id)]; }).length;
         el.textContent = 'Headings set: ' + n + ' of ' + tourSiteOptions.length;
+        var fill = document.getElementById('hdg-bar-fill');
+        if (fill) fill.style.width = (tourSiteOptions.length ? (100 * n / tourSiteOptions.length) : 0) + '%';
       }
       // A check means the stop's saved heading is not the default 0 degrees.
       // Read from each stop's config.json once per page load, plus any stop saved this session.
