@@ -323,7 +323,7 @@
       "label": "Mapped Wetlands",
       "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/13",
       "opacity": 0.5,
-      "default_on": true,
+      "default_on": false,
       "type": "feature",
       "popup": false
     },
@@ -331,14 +331,14 @@
       "label": "Rock and Fill",
       "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/18",
       "opacity": 0.5,
-      "default_on": true,
+      "default_on": false,
       "type": "feature",
       "popup": false
     },
     {
       "label": "Project Limits",
       "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/15",
-      "opacity": 0.5,
+      "opacity": 0.75,
       "default_on": true,
       "type": "feature",
       "popup": false
