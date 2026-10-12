@@ -652,6 +652,17 @@
     .tour-stop-link:hover { background: rgba(1, 159, 196, 0.3); }
     .tour-stop-link.active { background: #019fc4; font-weight: bold; }
     /* Local preview: this stop has hotspot edits not yet written to disk. */
+    .leaflet-popup-content-wrapper { background: #132447; color: #e8eef7; border: 1px solid #1b3f95;
+      border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+    .leaflet-popup-tip { background: #132447; border: 1px solid #1b3f95; }
+    .leaflet-popup-content { margin: 10px 14px; font-size: 12px; line-height: 1.45; }
+    .leaflet-container a.leaflet-popup-close-button { color: #9fb2cc; }
+    .overlay-popup-title { font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 13px; }
+    .overlay-popup table td { padding: 1px 0; vertical-align: top; }
+    .overlay-popup table td:first-child { color: #9fb2cc; padding-right: 12px; white-space: nowrap; }
+    .esri-pt { background: none; border: none; display: flex; align-items: center; justify-content: center; }
+    .esri-label { background: none; border: none; box-shadow: none; padding: 0; font-weight: 600; font-size: 12px; }
+    .esri-label::before { display: none; }
     .tour-stop-link.hdg-done::before { content: '\2713 '; color: #7CFC9A; font-weight: bold; }
     #hdg-fast { margin-top: 10px; border-top: 1px solid rgba(179,102,255,0.35); padding-top: 8px; }
     #hdg-fast button { display: block; width: 100%; margin-bottom: 6px; }
@@ -710,7 +721,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-12 13:24:56</div>
+  <div id="build-timestamp">Built 2026-10-12 14:00:25</div>
 
   <div id="status-banner"></div>
 
@@ -2863,7 +2874,7 @@
       }
       return st;
     }
-    function esriRendererStyle(renderer, props, baseOpacity) {
+    function esriPickSymbol(renderer, props) {
       if (!renderer) return null;
       var sym = null;
       if (renderer.type === 'simple') {
@@ -2880,7 +2891,32 @@
         }
         if (!sym) sym = renderer.defaultSymbol;
       }
-      return esriSymbolToStyle(sym, baseOpacity);
+      return sym;
+    }
+    function esriRendererStyle(renderer, props, baseOpacity) {
+      return esriSymbolToStyle(esriPickSymbol(renderer, props), baseOpacity);
+    }
+    // Point marker symbol as a small HTML icon (diamond, square, circle, triangle).
+    function esriMarkerIcon(sym, baseOpacity) {
+      var size = Math.max(6, (sym.size || 8) * 1.333);
+      var fill = esriRgba(sym.color);
+      var ol = sym.outline || {};
+      var olc = esriRgba(ol.color);
+      var bw = ol.width != null ? Math.max(ol.width > 0 ? 1 : 0, ol.width * 1.333) : 1;
+      var bg = fill && fill.a > 0
+          ? fill.css.replace('rgb(', 'rgba(').replace(')', ',' + (fill.a * baseOpacity) + ')') : 'transparent';
+      var bc = olc ? olc.css.replace('rgb(', 'rgba(').replace(')', ',' + (olc.a * baseOpacity) + ')') : 'transparent';
+      var shape = '';
+      var inner = size;
+      if (sym.style === 'esriSMSDiamond') { shape = 'transform:rotate(45deg);'; inner = size * 0.72; }
+      else if (sym.style === 'esriSMSSquare') { shape = ''; }
+      else if (sym.style === 'esriSMSTriangle') { shape = 'clip-path:polygon(50% 0,100% 100%,0 100%);'; }
+      else { shape = 'border-radius:50%;'; }
+      var html = '<div style="width:' + inner + 'px;height:' + inner + 'px;box-sizing:border-box;background:' + bg +
+                 ';border:' + bw + 'px solid ' + bc + ';' + shape + '"></div>';
+      return L.divIcon({
+        className: 'esri-pt', html: html, iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+      });
     }
 
     function ensureMapInitialized() {
@@ -2949,10 +2985,11 @@
             // own Map Viewer.
             siteMap.getPane(paneName).style.pointerEvents = 'auto';
             // Typed color in the overlay settings = one flat color. Blank color =
-            // use the symbology saved on the service (read from its metadata below).
+            // use the symbology and labels saved on the service (read from its metadata).
             var layerOpts = { url: o.url, pane: paneName };
             var serviceRenderer = null;
-            var flatColor = o.color || '#019fc4';
+            var labelInfo = null; // { expr, color, halo }
+            var flatColor = o.color || '#019FC4';
             var styleFn = function (feature) {
               if (!o.color && serviceRenderer) {
                 var st = esriRendererStyle(serviceRenderer, feature && feature.properties, opacity);
@@ -2961,34 +2998,93 @@
               return { color: flatColor, weight: 2, fillColor: flatColor, fillOpacity: opacity * 0.35, opacity: opacity };
             };
             layerOpts.style = styleFn;
-            layerOpts.pointToLayer = function (feature, latlng) {
-              var st = styleFn(feature);
-              return L.circleMarker(latlng, Object.assign({ radius: 6, pane: paneName }, st));
+            var markerFor = function (feature, latlng) {
+              if (!o.color && serviceRenderer) {
+                var sym = esriPickSymbol(serviceRenderer, feature && feature.properties);
+                if (sym && sym.type === 'esriSMS') {
+                  return L.marker(latlng, { icon: esriMarkerIcon(sym, opacity), pane: paneName, keyboard: false });
+                }
+              }
+              return L.circleMarker(latlng, Object.assign({ radius: 6, pane: paneName }, styleFn(feature)));
             };
+            layerOpts.pointToLayer = markerFor;
             layer = L.esri.featureLayer(layerOpts);
-            // Field aliases and (when no flat color) the service renderer.
-            var aliasFor = {};
-            var HIDDEN_FIELDS = ['objectid', 'fid', 'globalid', 'shape', 'shape__area', 'shape__length',
-                                 'shape_area', 'shape_length', 'st_area(shape)', 'st_length(shape)'];
+            var featLayer = layer;
+            // Field aliases, field types, and (when no flat color) renderer + labels.
+            var aliasFor = {}, typeFor = {};
+            // System and GNSS bookkeeping fields: OBJECTID, OBJECTID_1, GlobalID_2, Shape__Area,
+            // truncated Shape_Leng, esrignss_* receiver metadata, editor tracking.
+            var HIDDEN_FIELD_RE = /^(objectid|fid$|globalid|shape|st_area|st_length|esrignss|gnss_|created_(user|date)|last_edited_(user|date)|creationdate|creator|editdate|editor)/i;
+            var labelText = function (props) {
+              if (!labelInfo || !props) return '';
+              var t = labelInfo.expr.replace(/\[([^\]]+)\]|\$feature\.([A-Za-z0-9_]+)/g, function (m, f1, f2) {
+                var v = props[f1 || f2];
+                return v == null ? '' : String(v);
+              });
+              return t.trim();
+            };
+            var attachLabel = function (l) {
+              if (!labelInfo || !l || !l.feature) return;
+              var txt = labelText(l.feature.properties);
+              if (l.unbindTooltip) l.unbindTooltip();
+              if (!txt) return;
+              var halo = labelInfo.halo || 'rgba(0,0,0,0.8)';
+              var content = '<span style="color:' + (labelInfo.color || '#fff') + ';text-shadow:-1px -1px 0 ' + halo +
+                            ',1px -1px 0 ' + halo + ',-1px 1px 0 ' + halo + ',1px 1px 0 ' + halo + ';">' + escapeHtml(txt) + '</span>';
+              l.bindTooltip(content, { permanent: true, direction: 'right', offset: [8, 0], className: 'esri-label', pane: 'tooltipPane' });
+            };
             try {
-              layer.metadata(function (err, meta) {
+              featLayer.on('createfeature', function (e) {
+                try { attachLabel(featLayer.getFeature(e.feature.id)); } catch (e3) {}
+              });
+              featLayer.metadata(function (err, meta) {
                 if (err || !meta) return;
-                (meta.fields || []).forEach(function (f) { aliasFor[f.name] = f.alias || f.name; });
-                if (!o.color && meta.drawingInfo && meta.drawingInfo.renderer) {
-                  serviceRenderer = meta.drawingInfo.renderer;
-                  try { layer.setStyle(styleFn); } catch (e2) { console.error('Restyle failed', e2); }
+                (meta.fields || []).forEach(function (f) { aliasFor[f.name] = f.alias || f.name; typeFor[f.name] = f.type; });
+                var di = meta.drawingInfo;
+                if (!o.color && di && di.renderer) {
+                  serviceRenderer = di.renderer;
+                  try { featLayer.setStyle(styleFn); } catch (e2) { console.error('Restyle failed', e2); }
+                  // Point layers were built before the renderer arrived: swap their icons now.
+                  try {
+                    featLayer.eachFeature(function (l) {
+                      if (l.setIcon && l.feature) {
+                        var sym = esriPickSymbol(serviceRenderer, l.feature.properties);
+                        if (sym && sym.type === 'esriSMS') l.setIcon(esriMarkerIcon(sym, opacity));
+                      }
+                    });
+                  } catch (e4) {}
+                }
+                var li = !o.color && di && di.labelingInfo && di.labelingInfo[0];
+                if (li) {
+                  var expr = li.labelExpression || (li.labelExpressionInfo && (li.labelExpressionInfo.value || li.labelExpressionInfo.expression)) || '';
+                  if (/\[[^\]]+\]|\$feature\.[A-Za-z0-9_]+/.test(expr) && !/[()+]/.test(expr.replace(/\[[^\]]+\]/g, ''))) {
+                    var lc = li.symbol && esriRgba(li.symbol.color);
+                    var hc = li.symbol && esriRgba(li.symbol.haloColor);
+                    labelInfo = { expr: expr, color: lc ? lc.css : '#fff', halo: hc ? hc.css : null };
+                    featLayer.eachFeature(attachLabel);
+                  }
                 }
               });
             } catch (err) { console.error('Overlay metadata lookup failed', err); }
-            layer.bindPopup(l => {
-              var props = (l.feature && l.feature.properties) || {};
-              var rows = Object.keys(props)
-                  .filter(k => props[k] !== null && props[k] !== '' && HIDDEN_FIELDS.indexOf(k.toLowerCase()) === -1)
-                  .map(k => '<tr><td style="font-weight:600;padding-right:10px;">' + escapeHtml(aliasFor[k] || k) +
-                             '</td><td>' + escapeHtml(String(props[k])) + '</td></tr>')
-                  .join('');
-              return rows ? '<table style="font-size:12px;">' + rows + '</table>' : '(no attributes)';
-            });
+            if (o.popup !== false) {
+              layer.bindPopup(l => {
+                var props = (l.feature && l.feature.properties) || {};
+                var fmt = function (k, v) {
+                  var t = typeFor[k];
+                  if (t === 'esriFieldTypeDate' && Number.isFinite(Number(v))) return new Date(Number(v)).toLocaleDateString();
+                  if ((t === 'esriFieldTypeDouble' || t === 'esriFieldTypeSingle') && Number.isFinite(Number(v))) {
+                    return Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                  }
+                  return String(v);
+                };
+                var rows = Object.keys(props)
+                    .filter(k => props[k] !== null && String(props[k]).trim() !== '' && !HIDDEN_FIELD_RE.test(k))
+                    .map(k => '<tr><td>' + escapeHtml(aliasFor[k] || k) + '</td><td>' + escapeHtml(fmt(k, props[k])) + '</td></tr>')
+                    .join('');
+                var title = o.label ? '<div class="overlay-popup-title">' + escapeHtml(o.label) + '</div>' : '';
+                return '<div class="overlay-popup">' + title + (rows ? '<table>' + rows + '</table>' : '<div>(no attributes)</div>') + '</div>';
+              });
+            }
           } else {
             layer = L.tileLayer(o.url, { maxZoom: 22, opacity: opacity, attribution: 'Imagery: SPSSEG', pane: paneName });
           }

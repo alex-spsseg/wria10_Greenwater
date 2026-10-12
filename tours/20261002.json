@@ -312,11 +312,36 @@
   "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
   "overlays": [
     {
+      "label": "River Miles",
+      "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/17",
+      "opacity": 0.75,
+      "default_on": false,
+      "type": "feature",
+      "popup": false
+    },
+    {
+      "label": "Mapped Wetlands",
+      "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/13",
+      "opacity": 0.5,
+      "default_on": true,
+      "type": "feature",
+      "popup": false
+    },
+    {
+      "label": "Rock and Fill",
+      "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/18",
+      "opacity": 0.5,
+      "default_on": true,
+      "type": "feature",
+      "popup": false
+    },
+    {
       "label": "Project Limits",
       "url": "https://services7.arcgis.com/buuvDFFARQiOEbVZ/arcgis/rest/services/Greenwater_RM3_8_to_RM5_0_Survey20251015/FeatureServer/15",
       "opacity": 0.5,
       "default_on": true,
-      "type": "feature"
+      "type": "feature",
+      "popup": false
     }
   ],
   "forward_label": "Forward",
