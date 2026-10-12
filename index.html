@@ -663,7 +663,7 @@
     .esri-pt { background: none; border: none; display: flex; align-items: center; justify-content: center; }
     .esri-label { background: none; border: none; box-shadow: none; padding: 0; font-weight: 600; font-size: 12px; }
     .esri-label::before { display: none; }
-    .tour-stop-link.hdg-done::before { content: '\2713 '; color: #7CFC9A; font-weight: bold; }
+    body.hdg-local .tour-stop-link.hdg-done::before { content: '\2713 '; color: #7CFC9A; font-weight: bold; }
     #hdg-fast { margin-top: 10px; border-top: 1px solid rgba(179,102,255,0.35); padding-top: 8px; }
     #hdg-fast button { display: block; width: 100%; margin-bottom: 6px; }
     #hdg-fast label { color: #d9b3ff; font-size: 12px; display: block; margin-bottom: 6px; cursor: pointer; }
@@ -721,7 +721,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-12 14:00:25</div>
+  <div id="build-timestamp">Built 2026-10-12 14:04:06</div>
 
   <div id="status-banner"></div>
 
@@ -3443,6 +3443,9 @@
     })();
     // ---- fast heading workflow for long stop sequences ----
     (function () {
+      // Heading check marks are an editing aid: local preview only, never on the published site.
+      var HDG_LOCAL = (location.hostname === '127.0.0.1' || location.hostname === 'localhost');
+      if (HDG_LOCAL) document.body.classList.add('hdg-local');
       var norm = function (s) { return s.trim().toLowerCase().replace(/[\s-]+/g, '_'); };
       var doneSet = {};
       function idxOf(sid) {
@@ -3480,7 +3483,7 @@
         });
       }
       window.__hdgSync = function () {
-        if (!tourParam) return;
+        if (!tourParam || !HDG_LOCAL) return;
         seedConfirmed();
         var els = document.querySelectorAll('.tour-stop-link');
         els.forEach(function (el) {
