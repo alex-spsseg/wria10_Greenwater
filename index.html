@@ -651,7 +651,11 @@
     .tour-stop-link {
       color: #ffffff; padding: 8px 10px; border-radius: 4px; cursor: pointer;
       font-size: 13px; margin-bottom: 4px; transition: background 0.15s ease;
+      display: flex; align-items: center;
     }
+    /* Fixed width icon slot (airplane = drone photo, page = PDF) so every name lines up. */
+    .tour-stop-link .stop-icon { display: inline-flex; flex: none; width: 20px; justify-content: center; margin-right: 6px; }
+    .tour-stop-link.unsaved::after { margin-left: 6px; }
     .tour-stop-link:hover { background: rgba(1, 159, 196, 0.3); }
     .tour-stop-link.active { background: #019fc4; font-weight: bold; }
     /* Local preview: this stop has hotspot edits not yet written to disk. */
@@ -666,7 +670,9 @@
     .esri-pt { background: none; border: none; display: flex; align-items: center; justify-content: center; }
     .esri-label { background: none; border: none; box-shadow: none; padding: 0; font-weight: 600; font-size: 12px; }
     .esri-label::before { display: none; }
-    body.hdg-local .tour-stop-link.hdg-done::before { content: '\2713 '; color: #7CFC9A; font-weight: bold; }
+    /* Local preview only: a fixed slot ahead of the icon, so a check mark never shifts the names. */
+    body.hdg-local .tour-stop-link::before { content: ''; display: inline-block; flex: none; width: 16px; }
+    body.hdg-local .tour-stop-link.hdg-done::before { content: '\2713'; color: #7CFC9A; font-weight: bold; text-align: center; }
     #hdg-fast { margin-top: 10px; border-top: 1px solid rgba(179,102,255,0.35); padding-top: 8px; }
     #hdg-fast button { display: block; width: 100%; margin-bottom: 6px; }
     #hdg-fast label { color: #d9b3ff; font-size: 12px; display: block; margin-bottom: 6px; cursor: pointer; }
@@ -726,7 +732,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-12 15:09:03</div>
+  <div id="build-timestamp">Built 2026-10-13 09:23:39</div>
 
   <div id="status-banner"></div>
 
@@ -2266,6 +2272,12 @@
              'style="vertical-align:-3px;margin-right:6px;flex:none;" aria-label="Drone photo">' +
              '<path d="' + AIRPLANE_PATH + '" fill="' + color + '"/></svg>';
     }
+    // Page glyph (Material "description") marking PDF stops in the stop list.
+    var DOC_PATH = 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z';
+    function stopIconSvg(path, px, aria) {
+      return '<svg width="' + px + '" height="' + px + '" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ' +
+             'aria-label="' + aria + '"><path d="' + path + '" fill="currentColor"/></svg>';
+    }
     function isAerialSite(sid) {
       var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
       var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
@@ -3487,6 +3499,7 @@
       if (HDG_LOCAL) document.body.classList.add('hdg-local');
       var norm = function (s) { return s.trim().toLowerCase().replace(/[\s-]+/g, '_'); };
       var doneSet = {};
+      var flatSet = {};  // flat stops (drone photos, PDFs): no heading to set, so not counted
       function idxOf(sid) {
         return (tourSiteOptions || []).findIndex(function (s) { return norm(s.site_id) === sid; });
       }
@@ -3500,9 +3513,10 @@
         var el = document.getElementById('hdg-progress');
         if (!el || !tourSiteOptions) return;
         var n = tourSiteOptions.filter(function (s) { return doneSet[norm(s.site_id)]; }).length;
-        el.textContent = 'Headings set: ' + n + ' of ' + tourSiteOptions.length;
+        var total = tourSiteOptions.filter(function (s) { return !flatSet[norm(s.site_id)]; }).length;
+        el.textContent = 'Headings set: ' + n + ' of ' + total;
         var fill = document.getElementById('hdg-bar-fill');
-        if (fill) fill.style.width = (tourSiteOptions.length ? (100 * n / tourSiteOptions.length) : 0) + '%';
+        if (fill) fill.style.width = (total ? (100 * n / total) : 0) + '%';
       }
       // A check means the stop's saved heading is not the default 0 degrees.
       // Read from each stop's config.json once per page load, plus any stop saved this session.
@@ -3516,6 +3530,7 @@
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (cfg) {
               if (!cfg) return;
+              if (cfg.mode === 'flat') { flatSet[sid] = true; updateProgress(); return; }
               var nonzero = function (h) { return h != null && Number(h) % 360 !== 0; };
               var ok = nonzero(cfg.heading_offset) ||
                        (cfg.photos || []).some(function (ph) { return ph && nonzero(ph.heading_offset); });
@@ -4821,15 +4836,17 @@
             document.getElementById('next-stop-btn').style.display = 'inline-block';
           }
 
+          // Icon slot only when at least one stop has an icon, so plain tours look as before.
+          var anyStopIcon = sites.some(function (x) { return x.platform === 'aerial' || x.kind === 'pdf'; });
           sites.forEach((s, idx) => {
             var link = document.createElement('div');
             link.className = 'tour-stop-link';
             var label = s.display_name || s.site_id;
-            if (s.platform === 'aerial') {
-              link.innerHTML = airplaneSvg(14, 'currentColor') + escapeHtml(label);
-            } else {
-              link.textContent = label;
-            }
+            var icon = '';
+            if (s.platform === 'aerial') icon = stopIconSvg(AIRPLANE_PATH, 14, 'Drone photo');
+            else if (s.kind === 'pdf') icon = stopIconSvg(DOC_PATH, 14, 'PDF document');
+            link.innerHTML = (anyStopIcon ? '<span class="stop-icon">' + icon + '</span>' : '') +
+                             '<span class="stop-name">' + escapeHtml(label) + '</span>';
             var sidKey = s.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_');
             link.setAttribute('data-site-id', sidKey);
             siteLinkElements[sidKey] = link;
