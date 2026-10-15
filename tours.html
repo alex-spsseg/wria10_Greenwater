@@ -125,7 +125,12 @@
       renderCards(document.getElementById('locations-grid'), document.getElementById('locations-heading'), locations, l => {
         var a = document.createElement('a');
         a.className = 'tour-card';
-        a.href = 'index.html?site=' + encodeURIComponent(l.site_id) + '&view=compare';
+        // Opens in the first mode this location has switched on (side by side, then swipe, then dates).
+        var order = ['compare', 'curtain', 'dates'];
+        var on = Array.isArray(l.modes) && l.modes.length ? l.modes : ['compare', 'dates'];
+        var firstView = (l.open_view && on.indexOf(l.open_view) !== -1) ? l.open_view
+            : (order.filter(function (m) { return on.indexOf(m) !== -1; })[0] || 'compare');
+        a.href = 'index.html?site=' + encodeURIComponent(l.site_id) + '&view=' + firstView;
         var n = l.photos || (l.dates ? l.dates.length : 0);
         // First and last date, e.g. "8/28/2026 to 9/30/2026". Dates are YYYY-MM-DD,
         // read as local midnight so the day shown is the day typed.

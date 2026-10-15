@@ -403,6 +403,18 @@
     #heading-dial-row {
       margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(179, 102, 255, 0.35);
     }
+    /* Hotspots and Heading tools each sit in their own block, closed until opened. */
+    .edit-group { border-top: 1px solid rgba(179, 102, 255, 0.35); padding-top: 4px; }
+    .edit-group > summary {
+      cursor: pointer; color: #d9b3ff; font-size: 11px; font-weight: bold; letter-spacing: 0.04em;
+      text-transform: uppercase; list-style: none; padding: 4px 2px; user-select: none;
+    }
+    .edit-group > summary::-webkit-details-marker { display: none; }
+    .edit-group > summary::before { content: '\25B8'; display: inline-block; width: 14px; }
+    .edit-group[open] > summary::before { content: '\25BE'; }
+    .edit-group > summary:hover { color: #ffffff; }
+    .edit-group-body { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; }
+    #heading-group #heading-dial-row { margin-top: 0; padding-top: 0; border-top: none; }
     #heading-dial-label { color: #d9b3ff; font-size: 12px; margin-bottom: 6px; }
     #heading-value-display { font-weight: bold; color: #fff; }
     #heading-dial-nudges { display: flex; gap: 4px; margin-bottom: 6px; }
@@ -743,7 +755,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-14 16:33:26</div>
+  <div id="build-timestamp">Built 2026-10-15 12:43:13</div>
 
   <div id="status-banner"></div>
 
@@ -849,11 +861,17 @@
       <div id="pin-match-help" style="display:none;">Aim both panels at the same real-world
         feature, then Pin. Do 2-4 features spread around the scene (not clustered) for the
         best fit, then lock -- alignment will hold across the whole pano, not just at one point.</div>
+      <details class="edit-group" id="hotspots-group" style="display:none;"><summary>Hotspots</summary>
+      <div class="edit-group-body">
       <button id="place-hotspot-btn" class="edit-tool-btn" type="button" style="display:none;">Place New Point</button>
       <button id="edit-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Move/Delete Points</button>
       <button id="save-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Save Hotspots</button>
       <button id="hotspot-list-btn" class="edit-tool-btn" type="button" style="display:none;">Show Hotspot List</button>
       <div id="hotspot-list-content" style="display:none;"></div>
+      </div>
+      </details>
+      <details class="edit-group" id="heading-group" style="display:none;"><summary>Heading</summary>
+      <div class="edit-group-body">
       <div id="heading-dial-row" style="display:none;">
         <div id="heading-dial-label">Heading: <span id="heading-value-display">0</span>&deg;</div>
         <div id="heading-dial-nudges">
@@ -875,6 +893,8 @@
         </div>
         <div id="heading-calibrate-list"></div>
       </div>
+      </div>
+      </details>
     </div>
   </div>
 
@@ -932,6 +952,26 @@
     const isLocalPreview = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && !tourParam;
     var useViewBtn = document.getElementById('use-view-btn');
     if (isLocalPreview) document.getElementById('edit-tools-panel').style.display = 'flex';
+
+    // The Hotspots and Heading blocks only appear when at least one tool inside them is in use
+    // for this page (the code below shows and hides the tools one at a time).
+    (function () {
+      var panel = document.getElementById('edit-tools-panel');
+      function syncEditGroups() {
+        ['hotspots-group', 'heading-group'].forEach(function (id) {
+          var g = document.getElementById(id);
+          var body = g && g.querySelector('.edit-group-body');
+          if (!body) return;
+          var any = Array.from(body.children).some(function (c) {
+            return c.id !== 'hotspot-list-content' && c.style.display !== 'none';
+          });
+          var want = any ? '' : 'none';
+          if (g.style.display !== want) g.style.display = want;
+        });
+      }
+      new MutationObserver(syncEditGroups).observe(panel, { attributes: true, subtree: true, attributeFilter: ['style'] });
+      syncEditGroups();
+    })();
 
     function sendViewCapture(yawRad, pitchRad, photoIndex, siteIdOverride) {
       var targetSiteId = siteIdOverride || siteId;
@@ -1248,8 +1288,31 @@
 
     function selectTimeseries(idx) {
       if (!tsScenes.length || idx === tsActiveIdx) return;
-      tsViews[idx].setParameters(tsViews[tsActiveIdx].parameters());
+      var curParams = tsViews[tsActiveIdx].parameters();
+      if (locTsBySite[siteId]) {
+        // Dates of a location: each date's saved start (Use This View as Start) marks the
+        // same real world point. Keep the viewer's offset from that point, so the crosshair
+        // stays on the same spot as you switch dates and panning stays in step.
+        var fromP = tsPhotos[tsActiveIdx] || {}, toP = tsPhotos[idx] || {};
+        tsViews[idx].setParameters({
+          yaw: curParams.yaw - (fromP.yaw || 0) + (toP.yaw || 0),
+          pitch: curParams.pitch - (fromP.pitch || 0) + (toP.pitch || 0),
+          fov: curParams.fov,
+        });
+      } else {
+        tsViews[idx].setParameters(curParams);
+      }
       tsActiveIdx = idx;
+      if (locTsBySite[siteId]) {
+        // Heading tools and the map cone now belong to this date, not to the date the page opened on.
+        var dp = tsPhotos[idx] || {};
+        currentHeadingOffset = dp.heading_offset == null ? 0 : dp.heading_offset;
+        headingIsKnown = dp.heading_offset != null;
+        var slot = (locSlotsBySite[siteId] || {})[String(idx)];
+        if (slot != null) locPhotoBySite[siteId] = slot;
+        updateHeadingDialDisplay();
+        try { updateViewCone(); } catch (e) { /* the map may not be open yet */ }
+      }
       // Only actually hits the network the first time this index is
       // shown -- once loaded, the browser (and Marzipano's own scene)
       // already have it, so this preload resolves instantly on repeat
@@ -1348,7 +1411,8 @@
         look: '<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>',
         map: '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
         stops: '<svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
-        controls: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>'
+        controls: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>',
+        views: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>'
       };
 
       var STAGES = {
@@ -1424,6 +1488,34 @@
         var intro = (window.helpTourIntro || '');
         if (intro) look.unshift('<p class="info-intro"></p>');
         out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join(''), intro: intro });
+
+        // A place photographed on several dates: explain the views its toolbar offers.
+        var locBar = document.getElementById('loc-toolbar');
+        if (locBar) {
+          var haveViews = {};
+          Array.from(locBar.querySelectorAll('button')).forEach(function (b) { haveViews[b.textContent.trim()] = true; });
+          var vBody = [], vChips = [];
+          if (haveViews['Dates']) {
+            vChips.push('Dates');
+            vBody.push('<p><b>Dates</b> shows one photo at a time. Click a date along the bottom to switch. The view stays lined up, so the same spot stays centered as you change dates.</p>');
+          }
+          if (haveViews['Side by side']) {
+            vChips.push('Side by side');
+            vBody.push('<p><b>Side by side</b> shows two dates next to each other. Pick the Left and Right dates from the menus at the top. The two photos pan and zoom together.</p>');
+          }
+          if (haveViews['Swipe']) {
+            vChips.push('Swipe');
+            vBody.push('<p><b>Swipe</b> puts two dates in one frame. Drag the divider left or right to reveal one date or the other.</p>');
+          }
+          if (vChips.length >= 2) {
+            out.push({
+              title: 'Compare dates',
+              icon: STEP_ICONS.views,
+              stage: '<div class="hp-chips">' + vChips.map(function (c) { return '<span class="hp-chip">' + c + '</span>'; }).join('') + '</div>',
+              body: vBody.join('') + '<p>Use the buttons at the top of the viewer to switch between views.</p>'
+            });
+          }
+        }
 
         if (isShown('map-toggle-btn')) {
           out.push({
@@ -1594,6 +1686,11 @@
             overlays: config.overlays || [],
           };
           mapToggleBtn.style.display = 'inline-block';
+          // A location's Dates view opens with the map inset showing. Phones keep it behind Show Map,
+          // where it would cover the photo.
+          if (config._locTs && window.innerWidth > 700) {
+            setTimeout(function () { try { openSiteMap(); } catch (e) { /* Show Map still works */ } }, 700);
+          }
         }
 
         if (mode === 'timeseries') {
@@ -1637,7 +1734,7 @@
             el.style.backgroundImage = "url('" + thumbUrl + "')";
             var lbl = document.createElement('div');
             lbl.className = 'ts-thumb-label';
-            lbl.textContent = p.label || ('Photo ' + (idx + 1));
+            lbl.textContent = p.thumb_label || p.label || ('Photo ' + (idx + 1));
             el.appendChild(lbl);
             el.addEventListener('click', () => selectTimeseries(idx));
             strip.appendChild(el);
@@ -1653,10 +1750,15 @@
             document.getElementById('label-left').innerText = (tsPhotos[tsStart] && tsPhotos[tsStart].label) || ('Photo ' + (tsStart + 1));
           }
 
+          // Dates view: aim at the spot you want this date to open on, then click this.
+          // It saves that angle as this date's starting view.
+          if (isLocalPreview) { useViewBtn.style.display = 'inline-block'; useViewBtn.textContent = 'Use This View as Start'; }
           useViewBtn.addEventListener('click', () => {
             if (!tsViews.length) return;
             var v = tsViews[tsActiveIdx].parameters();
             sendViewCapture(v.yaw, v.pitch, tsActiveIdx);
+            // Use it straight away, so switching dates lines up without a reload.
+            if (tsPhotos[tsActiveIdx]) { tsPhotos[tsActiveIdx].yaw = v.yaw; tsPhotos[tsActiveIdx].pitch = v.pitch; }
           });
 
           document.getElementById('pano-left').addEventListener('click', (e) => {
@@ -2383,6 +2485,13 @@
       return (dateStr && !isNaN(d.getTime())) ? d.toLocaleDateString() : (dateStr || '');
     }
 
+    // A date's label with its conditions (tide height, flow) after it, when they were entered.
+    function fmtLocDateCond(p) {
+      var d = fmtLocDate(p.date) || p.label || '';
+      var c = p.conditions ? String(p.conditions).trim() : '';
+      return c ? (d ? d + ' \u00B7 ' + c : c) : d;
+    }
+
     // Photos in date order (ties keep storage order), as indexes.
     function locationDateOrder(cfg) {
       var ph = cfg.photos || [];
@@ -2394,7 +2503,7 @@
     function locationDatesList(cfg) {
       return locationDateOrder(cfg).map(function (i) {
         var p = cfg.photos[i];
-        return { idx: i, id: p.id, date: p.date, text: fmtLocDate(p.date) || p.label || p.id };
+        return { idx: i, id: p.id, date: p.date, text: fmtLocDateCond(p) || p.id };
       });
     }
 
@@ -2426,7 +2535,7 @@
         levels_1: A.levels || [], levels_2: B.levels || [],
         mobile_1: A.mobile || 0, mobile_2: B.mobile || 0,
         yaw_1: yawA, pitch_1: A.pitch || 0, yaw_2: yawB, pitch_2: B.pitch || 0,
-        label_1: fmtLocDate(A.date) || A.label || 'Photo A', label_2: fmtLocDate(B.date) || B.label || 'Photo B',
+        label_1: fmtLocDateCond(A) || 'Photo A', label_2: fmtLocDateCond(B) || 'Photo B',
         hotspots_1: resolveLocationHotspots(cfg, A), hotspots_2: resolveLocationHotspots(cfg, B),
         heading_offset: A.heading_offset == null ? null : A.heading_offset,
         _imgNameL: A.path || ('img' + (ia + 1)), _imgNameR: B.path || ('img' + (ib + 1)),
@@ -2442,8 +2551,17 @@
         basemap_type: cfg.basemap_type, basemap_url: cfg.basemap_url, overlays: cfg.overlays,
         _location: true, _platform: cfg.platform, _locName: cfg.name || null,
       };
-      var view = (params && params.view) || 'compare';
+      // Which of Dates / Side by side / Swipe this location offers (set in the publisher;
+      // no setting means all three). A link to a view that is switched off opens the first
+      // enabled one instead, so old bookmarks keep working.
+      var allModes = ['compare', 'curtain', 'dates'];
+      var defaultModes = ['compare', 'dates']; // Swipe is off unless a location turns it on
+      var allowed = Array.isArray(cfg.modes) ? allModes.filter(function (m) { return cfg.modes.indexOf(m) !== -1; }) : defaultModes;
+      if (!allowed.length) allowed = defaultModes;
+      base._locModes = allowed;
+      var view = (params && params.view) || cfg.open_view || 'compare'; // open_view: the view this location opens on
       if (view === 'toggle') view = 'compare'; // Toggle isn't offered any more; old links still open
+      if (allowed.indexOf(view) === -1) view = allowed[0];
       if (!forceSingle && cfg.photos.length >= 2 && (view === 'compare' || view === 'curtain')) {
         return locationCompareConfig(cfg, base, view, params && params.a, params && params.b);
       }
@@ -2473,13 +2591,19 @@
       dateOrder.forEach(function (storeIdx, i) { tsSlots[String(i)] = storeIdx; });
       var startStore = locationPhotoIndex(cfg, null);
       return Object.assign(base, {
-        mode: 'timeseries', format: cfg.photos[0].format || 'raw', heading_offset: null,
+        mode: 'timeseries', format: cfg.photos[0].format || 'raw',
+        // The heading belongs to whichever date is showing, so the dial, the map cone and Save Heading
+        // follow it (selectTimeseries keeps them current when you click another date).
+        heading_offset: cfg.photos[startStore].heading_offset == null ? null : cfg.photos[startStore].heading_offset,
+        _photoIndex: startStore,
         _locView: 'dates', _locDates: locationDatesList(cfg), _locA: null, _locB: null,
         _locSlots: tsSlots, _locTs: true, _locStart: Math.max(dateOrder.indexOf(startStore), 0),
         photos: dateOrder.map(function (storeIdx) {
           var p = cfg.photos[storeIdx];
           return {
-            label: fmtLocDate(p.date) || p.label || '', yaw: p.yaw || 0, pitch: p.pitch || 0, format: p.format || 'raw',
+            label: fmtLocDateCond(p), thumb_label: fmtLocDate(p.date) || p.label || '',
+            heading_offset: p.heading_offset == null ? null : p.heading_offset,
+            yaw: p.yaw || 0, pitch: p.pitch || 0, format: p.format || 'raw',
             levels: p.levels || [], mobile: p.mobile || 0, hotspots: resolveLocationHotspots(cfg, p),
             _img: p.path || ('img' + (storeIdx + 1)),
           };
@@ -2567,7 +2691,10 @@
           });
         })
         .catch(function () {});
+      var offered = config._locModes || ['dates', 'compare'];
+      // With only one mode on, a row of mode buttons would have nothing to switch between.
       [['dates', 'Dates'], ['compare', 'Side by side'], ['curtain', 'Swipe']].forEach(function (vw) {
+        if (offered.length < 2 || offered.indexOf(vw[0]) === -1) return;
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'ctrl-btn';
@@ -2793,7 +2920,9 @@
         if (viewConeLayer) { siteMap.removeLayer(viewConeLayer); viewConeLayer = null; viewConePolygons = []; }
         return;
       }
-      var liveYawDeg = (!flatConeActive && viewL) ? (viewL.parameters().yaw * 180 / Math.PI) : 0;
+      // Dates view shows one view object per date (tsViews), not viewL, so the cone follows the date on screen.
+      var coneView = (isTimeseriesModeGlobal && tsViews.length) ? tsViews[tsActiveIdx] : viewL;
+      var liveYawDeg = (!flatConeActive && coneView) ? (coneView.parameters().yaw * 180 / Math.PI) : 0;
       var heading = (currentHeadingOffset + liveYawDeg + 360) % 360;
       var halfAngle = flatConeActive ? VIEWCONE_FLAT_HALF_ANGLE : VIEWCONE_HALF_ANGLE;
 

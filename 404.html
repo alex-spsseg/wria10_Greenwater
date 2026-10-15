@@ -21,6 +21,12 @@
     // read as a tour slug and redirected to a nonexistent tour named
     // "tours", producing a confusing "Tour Not Found" instead of just
     // landing on the actual tours list.
+    //
+    // The same slot also carries short link names for locations: tiles/_slugs.json maps a
+    // short name (like "west-lobe-east") to the location's real site ID, so a shared link can be
+    // /wria10_Greenwater/west-lobe-east instead of index.html?site=dji_20260909123847_0001_d.
+    // A name in that file wins; anything else is treated as a tour ID, as before. A view can
+    // still be added to the short link, like /wria10_Greenwater/west-lobe-east?view=dates.
     var REPO_NAME = "wria10_Greenwater";
     var RESERVED_TOP_LEVEL = ["tours", "tiles", "vendor"];
     var parts = location.pathname.split('/').filter(Boolean);
@@ -28,7 +34,18 @@
     var slug = repoIdx >= 0 ? parts[repoIdx + 1] : parts[0];
     var base = repoIdx >= 0 ? '/' + parts.slice(0, repoIdx + 1).join('/') : '/' + REPO_NAME;
     if (slug && RESERVED_TOP_LEVEL.indexOf(slug) === -1) {
-      location.replace(base + '/index.html?tour=' + encodeURIComponent(slug) + location.search);
+      var asTour = function () {
+        location.replace(base + '/index.html?tour=' + encodeURIComponent(slug) + location.search);
+      };
+      fetch(base + '/tiles/_slugs.json', { cache: 'no-store' })
+        .then(function (res) { return res.ok ? res.json() : {}; })
+        .catch(function () { return {}; })
+        .then(function (map) {
+          var sid = map && Object.prototype.hasOwnProperty.call(map, slug.toLowerCase()) ? map[slug.toLowerCase()] : null;
+          if (!sid) { asTour(); return; }
+          var extra = location.search ? '&' + location.search.replace(/^\?/, '') : '';
+          location.replace(base + '/index.html?site=' + encodeURIComponent(sid) + extra);
+        });
     } else {
       location.replace(base + '/tours.html');
     }
