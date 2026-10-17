@@ -21,5 +21,7 @@
   "mobile_2": 0,
   "heading_offset": 79.51305399243415,
   "overlays": [],
-  "heading_confirmed": true
+  "heading_confirmed": true,
+  "alt_checked": true,
+  "alt": 582.1
 }

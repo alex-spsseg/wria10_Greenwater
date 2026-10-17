@@ -23,5 +23,7 @@
   "overlays": [],
   "platform": "ground",
   "platform_manual": true,
-  "heading_confirmed": true
+  "heading_confirmed": true,
+  "alt_checked": true,
+  "alt": 589.2
 }
