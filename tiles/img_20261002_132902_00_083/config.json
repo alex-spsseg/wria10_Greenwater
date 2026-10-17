@@ -50,5 +50,7 @@
       "type": "tile"
     }
   ],
-  "heading_confirmed": true
+  "heading_confirmed": true,
+  "alt_checked": true,
+  "alt": 573.01
 }

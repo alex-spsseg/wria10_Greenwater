@@ -10,7 +10,30 @@
   "label_1": "IMG_20261002_113752_00_061 (2026/10/02)",
   "label_2": "",
   "autorotate": false,
-  "hotspots_1": [],
+  "hotspots_1": [
+    {
+      "yaw": 5.085617153470605,
+      "pitch": 0.0,
+      "title": "Stop 22",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_113540_00_060",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 3.8015772067830156,
+      "pitch": 0.0,
+      "title": "Stop 24",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_114533_00_062",
+      "link_icon": "ground"
+    }
+  ],
   "hotspots_2": [],
   "levels_1": [],
   "levels_2": [],
@@ -50,5 +73,7 @@
       "type": "tile"
     }
   ],
-  "heading_confirmed": true
+  "heading_confirmed": true,
+  "alt_checked": true,
+  "alt": 556.43
 }

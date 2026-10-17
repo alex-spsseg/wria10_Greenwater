@@ -10,7 +10,19 @@
   "label_1": "IMG_20261002_120414_00_068 (2026/10/02)",
   "label_2": "",
   "autorotate": false,
-  "hotspots_1": [],
+  "hotspots_1": [
+    {
+      "yaw": 5.20630977287677,
+      "pitch": 0.0,
+      "title": "Stop 29",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_120031_00_067",
+      "link_icon": "ground"
+    }
+  ],
   "hotspots_2": [],
   "levels_1": [],
   "levels_2": [],
@@ -50,5 +62,7 @@
       "type": "tile"
     }
   ],
-  "heading_confirmed": true
+  "heading_confirmed": true,
+  "alt_checked": true,
+  "alt": 559.41
 }

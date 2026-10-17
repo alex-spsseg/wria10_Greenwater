@@ -10,7 +10,19 @@
   "label_1": "IMG_20261002_110731_00_051 (2026/10/02)",
   "label_2": "",
   "autorotate": false,
-  "hotspots_1": [],
+  "hotspots_1": [
+    {
+      "yaw": 1.155160624770787,
+      "pitch": 0.0,
+      "title": "Stop 12",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_110547_00_050",
+      "link_icon": "ground"
+    }
+  ],
   "hotspots_2": [],
   "levels_1": [],
   "levels_2": [],
@@ -49,5 +61,7 @@
       "default_on": true,
       "type": "tile"
     }
-  ]
+  ],
+  "alt_checked": true,
+  "alt": 557.26
 }

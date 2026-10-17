@@ -423,14 +423,6 @@
       background: #b366ff; color: #fff; cursor: pointer; font-weight: bold;
     }
     #heading-dial-nudges button:hover { background: #c78cff; }
-    #heading-calibrate-list { margin-top: 8px; }
-    .heading-calibrate-label { color: #b9a3d9; font-size: 11px; font-style: italic; margin-bottom: 4px; }
-    .heading-calibrate-btn {
-      display: block; width: 100%; text-align: left; margin-bottom: 4px; padding: 6px 8px;
-      border: none; border-radius: 4px; background: rgba(179, 102, 255, 0.25); color: #fff;
-      cursor: pointer; font-size: 12px;
-    }
-    .heading-calibrate-btn:hover { background: rgba(179, 102, 255, 0.5); }
     .hotspot-list-row {
       display: flex; flex-direction: column; gap: 4px; font-size: 12px;
       background: rgba(255,255,255,0.05); border-radius: 4px; padding: 5px 7px;
@@ -744,6 +736,15 @@
       .pano-label { font-size: 12px; padding: 5px 10px; max-width: 70vw; }
       #label-right { top: 52px; }
     }
+    /* A quiet note, lower left, while the sharp photo of a stop downloads behind the soft one. */
+    #hd-pill {
+      position: fixed; left: 14px; bottom: 14px;
+      display: none; align-items: center; z-index: 30; pointer-events: none;
+      padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+      color: rgba(207, 230, 241, 0.8); background: rgba(9, 17, 36, 0.5);
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    #hd-pill.show { opacity: 1; }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -755,7 +756,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-15 12:43:13</div>
+  <div id="build-timestamp">Built 2026-10-16 18:26:23</div>
 
   <div id="status-banner"></div>
 
@@ -804,6 +805,7 @@
     <div id="curtain-slider"><div id="curtain-slider-handle">↔</div></div>
 
     <div id="timeseries-strip"></div>
+    <div id="hd-pill" aria-live="polite"><span class="hd-text">Loading full resolution</span></div>
 
     <div id="control-bar">
       <button id="control-bar-toggle" class="ctrl-btn" type="button" title="Menu">&#8942;</button>
@@ -864,6 +866,18 @@
       <details class="edit-group" id="hotspots-group" style="display:none;"><summary>Hotspots</summary>
       <div class="edit-group-body">
       <button id="place-hotspot-btn" class="edit-tool-btn" type="button" style="display:none;">Place New Point</button>
+      <button id="link-all-btn" class="edit-tool-btn" type="button" style="display:none;">Link to All Other Stops</button>
+      <div id="link-all-types" style="display:none; padding:2px 6px 8px; font-size:12px; color:#d8c8f0;">
+        Link to:
+        <label style="margin-left:6px;"><input type="checkbox" id="link-all-overview" checked> Overview</label>
+        <label style="margin-left:6px;"><input type="checkbox" id="link-all-aerial" checked> Aerial</label>
+        <label style="margin-left:6px;"><input type="checkbox" id="link-all-ground" checked> Ground</label>
+        <div style="margin-top:6px;">Within
+          <input type="number" id="link-all-maxdist" min="1" step="10" placeholder="any" style="width:62px; margin:0 4px; background:#0A1428; color:#fff; border:1px solid #5b3a8c; border-radius:4px; padding:2px 4px;"> m
+        </div>
+        <label style="display:block; margin-top:6px;"><input type="checkbox" id="link-all-tilt" checked> Tilt pins using altitude</label>
+      </div>
+      <button id="link-all-undo-btn" class="edit-tool-btn" type="button" style="display:none;">Undo Link to All</button>
       <button id="edit-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Move/Delete Points</button>
       <button id="save-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Save Hotspots</button>
       <button id="hotspot-list-btn" class="edit-tool-btn" type="button" style="display:none;">Show Hotspot List</button>
@@ -891,7 +905,6 @@
           <label><input type="checkbox" id="hdg-autoadv" checked> Auto jump to next stop after saving</label>
           <div id="hdg-keys">Center a landmark in the photo, press M, click that landmark on the map. Each of these saves the heading and shows the cone. [ ] nudge 1, { } nudge 5 (then Enter). Esc cancels.</div>
         </div>
-        <div id="heading-calibrate-list"></div>
       </div>
       </div>
       </details>
@@ -900,7 +913,7 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    let rawSiteId = urlParams.get('site') || urlParams.get('well') || 'img_20251020_095453_00_220';
+    let rawSiteId = urlParams.get('site') || urlParams.get('well') || 'img_20261002_103153_00_038';
     const siteId = rawSiteId.trim().toLowerCase().replace(/[\s-]+/g, '_');
 
     const tourParam = urlParams.get('tour');
@@ -943,10 +956,224 @@
                                  // have to get exactly right (site ids and their
                                  // display labels can differ completely once a
                                  // stop's been renamed in Site Tour Manager)
+    var updateLinkAllUndoVisibility = function () {}; // set up once the editing tools exist
     var activeTourSiteId = null; // which stop is currently showing, for Use This
                                   // View / hotspot editing / Save Hotspots to target
     var activeTourScene = null;  // that stop's live Marzipano scene, for placing
                                   // new hotspots onto it
+
+    // Staged loading of a stop's photo on a desktop screen. The phone sized copy (about a quarter of the size)
+    // loads first so the stop appears quickly, then the full size photo loads in the background and replaces it
+    // in place, with the same view, hotspots and zoom. It starts only after the viewer has stayed on the stop for
+    // a moment, is dropped if they move on, and is skipped on slow or data saving connections.
+    var stopUpgradeTimer = null, stopUpgradeImg = null;
+    var stopPrefetched = {}, stopPrefetchImgs = [];
+    // Set to false to go back to loading each stop's full photo directly, with no soft first look.
+    var STAGED_LOADING = true;
+    // On the local preview the files are on this computer's own disk and load instantly, so a soft first look
+    // would only show up as a flash. It is for visitors on the internet.
+    var onLocalPreviewHost = /^(127\.0\.0\.1|localhost|\[::1\])$/.test(location.hostname);
+    // The soft copy stays up at least this long before the sharp one fades in, so a fast connection does not
+    // turn the swap into a flicker.
+    var MIN_SOFT_MS = 1200;
+    var stopUpgradeAbort = null, hdPillHideTimer = null;
+    function showHdPill(frac, label) {
+      var pill = document.getElementById('hd-pill');
+      if (!pill) return;
+      clearTimeout(hdPillHideTimer);
+      pill.style.display = 'flex';
+      var text = pill.querySelector('.hd-text');
+      if (label) {
+        text.textContent = label;
+      } else if (frac == null) {
+        text.textContent = 'Loading full resolution';
+      } else {
+        text.textContent = 'Loading full resolution ' + Math.max(0, Math.min(100, Math.round(frac * 100))) + '%';
+      }
+      if (window.requestAnimationFrame) requestAnimationFrame(function () { pill.classList.add('show'); });
+      else pill.classList.add('show');
+    }
+    function hideHdPill() {
+      var pill = document.getElementById('hd-pill');
+      if (!pill) return;
+      pill.classList.remove('show');
+      clearTimeout(hdPillHideTimer);
+      hdPillHideTimer = setTimeout(function () { pill.style.display = 'none'; }, 400);
+    }
+    // Putting the big photo on the graphics card takes a moment and can make a drag hitch, so the swap waits until
+    // the viewer has stopped moving the picture (but never longer than about 10 seconds).
+    var lastPanoInteraction = 0, panPointerDown = false;
+    (function () {
+      var opts = { capture: true, passive: true };
+      window.addEventListener('pointerdown', function () { panPointerDown = true; lastPanoInteraction = Date.now(); }, opts);
+      window.addEventListener('pointerup', function () { panPointerDown = false; lastPanoInteraction = Date.now(); }, opts);
+      window.addEventListener('pointercancel', function () { panPointerDown = false; }, opts);
+      window.addEventListener('pointermove', function (e) { if (e.buttons > 0 || panPointerDown) lastPanoInteraction = Date.now(); }, opts);
+      window.addEventListener('wheel', function () { lastPanoInteraction = Date.now(); }, opts);
+      window.addEventListener('touchmove', function () { lastPanoInteraction = Date.now(); }, opts);
+      window.addEventListener('keydown', function () { lastPanoInteraction = Date.now(); }, opts);
+    })();
+    function runWhenViewerIdle(fn) {
+      var started = Date.now();
+      (function check() {
+        var idle = !panPointerDown && (Date.now() - lastPanoInteraction) > 700;
+        if (idle || Date.now() - started > 10000) fn(); else setTimeout(check, 200);
+      })();
+    }
+    // A photo this browser fetched in full a few minutes ago is still in its cache (the server allows 10 minutes),
+    // so showing the small copy first would only add a flash of softness. Remember what was loaded recently.
+    function fullLoadedRecently(url) {
+      try {
+        var t = parseInt(localStorage.getItem('fullpano:' + url) || '0', 10);
+        return t > 0 && (Date.now() - t) < 9 * 60 * 1000;
+      } catch (e) { return false; }
+    }
+    function markFullLoaded(url) {
+      try { localStorage.setItem('fullpano:' + url, String(Date.now())); } catch (e) { /* storage may be off */ }
+    }
+    var tourCaches = { config: {}, scene: {} }; // the tour page's own caches, shared here once it starts
+    function connectionIsSlow() {
+      var conn = navigator.connection || {};
+      return !!(conn.saveData || /^(slow-2g|2g|3g)$/.test(conn.effectiveType || ''));
+    }
+    function cancelStopUpgrade() {
+      clearTimeout(stopUpgradeTimer);
+      stopUpgradeTimer = null;
+      if (stopUpgradeAbort) { try { stopUpgradeAbort.abort(); } catch (e) { /* already finished */ } stopUpgradeAbort = null; }
+      hideHdPill();
+      if (stopUpgradeImg) {
+        stopUpgradeImg.onload = null;
+        stopUpgradeImg.onerror = null;
+        stopUpgradeImg.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACw='; // stops the download
+        stopUpgradeImg = null;
+      }
+    }
+    // Once the stop on screen is as sharp as it will get, quietly fetch the next stop's small copy (about 5 MB)
+    // so pressing Next shows it almost at once. Skipped on slow or data saving connections.
+    function prefetchNextStop(currentSid) {
+      if (connectionIsSlow()) return;
+      // A desktop that loads full photos directly never uses the small copy, so there is nothing to fetch ahead.
+      if (!isMobileDevice() && (!STAGED_LOADING || onLocalPreviewHost)) return;
+      var norm = function (x) { return String(x || '').trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var opts = tourSiteOptions || [];
+      var i = -1;
+      for (var k = 0; k < opts.length; k++) { if (norm(opts[k].site_id) === currentSid) { i = k; break; } }
+      if (i < 0 || i + 1 >= opts.length) return;
+      var nsid = norm(opts[i + 1].site_id);
+      if (stopPrefetched[nsid] || tourCaches.scene[nsid]) return;
+      stopPrefetched[nsid] = true;
+      var cfgPromise = tourCaches.config[nsid] ? Promise.resolve(tourCaches.config[nsid])
+          : fetch('tiles/' + nsid + '/config.json', { cache: 'no-store' })
+              .then(function (res) { return res.ok ? res.json() : null; })
+              .then(function (cfg) { if (cfg) tourCaches.config[nsid] = cfg; return cfg; });
+      cfgPromise.then(function (cfg) {
+        if (!cfg) return;
+        var c = normalizeLocationConfig(cfg, tourPhotoIdFor(nsid), true);
+        if (c.mode === 'flat' || c.format === 'tiled' || !c.mobile_1) return;
+        var img = new Image();
+        stopPrefetchImgs.push(img); // keep a reference so the download is not dropped
+        img.src = 'tiles/' + nsid + '/' + (c._imgName || 'img1') + '_mobile.jpg';
+      }).catch(function () { /* a failed prefetch changes nothing */ });
+    }
+    function startStopUpgrade(upg) {
+      if (!upg || upg.done) return;
+      if (!upg.softAt) upg.softAt = Date.now();   // when the soft copy first became visible
+      cancelStopUpgrade();
+      if (connectionIsSlow()) return;
+      var conn = navigator.connection || {};
+      // Start almost at once on a connection that looks fast; give a slower one a moment so a quick click-through
+      // does not start a big download that is then thrown away.
+      var delay = (conn.downlink == null || conn.downlink >= 5) ? 400 : 1500;
+      stopUpgradeTimer = setTimeout(function () {
+        var img = new Image();
+        stopUpgradeImg = img;
+        var finishDownload = function () {
+          stopUpgradeAbort = null;
+          showHdPill(1, 'Sharpening');        // downloaded; the swap to the sharp photo is next
+        };
+        img.onerror = function () { stopUpgradeAbort = null; hideHdPill(); };
+        img.onload = function () {
+          finishDownload();
+          stopUpgradeImg = null;
+          if (upg.done) return;
+          // Decode the big image in the background first. Decoding about 100 megapixels on the spot, while the
+          // viewer is on screen, is what makes the picture hitch.
+          var swapIn = function () {
+          if (upg.done || activeTourSiteId !== upg.sid) { hideHdPill(); return; }
+          try {
+            var oldLayers = upg.scene.listLayers().slice();
+            var layer = upg.scene.createLayer({
+              source: Marzipano.ImageUrlSource.fromString(upg.fullUrl),
+              geometry: new Marzipano.EquirectGeometry([{ width: 4000 }]),
+              view: upg.view,
+            });
+            upg.done = true;
+            markFullLoaded(upg.fullUrl);
+            var canFade = false;
+            try { layer.mergeEffects({ opacity: 0 }); canFade = true; } catch (e) { /* swaps without the fade */ }
+            var dropOld = function () {
+              hideHdPill();
+              oldLayers.forEach(function (l) { try { upg.scene.destroyLayer(l); } catch (e) { /* already gone */ } });
+              setTimeout(function () { prefetchNextStop(upg.sid); }, 800);
+            };
+            var started = false;
+            var begin = function () {
+              if (started) return;
+              started = true;
+              if (!canFade) { setTimeout(dropOld, 400); return; }
+              // The sharp photo fades in over the soft one, so it reads as the picture coming into focus.
+              var runFade = function () {
+                var t0 = Date.now(), dur = 700;
+                var timer = setInterval(function () {
+                  var k = Math.min(1, (Date.now() - t0) / dur);
+                  try { layer.mergeEffects({ opacity: k }); } catch (e) { k = 1; }
+                  if (k >= 1) { clearInterval(timer); dropOld(); }
+                }, 40);
+              };
+              setTimeout(runFade, Math.max(0, MIN_SOFT_MS - (Date.now() - (upg.softAt || 0))));
+            };
+            layer.addEventListener('textureStoreChange', begin);
+            setTimeout(function () {                    // if the texture never reports in, show the sharp photo anyway
+              if (started) return;
+              try { layer.mergeEffects({ opacity: 1 }); } catch (e) { /* nothing to restore */ }
+              started = true;
+              dropOld();
+            }, 10000);
+          } catch (e) { hideHdPill(); /* keep the smaller copy */ }
+          };
+          var afterDecode = function () { runWhenViewerIdle(swapIn); };
+          if (img.decode) { img.decode().then(afterDecode, afterDecode); } else { afterDecode(); }
+        };
+        // Read the file as a stream first so the pill can show real progress. The bytes land in the browser cache as they
+        // arrive, so the image load below is then served from the cache. If streaming is not available or fails, the
+        // plain image load still works, just without the progress bar.
+        var startImage = function () { if (stopUpgradeImg === img) img.src = upg.fullUrl; };
+        var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        stopUpgradeAbort = ctl;
+        showHdPill(null);
+        if (typeof fetch === 'function' && ctl) {
+          fetch(upg.fullUrl, { signal: ctl.signal }).then(function (res) {
+            if (!res.ok || !res.body || !res.body.getReader) throw new Error('no stream');
+            var total = parseInt(res.headers.get('Content-Length') || '0', 10);
+            var reader = res.body.getReader(), got = 0;
+            return (function pump() {
+              return reader.read().then(function (r) {
+                if (r.done) return;
+                got += r.value.length;
+                showHdPill(total ? got / total : null);
+                return pump();
+              });
+            })();
+          }).then(startImage, function (err) {
+            if (ctl.signal.aborted) return;       // the viewer moved on; nothing to do
+            startImage();                         // fall back to the plain load
+          });
+        } else {
+          startImage();
+        }
+      }, delay);
+    }
+
     if (tourParam) renderTourPage(tourParam);
 
     const isLocalPreview = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') && !tourParam;
@@ -1706,6 +1933,13 @@
           var tsStart = config._locStart || 0;
           tsActiveIdx = tsStart;
 
+          var tsThumbQueue = [], tsThumbsApplied = false;
+          var applyTsThumbs = function () {
+            if (tsThumbsApplied) return;
+            tsThumbsApplied = true;
+            tsThumbQueue.forEach(function (t) { t.el.style.backgroundImage = "url('" + t.url + "')"; });
+          };
+
           tsPhotos.forEach((p, idx) => {
             var view = new Marzipano.RectilinearView({ yaw: p.yaw || 0, pitch: p.pitch || 0, fov: Math.PI / 4 }, limiter);
             var geometry, source, thumbUrl;
@@ -1720,7 +1954,9 @@
               var tsFullUrl = 'tiles/' + siteId + '/' + (p._img || ('img' + (idx + 1))) + '.jpg';
               var tsImgUrl = rawImageUrl(tsFullUrl, p.mobile);
               source = Marzipano.ImageUrlSource.fromString(tsImgUrl);
-              thumbUrl = tsFullUrl;
+              // The strip only needs a small picture. The phone sized copy is about a quarter of the size, so use
+              // it for the thumbnail on any screen when the photo has one.
+              thumbUrl = p.mobile ? tsFullUrl.replace(/\.jpg$/i, '_mobile.jpg') : tsFullUrl;
               tsRawUrls.push(tsImgUrl);
             }
             var scene = viewerL.createScene({ source: source, geometry: geometry, view: view });
@@ -1731,7 +1967,8 @@
 
             var el = document.createElement('div');
             el.className = 'ts-thumb' + (idx === tsStart ? ' active' : '');
-            el.style.backgroundImage = "url('" + thumbUrl + "')";
+            // Thumbnails are filled in after the photo on screen has loaded, so they do not compete with it.
+            tsThumbQueue.push({ el: el, url: thumbUrl });
             var lbl = document.createElement('div');
             lbl.className = 'ts-thumb-label';
             lbl.textContent = p.thumb_label || p.label || ('Photo ' + (idx + 1));
@@ -1742,10 +1979,12 @@
 
           if (tsScenes.length) {
             if (tsRawUrls[tsStart]) {
-              preloadPanoThenRun(tsRawUrls[tsStart], 'left', function () { tsScenes[tsStart].switchTo(); });
+              preloadPanoThenRun(tsRawUrls[tsStart], 'left', function () { tsScenes[tsStart].switchTo(); applyTsThumbs(); });
+              setTimeout(applyTsThumbs, 8000); // a very slow connection still gets its thumbnails eventually
             } else {
               document.getElementById('pano-loading-left').classList.add('hidden');
               tsScenes[tsStart].switchTo();
+              applyTsThumbs();
             }
             document.getElementById('label-left').innerText = (tsPhotos[tsStart] && tsPhotos[tsStart].label) || ('Photo ' + (tsStart + 1));
           }
@@ -2391,13 +2630,20 @@
       return '<svg width="' + px + '" height="' + px + '" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ' +
              'aria-label="' + aria + '"><path d="' + path + '" fill="currentColor"/></svg>';
     }
+    // Material "home", marking overview stops in the stop list and on the map.
+    var HOME_PATH = 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z';
+    function isOverviewSite(sid) {
+      var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
+      return !!(opt && opt.overview);
+    }
     function isAerialSite(sid) {
       var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
       var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
       return !!(opt && opt.platform === 'aerial');
     }
 
-    function buildMarkerIcon(active, aerial) {
+    function buildMarkerIcon(active, aerial, overview) {
       var size = active ? 30 : 22;
       var color = active ? '#019fc4' : '#3f5a78';
       return L.divIcon({
@@ -2406,7 +2652,9 @@
               'xmlns="http://www.w3.org/2000/svg">' +
               '<path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" ' +
               'fill="' + color + '" stroke="#fff" stroke-width="1.5"/>' +
-              (aerial
+              (overview
+                ? '<path transform="translate(5.5 5.5) scale(0.55)" d="' + HOME_PATH + '" fill="#fff"/>'
+                : aerial
                 ? '<path transform="translate(5.5 5.5) scale(0.55)" d="' + AIRPLANE_PATH + '" fill="#fff"/>'
                 : '<circle cx="12" cy="12" r="4.5" fill="#fff"/>') + '</svg>',
         iconSize: [size, Math.round(size * 1.33)],
@@ -2804,100 +3052,6 @@
       return yawDeg * Math.PI / 180;
     }
 
-    // -- calibrate heading by aiming the camera, not dragging a pin --
-    // panning to look straight at something is the one interaction
-    // Marzipano is already smooth and precise at; dragging a small pin
-    // across a wide equirectangular image is not, which is exactly the
-    // tedium this replaces. Same underlying math as the pin-drag
-    // version (bearing minus whatever yaw is now "facing" the target),
-    // just reading the view's current yaw instead of a dragged spot's.
-    function refreshCalibrateTargets() {
-      var container = document.getElementById('heading-calibrate-list');
-      if (!container) return;
-      container.innerHTML = '';
-      if (!tourParam || !activeTourSiteId) return;
-      var slotId = getCurrentPrimarySlotId();
-      var links = (pendingSlotHotspots[slotId] || []).filter(h => h.category === 'link' && h.target && !linkOutsideTour(h));
-      var haveTargets = {};
-      links.forEach(h => { haveTargets[h.target] = true; });
-      (unplacedBySite[activeTourSiteId] || []).forEach(h => {
-        if (!haveTargets[h.target] && !linkOutsideTour(h)) links.push({ category: 'link', target: h.target, title: h.title });
-      });
-      if (!links.length) return;
-      var label = document.createElement('div');
-      label.className = 'heading-calibrate-label';
-      label.textContent = 'Pan the view to aim at one, then click it:';
-      container.appendChild(label);
-      links.forEach(h => {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'heading-calibrate-btn';
-        btn.textContent = '\u2192 ' + (h.title || h.target);
-        btn.addEventListener('click', () => calibrateHeadingFromView(h, btn));
-        container.appendChild(btn);
-      });
-    }
-
-    function calibrateHeadingFromView(targetHotspot, btn) {
-      if (!viewL) return;
-      var siteLatLng = findTourSiteLatLng(activeTourSiteId);
-      var targetLatLng = findTourSiteLatLng(targetHotspot.target);
-      var original = btn.textContent;
-      if (!siteLatLng || !targetLatLng) {
-        btn.textContent = 'Missing GPS on this site or target';
-        setTimeout(() => { btn.textContent = original; }, 2200);
-        return;
-      }
-      var bearing = computeBearingJs(siteLatLng[0], siteLatLng[1], targetLatLng[0], targetLatLng[1]);
-      var viewYawDeg = viewL.parameters().yaw * 180 / Math.PI;
-      var heading = (bearing - viewYawDeg + 360) % 360;
-      btn.textContent = 'Calibrating\u2026';
-      fetch('/__save_heading', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site_id: activeTourSiteId, heading: heading, loc_photo: locPhotoFor(activeTourSiteId) }),
-      }).then(res => {
-        if (!res.ok) throw new Error('save-failed');
-        currentHeadingOffset = heading;
-        headingIsKnown = true;
-        updateHeadingDialDisplay();
-        syncSceneCacheHeading(activeTourSiteId, heading, true);
-        reloadStopIfLinksWaiting(activeTourSiteId);
-        // Snap every link hotspot at this site to its real bearing now,
-        // including the one just used -- its position was never
-        // dragged this time, only inferred, so there's nothing "already
-        // correct" about it to preserve the way the pin-drag version
-        // left the dragged pin alone.
-        var slotId = getCurrentPrimarySlotId();
-        var links = (pendingSlotHotspots[slotId] || []).filter(h => h.category === 'link' && h.target);
-        var snapped = 0;
-        links.forEach(h => {
-          var tLatLng = findTourSiteLatLng(h.target);
-          if (!tLatLng) return;
-          var b = computeBearingJs(siteLatLng[0], siteLatLng[1], tLatLng[0], tLatLng[1]);
-          var newYaw = (b - heading + 360) % 360;
-          h.yaw = newYaw * Math.PI / 180;
-          // pitch deliberately untouched -- bearing is horizontal-only,
-          // overwriting it here would erase any manual vertical nudge
-          var ref = hotspotUiMap.get(h);
-          if (ref) ref.ctx.hotspotObj.setPosition({ yaw: h.yaw, pitch: h.pitch });
-          snapped++;
-        });
-        if (snapped) {
-          var snapSid = activeTourSiteId;
-          markHotspotsDirty(snapSid);
-          fetch('/__save_hotspots', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ site_id: snapSid, slots: { '1': pendingSlotHotspots[slotId] || [] }, loc_photo: locPhotoFor(snapSid) }),
-          }).then(res => { if (res.ok) markHotspotsClean(snapSid); }).catch(() => {});
-        }
-        btn.textContent = 'Calibrated! Snapped ' + snapped + ' pin(s)';
-        setTimeout(() => { btn.textContent = original; }, 2200);
-      }).catch(() => {
-        btn.textContent = 'Failed, try again';
-        setTimeout(() => { btn.textContent = original; }, 1800);
-      });
-    }
-
     function currentSiteLatLng() {
       if (pendingMapData && pendingMapData.type === 'single') {
         return [pendingMapData.lat, pendingMapData.lng];
@@ -2969,7 +3123,7 @@
       Object.keys(tourMarkersBySite).forEach(sid => {
         var m = tourMarkersBySite[sid];
         var active = sid === activeTourSiteId;
-        m.setIcon(buildMarkerIcon(active, isAerialSite(sid)));
+        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid)));
         if (active) m.setZIndexOffset(1000);
       });
       // Cluster icons are separate from the child markers' own icons,
@@ -3402,7 +3556,7 @@
         if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40 });
         pendingMapData.sites.forEach(s => {
           var isActive = s.site_id === activeTourSiteId;
-          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial') });
+          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview) });
           m.bindPopup(escapeHtml(s.display_name || s.site_id));
           // Stop name on hover (mouse only; touch screens use the tap popup).
           m.bindTooltip(escapeHtml(s.display_name || s.site_id), { direction: 'top', className: 'stop-tooltip', opacity: 1 });
@@ -3527,7 +3681,6 @@
     }
 
     function refreshHotspotList() {
-      refreshCalibrateTargets();
       var content = document.getElementById('hotspot-list-content');
       if (content.style.display === 'none') return; // don't do the work while collapsed
       var slotId = getCurrentPrimarySlotId();
@@ -4029,7 +4182,7 @@
         '<option value="overview">Overview (birds-eye)</option>' +
         '</select>' +
         '<label class="hf-return-link-label" style="display:none;">' +
-        '<input type="checkbox" class="hf-return-link" checked> Also add a return link back here</label>' +
+        '<input type="checkbox" class="hf-return-link"> Also add a return link back here</label>' +
         '</div>' +
         '<label>Pin Style</label>' +
         '<select class="hf-pinstyle">' +
@@ -4153,8 +4306,6 @@
         '<option value="aerial">Aerial / drone (plane)</option>' +
         '<option value="overview">Overview (birds-eye)</option>' +
         '</select>' +
-        '<button type="button" class="hf-calibrate-heading" style="display:none; margin-top:8px;">' +
-        'Calibrate Heading From This Position</button>' +
         '</div>' +
         '<label>Pin Style</label>' +
         '<select class="hf-pinstyle">' +
@@ -4196,79 +4347,12 @@
 
       var catSelect = form.querySelector('.hf-cat');
       var targetRow = form.querySelector('.hf-target-row');
-      var calibrateBtn = form.querySelector('.hf-calibrate-heading');
       function syncTargetVisibility() {
         var isLink = catSelect.value === 'link';
         targetRow.style.display = isLink ? 'block' : 'none';
-        // Deliberately separate from ordinary dragging (Move/Delete
-        // Points never touches heading_offset on its own) -- this only
-        // fires when explicitly clicked, precisely so "nudge a pin off
-        // a rock in the frame" can never silently recalibrate a stop
-        // that's already correct.
-        calibrateBtn.style.display = (isLink && tourParam && spot.target) ? 'inline-block' : 'none';
       }
       catSelect.addEventListener('change', syncTargetVisibility);
       syncTargetVisibility();
-
-      calibrateBtn.addEventListener('click', () => {
-        var siteLatLng = findTourSiteLatLng(activeTourSiteId);
-        var targetLatLng = findTourSiteLatLng(spot.target);
-        if (!siteLatLng || !targetLatLng) {
-          calibrateBtn.textContent = 'Missing GPS on this site or target';
-          setTimeout(() => { calibrateBtn.textContent = 'Calibrate Heading From This Position'; }, 2200);
-          return;
-        }
-        var bearing = computeBearingJs(siteLatLng[0], siteLatLng[1], targetLatLng[0], targetLatLng[1]);
-        var draggedYawDeg = spot.yaw * 180 / Math.PI;
-        var heading = (bearing - draggedYawDeg + 360) % 360;
-        var original = calibrateBtn.textContent;
-        calibrateBtn.textContent = 'Calibrating\u2026';
-        fetch('/__save_heading', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ site_id: activeTourSiteId, heading: heading, loc_photo: locPhotoFor(activeTourSiteId) }),
-        }).then(res => {
-          if (!res.ok) throw new Error('save-failed');
-          currentHeadingOffset = heading;
-          headingIsKnown = true;
-          updateHeadingDialDisplay();
-          syncSceneCacheHeading(activeTourSiteId, heading, true);
-          reloadStopIfLinksWaiting(activeTourSiteId);
-          // The pin just dragged into place is now correct by
-          // definition and is left alone -- every *other* link
-          // hotspot at this same site can now be auto-snapped to its
-          // own correct position too, using this newly known heading,
-          // instead of needing the same drag-and-calibrate treatment
-          // repeated for each one.
-          var others = (pendingSlotHotspots[activeTourSiteId] || [])
-              .filter(h => h !== spot && h.category === 'link' && h.target);
-          var snapped = 0;
-          others.forEach(h => {
-            var otherTargetLatLng = findTourSiteLatLng(h.target);
-            if (!otherTargetLatLng) return;
-            var otherBearing = computeBearingJs(siteLatLng[0], siteLatLng[1], otherTargetLatLng[0], otherTargetLatLng[1]);
-            var newYaw = (otherBearing - heading + 360) % 360;
-            h.yaw = newYaw * Math.PI / 180;
-            // pitch deliberately untouched -- same reasoning as the
-            // view-aim calibrate path, bearing is horizontal-only
-            var ref = hotspotUiMap.get(h);
-            if (ref) ref.ctx.hotspotObj.setPosition({ yaw: h.yaw, pitch: h.pitch });
-            snapped++;
-          });
-          if (snapped) {
-            var snapSid2 = activeTourSiteId;
-            markHotspotsDirty(snapSid2);
-            fetch('/__save_hotspots', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ site_id: snapSid2, slots: { '1': pendingSlotHotspots[snapSid2] || [] }, loc_photo: locPhotoFor(snapSid2) }),
-            }).then(res => { if (res.ok) markHotspotsClean(snapSid2); }).catch(() => {});
-          }
-          calibrateBtn.textContent = snapped ? ('Calibrated! Snapped ' + snapped + ' other pin(s)') : 'Calibrated!';
-          setTimeout(() => { calibrateBtn.textContent = original; }, 2200);
-        }).catch(() => {
-          calibrateBtn.textContent = 'Failed, try again';
-          setTimeout(() => { calibrateBtn.textContent = original; }, 1800);
-        });
-      });
 
       function close() { form.remove(); }
       form.querySelector('.hf-cancel').addEventListener('click', close);
@@ -4396,6 +4480,119 @@
               activeTourSiteId, e.clientX, e.clientY, viewerL,
           );
         });
+
+        // Link to All Other Stops: one link pin per other stop in the tour, placed at the real
+        // bearing from this stop's heading and GPS. Pitch 0 (GPS has no vertical angle), so they
+        // sit on the horizon until dragged. Goes through the same pending list as Place New Point,
+        // so nothing is written until Save Hotspots.
+        var linkAllBtn = document.getElementById('link-all-btn');
+        linkAllBtn.style.display = 'inline-block';
+        document.getElementById('link-all-types').style.display = 'block';
+        var linkAllUndoStack = [];
+        var undoBtn = document.getElementById('link-all-undo-btn');
+        updateLinkAllUndoVisibility = function () {
+          undoBtn.style.display = linkAllUndoStack.some(b => b.sid === activeTourSiteId) ? 'block' : 'none';
+        };
+        undoBtn.addEventListener('click', () => {
+          // Only this stop's batches: undo never reaches into a stop you have moved away from.
+          var idx = -1;
+          for (var k = linkAllUndoStack.length - 1; k >= 0; k--) {
+            if (linkAllUndoStack[k].sid === activeTourSiteId) { idx = k; break; }
+          }
+          if (idx === -1) { updateLinkAllUndoVisibility(); return; }
+          var batch = linkAllUndoStack.splice(idx, 1)[0];
+          var arr = pendingSlotHotspots[batch.sid] || [];
+          batch.items.forEach(it => {
+            try { batch.scene.hotspotContainer().destroyHotspot(it.hotspotObj); } catch (err) { /* already removed */ }
+            var i = arr.indexOf(it.spot);
+            if (i !== -1) arr.splice(i, 1);
+            hotspotUiMap.delete(it.spot);
+          });
+          markHotspotsDirty(batch.sid);
+          refreshHotspotList();
+          var o = undoBtn.dataset.orig || undoBtn.textContent;
+          undoBtn.dataset.orig = o;
+          undoBtn.textContent = 'Removed ' + batch.items.length + ' from ' + batch.name;
+          setTimeout(() => { undoBtn.textContent = o; updateLinkAllUndoVisibility(); }, 2200);
+        });
+        linkAllBtn.addEventListener('click', () => {
+          var flashMsg = (t) => {
+            var o = linkAllBtn.dataset.orig || linkAllBtn.textContent;
+            linkAllBtn.dataset.orig = o; linkAllBtn.textContent = t;
+            setTimeout(() => { linkAllBtn.textContent = o; }, 2200);
+          };
+          var normId = (x) => String(x).trim().toLowerCase().replace(/[\s-]+/g, '_');
+          var sid = activeTourSiteId;
+          if (!sid || !activeTourScene || !tourSiteOptions) return;
+          if (document.getElementById('flat-stop-viewer').classList.contains('visible')) { flashMsg('Not for flat stops'); return; }
+          var me = findTourSiteLatLng(sid);
+          if (!me) { flashMsg('This stop has no GPS'); return; }
+          if (!headingIsKnown) { flashMsg('Set this stop\u2019s heading first'); return; }
+          if (!pendingSlotHotspots[sid]) pendingSlotHotspots[sid] = [];
+          var have = {};
+          pendingSlotHotspots[sid].forEach(h => { if (h.category === 'link' && h.target) have[normId(h.target)] = true; });
+          var want = {
+            overview: document.getElementById('link-all-overview').checked,
+            aerial: document.getElementById('link-all-aerial').checked,
+            ground: document.getElementById('link-all-ground').checked,
+          };
+          if (!want.overview && !want.aerial && !want.ground) { flashMsg('Tick at least one type'); return; }
+          var maxDist = parseFloat(document.getElementById('link-all-maxdist').value);
+          if (!(maxDist > 0)) maxDist = Infinity;
+          var added = 0, noGps = 0, typeSkipped = 0, tooFar = 0;
+          var batch = [];
+          var diag = [];
+          var tilt = document.getElementById('link-all-tilt').checked;
+          var meOpt = tourSiteOptions.find(x => normId(x.site_id) === sid) || {};
+          tourSiteOptions.forEach(st => {
+            var tid = normId(st.site_id);
+            if (tid === sid || have[tid]) return;
+            if (st.lat == null || st.lng == null) { noGps++; return; }
+            var kind = st.overview ? 'overview' : (st.platform === 'aerial' ? 'aerial' : 'ground');
+            if (!want[kind]) { typeSkipped++; return; }
+            var dLat = (st.lat - me[0]) * 111320;
+            var dLng = (st.lng - me[1]) * 111320 * Math.cos(me[0] * Math.PI / 180);
+            var dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            if (dist < 0.5) return;
+            if (dist > maxDist) { tooFar++; return; }
+            var b = computeBearingJs(me[0], me[1], st.lat, st.lng);
+            var yaw = ((((b - currentHeadingOffset) % 360) + 360) % 360) * Math.PI / 180;
+            // Pitch from altitude: the GPS height difference over the horizontal distance. Both stops need
+            // an altitude (all treated as ellipsoid heights), otherwise the pin stays level.
+            // Marzipano pitch is positive DOWNWARD, so a target above this stop gets a negative pitch.
+            var pitch = 0, dz = null, upDeg = 0;
+            if (tilt && meOpt.alt != null && st.alt != null) {
+              dz = st.alt - meOpt.alt;
+              upDeg = Math.max(-80, Math.min(80, Math.atan2(dz, dist) * 180 / Math.PI));
+              pitch = -upDeg * Math.PI / 180;
+            }
+            diag.push({ target: st.display_name || st.site_id, kind: kind, alt: st.alt, rel_alt: st.rel_alt,
+                        dist_m: Math.round(dist), dz_m: dz == null ? null : Math.round(dz * 10) / 10,
+                        degrees_above_horizon: Math.round(upDeg) });
+            var spot = {
+              yaw: yaw, pitch: pitch, title: st.display_name || st.site_id, text: '', link: '',
+              category: 'link', pin_style: 'label_hover', target: st.site_id, link_icon: kind,
+            };
+            pendingSlotHotspots[sid].push(spot);
+            var pin = buildHotspotPin(spot);
+            var hotspotObj = activeTourScene.hotspotContainer().createHotspot(pin.el, { yaw: spot.yaw, pitch: spot.pitch });
+            wireHotspotInteractions(pin, spot, {
+              hotspotObj: hotspotObj, scene: activeTourScene, slotId: sid,
+              panelEl: document.getElementById('pano-left'), view: viewL, viewerRef: viewerL,
+            });
+            batch.push({ spot: spot, hotspotObj: hotspotObj });
+            added++;
+          });
+          if (diag.length) { console.log('Link to All Other Stops from ' + sid + ' (alt ' + meOpt.alt + ', rel_alt ' + meOpt.rel_alt + ')'); console.table(diag); }
+          if (added) {
+            markHotspotsDirty(sid); refreshHotspotList();
+            var me2 = tourSiteOptions.find(x => normId(x.site_id) === sid);
+            linkAllUndoStack.push({ sid: sid, scene: activeTourScene, items: batch, name: (me2 && me2.display_name) || sid });
+            updateLinkAllUndoVisibility();
+          }
+          flashMsg(added ? ('Added ' + added + ' link' + (added > 1 ? 's' : '') + ', now Save Hotspots')
+                         : (tooFar ? 'Nothing within ' + maxDist + ' m' : typeSkipped ? 'Nothing to add for the ticked types' : (noGps ? 'Nothing added (others have no GPS)' : 'Already linked to every stop')));
+        });
       }
 
       var sidebar = document.createElement('div');
@@ -4421,6 +4618,8 @@
 
       var configCache = {};
       var sceneCache = {};
+      tourCaches.config = configCache;
+      tourCaches.scene = sceneCache;
       var siteLinkElements = {}; // site_id -> its sidebar link element, if it has one
       var tourNameForTitle = tourId; // updated once the manifest loads, used to keep
                                       // the browser tab title showing "Tour \u2014 Stop"
@@ -4800,6 +4999,7 @@
       }
 
       function loadStop(rawId) {
+        cancelStopUpgrade();
         var sid = rawId.trim().toLowerCase().replace(/[\s-]+/g, '_');
         var linkEl = siteLinkElements[sid];
         if (activeLink) activeLink.classList.remove('active');
@@ -4813,6 +5013,7 @@
         }
         var fallbackLabel = linkEl ? linkEl.textContent : sid;
         activeTourSiteId = sid;
+        updateLinkAllUndoVisibility();
         updateActiveMapMarker();
         updateTourCompareButton(null);
 
@@ -4828,6 +5029,8 @@
           defaultViewL = cached.defaultView;
           activeTourScene = cached.scene;
           cached.scene.switchTo();
+          if (cached.upgrade && !cached.upgrade.done) startStopUpgrade(cached.upgrade);
+          else prefetchNextStop(sid);
           setTimeout(() => { viewerL.updateSize(); }, 100);
           document.getElementById('label-left').innerText = cached.label;
           document.title = tourNameForTitle + ' \u2014 ' + cached.label;
@@ -4873,21 +5076,38 @@
           if (facingYaw != null) defaultViewL.yaw = facingYaw;
           viewL = new Marzipano.RectilinearView(defaultViewL, limiter);
 
-          var geometry, source;
+          var geometry, source, stopUpgrade = null;
           if (isTiled) {
             geometry = new Marzipano.CubeGeometry(
                 (config.levels_1 && config.levels_1.length) ? config.levels_1 : [{ tileSize: 256, size: 256, fallbackOnly: true }, { tileSize: 512, size: 512 }, { tileSize: 512, size: 1024 }, { tileSize: 512, size: 2048 }]);
             source = Marzipano.ImageUrlSource.fromString('tiles/' + sid + '/' + (config._imgName || 'img1') + '/scene/{z}/{f}/{y}/{x}.jpg');
             document.getElementById('pano-loading-left').classList.add('hidden');
           } else {
-            geometry = new Marzipano.EquirectGeometry([{ width: rawEquirectWidth(config.mobile_1) }]);
-            var stopImgUrl = rawImageUrl('tiles/' + sid + '/' + (config._imgName || 'img1') + '.jpg', config.mobile_1);
+            var stopFullUrl = 'tiles/' + sid + '/' + (config._imgName || 'img1') + '.jpg';
+            // a phone sized copy exists, this is a desktop screen, and the full photo is not already cached
+            var staged = STAGED_LOADING && !onLocalPreviewHost && !!config.mobile_1 && !isMobileDevice() &&
+                         !fullLoadedRecently(stopFullUrl);
+            if (staged) {
+              // Show the phone sized copy first; the full photo replaces it once the stop has been on screen a moment.
+              var stopImgUrl = stopFullUrl.replace(/\.jpg$/i, '_mobile.jpg');
+              geometry = new Marzipano.EquirectGeometry([{ width: config.mobile_1 }]);
+              stopUpgrade = { sid: sid, scene: null, view: null, fullUrl: stopFullUrl, done: false };
+            } else {
+              geometry = new Marzipano.EquirectGeometry([{ width: rawEquirectWidth(config.mobile_1) }]);
+              var stopImgUrl = rawImageUrl(stopFullUrl, config.mobile_1);
+            }
             source = Marzipano.ImageUrlSource.fromString(stopImgUrl);
-            preloadPanoThenRun(stopImgUrl, 'left', function () {});
+            preloadPanoThenRun(stopImgUrl, 'left', function () {
+              if (!staged && !isMobileDevice() && config.mobile_1) markFullLoaded(stopFullUrl);
+              if (activeTourSiteId !== sid) return;
+              if (stopUpgrade) startStopUpgrade(stopUpgrade);   // the next stop is fetched once this one is sharp
+              else prefetchNextStop(sid);
+            });
           }
 
           var scene = viewerL.createScene({ source: source, geometry: geometry, view: viewL });
           activeTourScene = scene;
+          if (stopUpgrade) { stopUpgrade.scene = scene; stopUpgrade.view = viewL; }
           // Keyed by site id, not a fixed '1' -- each stop's hotspots
           // need to land in their own pendingSlotHotspots entry, or
           // editing one stop's pins would bleed into whichever other
@@ -4910,7 +5130,7 @@
           // its tiles already loaded, instead of rebuilding the scene
           // and re-fetching every tile from scratch again.
           sceneCache[sid] = {
-            scene: scene, view: viewL, defaultView: defaultViewL,
+            scene: scene, view: viewL, defaultView: defaultViewL, upgrade: stopUpgrade,
             label: resolvedLabel, pinStyle: config.pin_style, heading: config.heading_offset || 0,
             headingKnown: config.heading_offset != null,
             // A flat stop force-hides both these buttons (see
@@ -4980,13 +5200,14 @@
           }
 
           // Icon slot only when at least one stop has an icon, so plain tours look as before.
-          var anyStopIcon = sites.some(function (x) { return x.platform === 'aerial' || x.kind === 'pdf'; });
+          var anyStopIcon = sites.some(function (x) { return x.platform === 'aerial' || x.kind === 'pdf' || x.overview; });
           sites.forEach((s, idx) => {
             var link = document.createElement('div');
             link.className = 'tour-stop-link';
             var label = s.display_name || s.site_id;
             var icon = '';
-            if (s.platform === 'aerial') icon = stopIconSvg(AIRPLANE_PATH, 14, 'Drone photo');
+            if (s.overview) icon = stopIconSvg(HOME_PATH, 14, 'Overview');
+            else if (s.platform === 'aerial') icon = stopIconSvg(AIRPLANE_PATH, 14, 'Drone photo');
             else if (s.kind === 'pdf') icon = stopIconSvg(DOC_PATH, 14, 'PDF document');
             link.innerHTML = (anyStopIcon ? '<span class="stop-icon">' + icon + '</span>' : '') +
                              '<span class="stop-name">' + escapeHtml(label) + '</span>';
