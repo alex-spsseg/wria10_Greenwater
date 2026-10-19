@@ -3,6 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <script>
+    // Repos that open the tours page by default (on unless a repo's Tours Page Settings turn it off): a visit to the
+    // bare repo link, with no ?tour= or ?site=, goes to tours.html instead of the default site. Only when the tours
+    // page would have something to list (a tour or a site comparison), so a repo without one keeps opening its
+    // default site. Never on the local preview, which always asks for a tour or site. The checks are synchronous
+    // so the viewer never starts loading a page the visitor is about to leave.
+    (function () {
+      if ('true' !== 'true' || window.location.search) return;
+      if (/^(127\.0\.0\.1|localhost|\[::1\])$/.test(window.location.hostname)) return;
+      function hasEntries(url) {
+        try {
+          var x = new XMLHttpRequest();
+          x.open('GET', url, false);
+          x.send();
+          if (x.status !== 200) return false;
+          var d = JSON.parse(x.responseText);
+          return Array.isArray(d) && d.length > 0;
+        } catch (e) { return false; }
+      }
+      if (hasEntries('tours/_index.json') || hasEntries('tiles/_locations.json')) {
+        window.location.replace('tours.html' + window.location.hash);
+      }
+    })();
+  </script>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -379,6 +403,11 @@
       font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 4px;
     }
     .hp-chip svg { width: 14px; height: 14px; stroke: #019fc4; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .hp-legend-dot {
+      display: inline-flex; align-items: center; justify-content: center; flex: none;
+      width: 20px; height: 20px; border-radius: 50%; background: #b366ff; color: #fff;
+      border: 2px solid #fff; font-size: 12px; line-height: 1; font-weight: 700;
+    }
     @media (prefers-reduced-motion: reduce) {
       #info-overlay.visible, #info-overlay.visible #info-panel, #info-body.swap { animation: none; }
       .hp-pan, .hp-grow, .hp-layer-a, .hp-stepper, .hp-pulse, .hp-spin { animation: none; }
@@ -756,7 +785,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-16 18:36:48</div>
+  <div id="build-timestamp">Built 2026-10-19 15:28:04</div>
 
   <div id="status-banner"></div>
 
@@ -1716,6 +1745,33 @@
         if (intro) look.unshift('<p class="info-intro"></p>');
         out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join(''), intro: intro });
 
+        if (isShown('prev-stop-btn')) {
+          out.push({
+            title: 'Move between stops',
+            icon: STEP_ICONS.stops,
+            stage: STAGES.stops,
+            body:
+              '<p>Use <b>Prev</b> and <b>Next</b> at the top left to step through the tour in order.</p>' +
+              '<p>The menu button beside them lists every stop, so you can jump straight to any one.</p>'
+          });
+        }
+
+        // Legend for the pin icons, so the three kinds of stop links can be told apart at a glance.
+        if (isShown('hotspots-toggle-btn')) {
+          out.push({
+            title: 'What the pins mean',
+            icon: STEP_ICONS.look,
+            stage: '<div class="hp-chips">' +
+              '<span class="hp-chip"><span class="hp-legend-dot">&#8599;</span>Ground</span>' +
+              '<span class="hp-chip"><span class="hp-legend-dot">&#9992;</span>Aerial</span>' +
+              '<span class="hp-chip"><span class="hp-legend-dot">&#8962;</span>Overview</span>' +
+              '</div>',
+            body:
+              '<p>Purple pins jump to another stop. The symbol shows what kind of photo you will land on: <b>Ground</b> is taken on foot, <b>Aerial</b> is a drone photo, and <b>Overview</b> is also a drone photo, taken from higher up to cover a larger part of the site.</p>' +
+              (isShown('prev-stop-btn') ? '<p>The stop menu marks aerial and overview stops with the same icons.</p>' : '')
+          });
+        }
+
         // A place photographed on several dates: explain the views its toolbar offers.
         var locBar = document.getElementById('loc-toolbar');
         if (locBar) {
@@ -1756,17 +1812,6 @@
                 ? '<p>Picking a stop zooms the map in to it. <b>\u25CE</b> turns that on or off, and <b>\u2725</b> zooms back out to the whole site.</p>'
                 : '') +
               '<p><b>Resize it:</b> drag the grip in the map\u2019s top left corner to make the map larger or smaller.</p>'
-          });
-        }
-
-        if (isShown('prev-stop-btn')) {
-          out.push({
-            title: 'Move between stops',
-            icon: STEP_ICONS.stops,
-            stage: STAGES.stops,
-            body:
-              '<p>Use <b>Prev</b> and <b>Next</b> at the top left to step through the tour in order.</p>' +
-              '<p>The menu button beside them lists every stop, so you can jump straight to any one.</p>'
           });
         }
 
