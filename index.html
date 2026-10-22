@@ -43,7 +43,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html { width: 100%; height: 100%; overflow: hidden; background: #0e1b33; font-family: sans-serif; }
 
-    #container { display: flex; width: 100vw; height: 100vh; position: relative; }
+    #container { display: flex; width: 100vw; height: 100vh; height: 100dvh; position: relative; }
 
     .pano-panel { flex: 1; height: 100%; position: relative; border-right: 2px solid #1b3f95; }
 
@@ -100,14 +100,14 @@
     #pano-right-wrapper.hidden { display: none; }
 
     #container.curtain-mode .pano-panel {
-      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
     }
     #container.curtain-mode #pano-right-wrapper {
-      position: absolute; top: 0; right: 0; left: auto; width: 50vw; height: 100vh;
+      position: absolute; top: 0; right: 0; left: auto; width: 50vw; height: 100vh; height: 100dvh;
       overflow: hidden; z-index: 5; border-left: 3px solid #019fc4;
     }
     #container.curtain-mode #pano-right {
-      position: absolute; top: 0; right: 0; left: auto; width: 100vw; height: 100vh;
+      position: absolute; top: 0; right: 0; left: auto; width: 100vw; height: 100vh; height: 100dvh;
     }
 
     #curtain-slider {
@@ -794,6 +794,33 @@
       .pano-label { font-size: 12px; padding: 5px 10px; max-width: 70vw; }
       #label-right { top: 52px; }
     }
+    /* A phone held sideways is wider than 700px, so the narrow screen rules above do not apply, yet it is only
+    about 350px tall. The full row of buttons then runs into Prev and Next on the left. Phones in landscape get
+    the same single menu button as a narrow screen, with the list opening as two columns so it fits the short
+    height. Only touch screens in landscape match, so a short desktop window keeps the normal row. */
+    @media (orientation: landscape) and (max-height: 540px) and (pointer: coarse) {
+      #control-bar { position: absolute; top: 8px; right: 12px; }
+      #control-bar-toggle {
+        display: flex; align-items: center; justify-content: center;
+        width: 42px; height: 42px; padding: 0; font-size: 20px; line-height: 1;
+      }
+      #control-bar-buttons {
+        display: none; position: absolute; top: 48px; right: 0;
+        grid-template-columns: repeat(2, max-content); gap: 6px;
+        max-height: calc(100vh - 64px); overflow-y: auto;
+        background: rgba(14, 27, 51, 0.95); border: 1px solid #019fc4;
+        border-radius: 8px; padding: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      }
+      #control-bar-buttons.open { display: grid; }
+      .ctrl-btn { padding: 9px 12px; font-size: 13px; }
+      .tour-nav-btn { top: 8px; height: 42px; padding: 0 10px; font-size: 13px; }
+      #tour-sidebar-toggle { top: 8px; width: 42px; height: 42px; font-size: 20px; }
+      #prev-stop-btn { left: 60px; }
+      #next-stop-btn { left: 136px; }
+      #tour-sidebar { top: 58px; max-height: calc(100vh - 70px); }
+      #site-map-panel { width: 36vw; height: 44vh; min-height: 120px; max-height: 190px; }
+      .hotspot-pin { width: 34px; height: 34px; }
+    }
     /* A quiet note, lower left, while the sharp photo of a stop downloads behind the soft one. */
     #hd-pill {
       position: fixed; left: 14px; bottom: 14px;
@@ -814,7 +841,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-22 13:22:10</div>
+  <div id="build-timestamp">Built 2026-10-22 14:42:12</div>
 
   <div id="status-banner"></div>
 
@@ -1655,6 +1682,13 @@
       }
     });
     document.getElementById('fullscreen-btn').addEventListener('click', () => toggleFullscreen());
+    // iPhone Safari has no full screen mode for a web page, so the button would do nothing there. Hide it.
+    (function () {
+      var el = document.documentElement;
+      var canFullscreen = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen ||
+                          el.mozRequestFullScreen || el.msRequestFullscreen;
+      if (!canFullscreen) document.getElementById('fullscreen-btn').style.display = 'none';
+    })();
     document.getElementById('reset-btn').addEventListener('click', () => resetViews());
 
     // -- help / info card ----------------------------------------------
@@ -5237,28 +5271,102 @@
           if (panZoomState.scale <= panZoomState.minScale * 1.001) { resetView(); return; }
           applyPanZoom(wrap);
         }, { passive: false });
+        // Touch: one finger pans, two fingers pinch to zoom (and pan with the midpoint), double tap zooms in or
+        // resets. All of it works through pointer events, so a mouse and a pen behave as before.
         var dragging = false, lastX = 0, lastY = 0;
+        var pointers = new Map();          // pointerId -> { x, y } for every finger or button down on the page
+        var pinchDist = 0, pinchMidX = 0, pinchMidY = 0;
+        var tapCandidate = false, tapDownX = 0, tapDownY = 0, lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+        var ignoreDblClickUntil = 0;       // some phones also send a double click after a double tap
+        function clampScale(v) { return Math.min(panZoomState.minScale * 10, Math.max(panZoomState.minScale, v)); }
+        function zoomAbout(mx, my, next) {
+          next = clampScale(next);
+          panZoomState.tx = mx - (mx - panZoomState.tx) * (next / panZoomState.scale);
+          panZoomState.ty = my - (my - panZoomState.ty) * (next / panZoomState.scale);
+          panZoomState.scale = next;
+        }
+        function firstTwo() {
+          var it = pointers.values();
+          return [it.next().value, it.next().value];
+        }
         body.addEventListener('pointerdown', e => {
           if (!panZoomState) return;
-          dragging = true; lastX = e.clientX; lastY = e.clientY;
-          body.setPointerCapture(e.pointerId);
-          body.classList.add('dragging');
+          pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          try { body.setPointerCapture(e.pointerId); } catch (err) {}
+          if (pointers.size === 1) {
+            dragging = true; lastX = e.clientX; lastY = e.clientY;
+            tapCandidate = true; tapDownX = e.clientX; tapDownY = e.clientY;
+            body.classList.add('dragging');
+          } else if (pointers.size === 2) {
+            dragging = false; tapCandidate = false;
+            var two = firstTwo();
+            pinchDist = Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y) || 1;
+            pinchMidX = (two[0].x + two[1].x) / 2; pinchMidY = (two[0].y + two[1].y) / 2;
+          }
         });
         body.addEventListener('pointermove', e => {
-          if (!dragging || !panZoomState) return;
+          if (!panZoomState || !pointers.has(e.pointerId)) return;
+          pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (pointers.size >= 2) {
+            var two = firstTwo();
+            var dist = Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y) || 1;
+            var midX = (two[0].x + two[1].x) / 2, midY = (two[0].y + two[1].y) / 2;
+            var rect = body.getBoundingClientRect();
+            zoomAbout(pinchMidX - rect.left, pinchMidY - rect.top, panZoomState.scale * (dist / pinchDist));
+            panZoomState.tx += midX - pinchMidX;
+            panZoomState.ty += midY - pinchMidY;
+            pinchDist = dist; pinchMidX = midX; pinchMidY = midY;
+            if (panZoomState.scale <= panZoomState.minScale * 1.001) resetView(); else applyPanZoom(wrap);
+            return;
+          }
+          if (!dragging) return;
+          if (tapCandidate && Math.hypot(e.clientX - tapDownX, e.clientY - tapDownY) > 8) tapCandidate = false;
           panZoomState.tx += e.clientX - lastX;
           panZoomState.ty += e.clientY - lastY;
           lastX = e.clientX; lastY = e.clientY;
           applyPanZoom(wrap);
         });
-        ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => body.addEventListener(ev, () => {
-          dragging = false;
-          body.classList.remove('dragging');
-        }));
+        var endPointer = function (e) {
+          var wasTap = tapCandidate && e.type === 'pointerup' && e.pointerType !== 'mouse';
+          pointers.delete(e.pointerId);
+          if (pointers.size === 1) {
+            // One finger lifted after a pinch: carry on panning with the other without a jump.
+            var rest = pointers.values().next().value;
+            dragging = true; lastX = rest.x; lastY = rest.y; tapCandidate = false;
+          } else if (pointers.size === 0) {
+            dragging = false;
+            body.classList.remove('dragging');
+          }
+          if (wasTap && panZoomState) {
+            var now = Date.now();
+            if (now - lastTapTime < 350 && Math.hypot(e.clientX - lastTapX, e.clientY - lastTapY) < 40) {
+              // Second tap: zoom in around the tap, or go back to the whole page if already zoomed.
+              if (panZoomState.scale > panZoomState.minScale * 1.05) {
+                resetView();
+              } else {
+                var rect2 = body.getBoundingClientRect();
+                zoomAbout(e.clientX - rect2.left, e.clientY - rect2.top, panZoomState.minScale * 3);
+                applyPanZoom(wrap);
+              }
+              lastTapTime = 0;
+              ignoreDblClickUntil = Date.now() + 600;
+            } else {
+              lastTapTime = now; lastTapX = e.clientX; lastTapY = e.clientY;
+            }
+          }
+        };
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => body.addEventListener(ev, endPointer));
         body.addEventListener('dblclick', () => {
-          if (!panZoomState) return;
+          if (!panZoomState || Date.now() < ignoreDblClickUntil) return;
           resetView();
         });
+        // The hint in the caption bar names the gestures for the kind of screen this is.
+        try {
+          var zoomHint = document.getElementById('flat-stop-zoom-hint');
+          if (zoomHint && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+            zoomHint.textContent = 'Drag to pan \u00b7 pinch to zoom \u00b7 double tap to zoom in or reset';
+          }
+        } catch (err) {}
       }
 
       function loadStop(rawId) {
