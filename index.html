@@ -264,7 +264,7 @@
       background-repeat: no-repeat;
     }
 
-    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn {
+    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn, #site-map-locate-btn, #site-map-measure-btn {
       position: absolute; z-index: 1600; top: 8px;
       width: 30px; height: 30px; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2);
       background: #fff; color: #333; font-size: 15px; line-height: 1;
@@ -275,7 +275,41 @@
     #site-map-follow-btn { right: 116px; font-size: 17px; }
     #site-map-follow-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
     #site-map-basemap-btn { right: 80px; font-size: 16px; display: none; }
-    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover, #site-map-follow-btn:hover { background: #f4f4f4; }
+    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover, #site-map-follow-btn:hover, #site-map-locate-btn:hover, #site-map-measure-btn:hover { background: #f4f4f4; }
+    /* Measure tool: desktop only, the far left button of the top row. */
+    #site-map-measure-btn { right: 152px; }
+    #site-map-measure-btn.armed { background: #ffb84d; color: #1a1a1a; border-color: #ffb84d; }
+    #site-map-measure-btn.armed:hover { background: #ffb84d; }
+    #site-map.measuring, #site-map.measuring .leaflet-interactive { cursor: crosshair !important; }
+    #site-map-measure-box {
+      display: none; position: absolute; left: 8px; right: 8px; bottom: 30px; z-index: 1700;
+      background: rgba(14, 27, 51, 0.94); color: #ffffff; border: 1px solid #ffb84d; border-radius: 6px;
+      padding: 6px 8px; font-size: 12px; line-height: 1.35;
+    }
+    #site-map-measure-readout { margin-bottom: 5px; }
+    #site-map-measure-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+    #site-map-measure-actions button {
+      background: #1b3f95; color: #ffffff; border: 1px solid rgba(255,255,255,0.25); border-radius: 3px;
+      padding: 2px 7px; font-size: 11px; cursor: pointer;
+    }
+    #site-map-measure-actions button:hover { background: #019fc4; }
+    #site-map-measure-actions button.on { background: #ffb84d; color: #1a1a1a; border-color: #ffb84d; }
+    /* "You are here": touch screens only (the phone is what is standing in the field). It takes the slot in the
+    top row that the zoom to point tool has on a desktop, a tool touch screens do not need because pinching zooms
+    and a tap on the map already works. */
+    #site-map-locate-btn { display: none; right: 44px; }
+    #site-map-locate-btn.armed { background: #2a7fff; color: #fff; border-color: #2a7fff; }
+    #site-map-locate-btn.armed:hover { background: #2a7fff; }
+    @media (pointer: coarse) {
+      #site-map-locate-btn { display: flex; }
+      #site-map-zoomto-btn { display: none; }
+      #site-map-measure-btn, #site-map-measure-box { display: none !important; }
+    }
+    #site-map-toast {
+      display: none; position: absolute; left: 8px; right: 8px; bottom: 28px; z-index: 1700; pointer-events: none;
+      background: rgba(14, 27, 51, 0.92); color: #ffffff; font-size: 12px; line-height: 1.35;
+      padding: 6px 8px; border-radius: 4px; border: 1px solid #019fc4;
+    }
     #site-map-follow-btn.armed:hover { background: #019fc4; }
     /* Leaflet's own layers control (added for overlays -- see
     ensureMapInitialized) defaults to the same top-right corner as the
@@ -841,7 +875,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-22 14:42:12</div>
+  <div id="build-timestamp">Built 2026-10-22 15:32:17</div>
 
   <div id="status-banner"></div>
 
@@ -934,6 +968,18 @@
       <button id="site-map-zoomto-btn" type="button" title="Zoom to point (click, then click the map)">&#8982;</button>
       <button id="site-map-basemap-btn" type="button" title="Toggle basemap">&#128506;</button>
       <button id="site-map-follow-btn" type="button" title="Zoom the map to each stop when it is selected (click to turn on or off)">&#9678;</button>
+      <button id="site-map-locate-btn" type="button" title="Show where you are on the map (tap again to stop)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></button>
+      <button id="site-map-measure-btn" type="button" title="Measure distance or area on the map (click points, Esc to finish)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg></button>
+      <div id="site-map-measure-box">
+        <div id="site-map-measure-readout"></div>
+        <div id="site-map-measure-actions">
+          <button type="button" data-measure-mode="distance" class="on">Distance</button>
+          <button type="button" data-measure-mode="area">Area</button>
+          <button type="button" id="site-map-measure-undo">Undo</button>
+          <button type="button" id="site-map-measure-clear">Clear</button>
+        </div>
+      </div>
+      <div id="site-map-toast"></div>
     </div>
 
     <div id="edit-tools-panel" style="display:none;">
@@ -3701,6 +3747,8 @@
           L.control.layers(null, overlayLayers, { collapsed: true }).addTo(siteMap);
         }
       }
+      // Scale bar, metric and imperial, lower left.
+      L.control.scale({ position: 'bottomleft', metric: true, imperial: true, maxWidth: 90 }).addTo(siteMap);
       // Resizing the panel (see the CSS `resize: both`) changes
       // #site-map's dimensions, but Leaflet only measures its
       // container once at creation -- without this, tiles stay
@@ -3710,7 +3758,202 @@
         new ResizeObserver(() => siteMap.invalidateSize()).observe(siteMapPanel);
       }
       wireZoomToPoint();
+      wireMeasure();
     }
+
+    // -- measure tool (desktop) -------------------------------------------------
+    // Click the ruler button, then click points on the map (or on stop pins, which snap to the stop's position).
+    // Distance mode shows the length of the line; Area mode closes it into a polygon and shows its area and
+    // perimeter. Metric and imperial are shown together. Esc, or the ruler button again, finishes and clears.
+    var measureActive = false, measureMode = 'distance', measurePoints = [], measureLayer = null;
+    function measureDist(m) {
+      var ft = m * 3.28084;
+      var metric = m >= 1000 ? (m / 1000).toFixed(2) + ' km' : (m < 100 ? m.toFixed(1) : Math.round(m)) + ' m';
+      var imp = ft >= 5280 ? (ft / 5280).toFixed(2) + ' mi' : Math.round(ft) + ' ft';
+      return metric + ' (' + imp + ')';
+    }
+    function measureAreaText(a) {
+      var metric = a >= 10000 ? (a / 10000).toFixed(2) + ' ha' : Math.round(a).toLocaleString() + ' m\u00b2';
+      var ac = a / 4046.8564224;
+      var imp = ac >= 0.1 ? ac.toFixed(2) + ' ac' : Math.round(a * 10.7639).toLocaleString() + ' ft\u00b2';
+      return metric + ' (' + imp + ')';
+    }
+    function measureGeodesicArea(pts) {
+      // Area on the sphere, in square metres. Fine for the few hundred metres to few kilometres drawn here.
+      if (pts.length < 3) return 0;
+      var d2r = Math.PI / 180, area = 0;
+      for (var i = 0; i < pts.length; i++) {
+        var p1 = pts[i], p2 = pts[(i + 1) % pts.length];
+        area += ((p2.lng - p1.lng) * d2r) * (2 + Math.sin(p1.lat * d2r) + Math.sin(p2.lat * d2r));
+      }
+      return Math.abs(area * 6378137.0 * 6378137.0 / 2.0);
+    }
+    function measureLength(pts, closed) {
+      var total = 0;
+      for (var i = 1; i < pts.length; i++) total += pts[i - 1].distanceTo(pts[i]);
+      if (closed && pts.length > 2) total += pts[pts.length - 1].distanceTo(pts[0]);
+      return total;
+    }
+    function measureRedraw() {
+      if (!siteMap) return;
+      if (!measureLayer) measureLayer = L.layerGroup().addTo(siteMap);
+      measureLayer.clearLayers();
+      var style = { color: '#ffb84d', weight: 3, interactive: false };
+      if (measureMode === 'area' && measurePoints.length > 2) {
+        L.polygon(measurePoints, Object.assign({ fillColor: '#ffb84d', fillOpacity: 0.2 }, style)).addTo(measureLayer);
+      } else if (measurePoints.length > 1) {
+        L.polyline(measurePoints, style).addTo(measureLayer);
+      }
+      measurePoints.forEach(function (ll) {
+        L.circleMarker(ll, { radius: 4, color: '#ffb84d', weight: 2, fillColor: '#ffffff', fillOpacity: 1, interactive: false })
+          .addTo(measureLayer);
+      });
+      var readout = document.getElementById('site-map-measure-readout');
+      if (measureMode === 'area') {
+        readout.textContent = measurePoints.length < 3
+          ? 'Click at least three points to outline an area.'
+          : 'Area ' + measureAreaText(measureGeodesicArea(measurePoints)) + ' \u00b7 perimeter ' + measureDist(measureLength(measurePoints, true));
+      } else {
+        readout.textContent = measurePoints.length < 2
+          ? 'Click the map or a stop to start measuring.'
+          : 'Distance ' + measureDist(measureLength(measurePoints, false)) + ' \u00b7 ' + measurePoints.length + ' points';
+      }
+      document.querySelectorAll('#site-map-measure-actions [data-measure-mode]').forEach(function (b) {
+        b.classList.toggle('on', b.getAttribute('data-measure-mode') === measureMode);
+      });
+    }
+    function setMeasureActive(on) {
+      measureActive = on;
+      var btn = document.getElementById('site-map-measure-btn');
+      var box = document.getElementById('site-map-measure-box');
+      btn.classList.toggle('armed', on);
+      box.style.display = on ? 'block' : 'none';
+      document.getElementById('site-map').classList.toggle('measuring', on);
+      if (siteMap) { if (on) siteMap.doubleClickZoom.disable(); else siteMap.doubleClickZoom.enable(); }
+      if (on) {
+        if (typeof setZoomToArmed === 'function') setZoomToArmed(false);
+        measureRedraw();
+      } else {
+        measurePoints = [];
+        if (measureLayer) measureLayer.clearLayers();
+      }
+    }
+    function measureAddPoint(ll) {
+      measurePoints.push(L.latLng(ll));
+      measureRedraw();
+    }
+    function measureHandleMarkerClick(ll) {
+      if (!measureActive) return false;
+      measureAddPoint(ll);
+      return true;
+    }
+    function wireMeasure() {
+      if (!siteMap) return;
+      L.DomEvent.disableClickPropagation(document.getElementById('site-map-measure-box'));
+      siteMap.on('click', function (e) {
+        if (!measureActive || zoomToArmed) return;
+        measureAddPoint(e.latlng);
+      });
+    }
+    (function () {
+      var btn = document.getElementById('site-map-measure-btn');
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        ensureMapInitialized();
+        setMeasureActive(!measureActive);
+      });
+      document.getElementById('site-map-measure-undo').addEventListener('click', function () {
+        measurePoints.pop();
+        measureRedraw();
+      });
+      document.getElementById('site-map-measure-clear').addEventListener('click', function () {
+        measurePoints = [];
+        measureRedraw();
+      });
+      document.querySelectorAll('#site-map-measure-actions [data-measure-mode]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          measureMode = b.getAttribute('data-measure-mode');
+          measureRedraw();
+        });
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && measureActive) setMeasureActive(false);
+      });
+    })();
+
+    // -- "you are here" (touch screens) -------------------------------------
+    // Tap to show a blue dot with an accuracy circle that follows the phone; tap again to stop. The first fix
+    // moves the map to you, unless you are far from every stop in the tour (say, still at the office), in which
+    // case it only says how far away you are and leaves the map alone.
+    (function () {
+      var btn = document.getElementById('site-map-locate-btn');
+      var toastEl = document.getElementById('site-map-toast');
+      if (!btn) return;
+      if (!navigator.geolocation) { btn.style.display = 'none'; return; }
+      var watchId = null, dot = null, ring = null, firstFix = true, toastTimer = null;
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.style.display = 'block';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.style.display = 'none'; }, 5000);
+      }
+      function stopLocating() {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        if (siteMap) {
+          if (dot) siteMap.removeLayer(dot);
+          if (ring) siteMap.removeLayer(ring);
+        }
+        dot = ring = null; firstFix = true;
+        btn.classList.remove('armed');
+      }
+      function nearestStopMeters(ll) {
+        var sites = (pendingMapData && pendingMapData.sites) || [];
+        var best = null;
+        sites.forEach(function (s) {
+          if (s.lat == null || s.lng == null) return;
+          var d = L.latLng(ll).distanceTo(L.latLng(s.lat, s.lng));
+          if (best === null || d < best) best = d;
+        });
+        return best;
+      }
+      function onFix(pos) {
+        if (!siteMap) return;
+        var ll = [pos.coords.latitude, pos.coords.longitude];
+        var acc = pos.coords.accuracy || 0;
+        if (!dot) {
+          ring = L.circle(ll, { radius: acc, interactive: false, color: '#2a7fff', weight: 1,
+                                fillColor: '#2a7fff', fillOpacity: 0.12 }).addTo(siteMap);
+          dot = L.circleMarker(ll, { radius: 8, color: '#ffffff', weight: 3, fillColor: '#2a7fff',
+                                     fillOpacity: 1, interactive: false }).addTo(siteMap);
+        } else {
+          ring.setLatLng(ll); ring.setRadius(acc); dot.setLatLng(ll);
+        }
+        if (firstFix) {
+          firstFix = false;
+          var near = nearestStopMeters(ll);
+          if (near !== null && near > 5000) {
+            toast('You are about ' + (near / 1000).toFixed(near > 20000 ? 0 : 1) + ' km from the nearest stop.');
+          } else {
+            siteMap.setView(ll, Math.max(siteMap.getZoom(), 17));
+          }
+        }
+      }
+      function onError(err) {
+        stopLocating();
+        toast(err && err.code === 1
+          ? 'Location is turned off for this page. Allow it in your browser settings to use this.'
+          : 'Could not find your location. Try again outdoors.');
+      }
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (watchId !== null) { stopLocating(); return; }
+        ensureMapInitialized();
+        btn.classList.add('armed');
+        watchId = navigator.geolocation.watchPosition(onFix, onError,
+          { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+      });
+    })();
 
     var lastMapFit = null;
     document.getElementById('site-map-fit-btn').addEventListener('click', (e) => {
@@ -3738,6 +3981,7 @@
     zoomToBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!siteMap) return;
+      if (typeof measureActive !== 'undefined' && measureActive) setMeasureActive(false);
       setZoomToArmed(!zoomToArmed);
     });
 
@@ -3841,6 +4085,8 @@
           m.bindTooltip(escapeHtml(s.display_name || s.site_id), { direction: 'top', className: 'stop-tooltip', opacity: 1 });
           if (isActive) m.setZIndexOffset(1000);
           m.on('click', () => {
+            // While measuring, a click on a stop pin adds that stop's position to the measurement instead.
+            if (typeof measureHandleMarkerClick === 'function' && measureHandleMarkerClick(m.getLatLng())) return;
             m.openTooltip();
             if (tourLoadStopFn) tourLoadStopFn(s.site_id);
           });
