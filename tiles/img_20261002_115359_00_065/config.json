@@ -14,12 +14,23 @@
     {
       "yaw": 1.4625714477065161,
       "pitch": 0.0,
-      "title": "Stop 28",
+      "title": "Stop 28 \u00b7 47 m",
       "text": "",
       "link": "",
       "category": "link",
       "pin_style": "label_hover",
       "target": "img_20261002_115615_00_066",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 4.849797404807609,
+      "pitch": 0.0,
+      "title": "Stop 26 \u00b7 98 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_114823_00_064",
       "link_icon": "ground"
     }
   ],

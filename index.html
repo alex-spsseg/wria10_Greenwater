@@ -171,6 +171,14 @@
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
     #flat-stop-caption-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* In a tour the menu button and Prev/Next sit in the top left, and the control bar sits in the top right,
+    both floating over this bar. Keep the caption between them so its text is never printed underneath. */
+    body.is-tour #flat-stop-caption { padding-left: 224px; padding-right: 400px; }
+    @media (max-width: 700px) {
+      /* Narrow screens: drop the caption below the button row instead of squeezing it between them. */
+      body.is-tour #flat-stop-caption { padding: 52px 14px 10px; }
+      body.is-tour #flat-stop-zoom-hint { display: none; }
+    }
     #flat-stop-zoom-hint { flex: none; font-size: 11px; font-weight: 400; color: #9fb2cc; }
     /* Hidden by default -- shown (display:flex) only for a PDF with
     more than one page, see renderFlatPdf/updatePageNavUI. */
@@ -533,6 +541,12 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z'/%3E%3C/svg%3E");
       background-size: 58%; background-repeat: no-repeat; background-position: center;
     }
+    /* Float / raft stops (a stop whose platform is "float", or a link set to the Float icon). */
+    .hotspot-pin.hotspot-cat-link.hotspot-link-float::after {
+      content: ''; width: 100%; height: 100%; font-size: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z'/%3E%3C/svg%3E");
+      background-size: 62%; background-repeat: no-repeat; background-position: center;
+    }
     .hotspot-pin.hotspot-cat-photo::after {
       content: '';
       width: 100%; height: 100%;
@@ -726,9 +740,9 @@
     .esri-pt { background: none; border: none; display: flex; align-items: center; justify-content: center; }
     .esri-label { background: none; border: none; box-shadow: none; padding: 0; font-weight: 600; font-size: 12px; }
     .esri-label::before { display: none; }
-    .leaflet-tooltip.stop-tooltip { background: #0e1b33; color: #ffffff; border: 1px solid #019fc4; border-radius: 4px;
-      padding: 4px 8px; font-size: 12px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-    .leaflet-tooltip-top.stop-tooltip::before { border-top-color: #019fc4; }
+    .leaflet-tooltip.stop-tooltip { background: rgba(14, 27, 51, 0.82); color: #ffffff; border: none; border-radius: 3px;
+      padding: 2px 6px; font-size: 11px; font-weight: 600; line-height: 1.3; box-shadow: none; pointer-events: none; }
+    .leaflet-tooltip-top.stop-tooltip::before { display: none; }
     /* Local preview only: a fixed slot ahead of the icon, so a check mark never shifts the names. */
     body.hdg-local .tour-stop-link::before { content: ''; display: inline-block; flex: none; width: 16px; }
     body.hdg-local .tour-stop-link.hdg-done::before { content: '\2713'; color: #7CFC9A; font-weight: bold; text-align: center; }
@@ -800,7 +814,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-21 10:17:59</div>
+  <div id="build-timestamp">Built 2026-10-22 12:59:37</div>
 
   <div id="status-banner"></div>
 
@@ -916,6 +930,7 @@
         <label style="margin-left:6px;"><input type="checkbox" id="link-all-overview" checked> Overview</label>
         <label style="margin-left:6px;"><input type="checkbox" id="link-all-aerial" checked> Aerial</label>
         <label style="margin-left:6px;"><input type="checkbox" id="link-all-ground" checked> Ground</label>
+        <label style="margin-left:6px;"><input type="checkbox" id="link-all-float" checked> Float</label>
         <div style="margin-top:6px;">Within
           <input type="number" id="link-all-maxdist" min="1" step="10" placeholder="any" style="width:62px; margin:0 4px; background:#0A1428; color:#fff; border:1px solid #5b3a8c; border-radius:4px; padding:2px 4px;"> m
         </div>
@@ -1427,7 +1442,10 @@
       var isLink = spot.category === 'link';
       var autoAerial = isLink && spot.target && (!spot.link_icon || spot.link_icon === 'ground') &&
                        isAerialSite(spot.target);
+      var autoFloat = isLink && spot.target && (!spot.link_icon || spot.link_icon === 'ground') &&
+                      isFloatSite(spot.target);
       el.classList.toggle('hotspot-link-aerial', isLink && (spot.link_icon === 'aerial' || !!autoAerial));
+      el.classList.toggle('hotspot-link-float', isLink && (spot.link_icon === 'float' || !!autoFloat));
       el.classList.toggle('hotspot-link-overview', isLink && spot.link_icon === 'overview');
     }
 
@@ -1780,6 +1798,8 @@
               '<span class="hp-chip"><span class="hp-legend-dot"><svg viewBox="0 0 24 24"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg></span>Ground</span>' +
               '<span class="hp-chip"><span class="hp-legend-dot"><svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></span>Aerial</span>' +
               '<span class="hp-chip"><span class="hp-legend-dot"><svg viewBox="0 0 24 24"><path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/></svg></span>Overview</span>' +
+              (((typeof tourSiteOptions !== 'undefined' && tourSiteOptions) || []).some(function (x) { return x.platform === 'float'; })
+                ? '<span class="hp-chip"><span class="hp-legend-dot"><svg viewBox="0 0 24 24"><path d="M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z"/></svg></span>Float</span>' : '') +
               '</div>',
             body:
               '<p>Purple pins jump to another stop. The symbol shows what kind of photo you will land on: <b>Ground</b> is taken on foot, <b>Aerial</b> is a drone photo, and <b>Overview</b> is also a drone photo, taken from higher up to cover a larger part of the site.</p>' +
@@ -2653,15 +2673,118 @@
     // individual site's basemap.
     var pendingMapData = null;
 
+    // Zoom limits that follow the tile caches actually loaded. An Esri tile service lists its
+    // cached levels at <service>?f=json (tileInfo.lods). The deepest cached level becomes that
+    // layer's maxNativeZoom (so Leaflet stretches the last real tiles instead of asking for
+    // missing ones), and the map may zoom OVERZOOM_LEVELS past the deepest cache of any layer.
+    // Until the service answers, layers keep the old behaviour (no native cap, zoom up to 22).
+    var OVERZOOM_LEVELS = 0;      // levels of stretch allowed past the deepest cached level (0 = stop at the last cached level)
+    var TILE_ABS_MAX_ZOOM = 21;   // hard navigation boundary: the map never zooms past this level, whatever a service reports
+    var tileNativeMax = 0;
+    var TILE_HARD_CEILING = 24;   // no layer setting can raise the map past this
+    var XYZ_NATIVE_MAX_ZOOM = 20; // deepest real level assumed for plain XYZ basemaps such as Google satellite
+    // Pins a tile layer to its last real level and sets the map's zoom boundary from the deepest layer.
+    var tileTopLayers = [];
+    function applyTileTop(layer, top) {
+      top = Math.min(top, TILE_HARD_CEILING);
+      layer.options.maxNativeZoom = top;
+      layer.options.maxZoom = TILE_HARD_CEILING;
+      layer._lodTop = top;
+      if (tileTopLayers.indexOf(layer) < 0) tileTopLayers.push(layer);
+      tileNativeMax = 0;
+      tileTopLayers.forEach(function (l) { tileNativeMax = Math.max(tileNativeMax, l._lodTop); });
+      if (siteMap) siteMap.setMaxZoom(Math.min(tileNativeMax + OVERZOOM_LEVELS, TILE_HARD_CEILING));
+      if (layer._map) layer.redraw();
+    }
+
+    // Finds the deepest level that really has tiles. A tile service's level list covers the whole tiling
+    // scheme (down to 23) whatever was cached, but the service's tilemap endpoint says which tiles exist.
+    // Checks a 9x9 block of tiles around five spots in the layer's extent, per level, and binary searches
+    // the levels. Resolves to null when the service can't answer (no Tilemap capability, odd projection...).
+    function probeCachedMaxLevel(root, meta) {
+      try {
+        var ti = meta.tileInfo, ext = meta.fullExtent || meta.initialExtent;
+        if (!window.fetch || !ti || !ti.lods || !ti.origin || !ext) return Promise.resolve(null);
+        if (!/tilemap/i.test(String(meta.capabilities || ''))) return Promise.resolve(null);
+        var wkid = ext.spatialReference && (ext.spatialReference.latestWkid || ext.spatialReference.wkid);
+        if ([102100, 102113, 3857, 900913].indexOf(wkid) < 0) return Promise.resolve(null);
+        var size = ti.rows || 256, HALF = 4;
+        var res = {};
+        ti.lods.forEach(function (l) { res[l.level] = l.resolution; });
+        var levels = ti.lods.map(function (l) { return l.level; }).sort(function (a, b) { return a - b; });
+        var spots = [[0.5, 0.5], [0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]].map(function (f) {
+          return [ext.xmin + (ext.xmax - ext.xmin) * f[0], ext.ymin + (ext.ymax - ext.ymin) * f[1]];
+        });
+        var hasTiles = function (level) {
+          return Promise.all(spots.map(function (p) {
+            var col = Math.max(0, Math.floor((p[0] - ti.origin.x) / (res[level] * size)) - HALF);
+            var row = Math.max(0, Math.floor((ti.origin.y - p[1]) / (res[level] * size)) - HALF);
+            var n = HALF * 2 + 1;
+            return fetch(root + '/tilemap/' + level + '/' + row + '/' + col + '/' + n + '/' + n + '?f=json')
+              .then(function (r) { return r.ok ? r.json() : null; })
+              .then(function (j) { return !!(j && j.data && j.data.some(function (v) { return v === 1; })); })
+              .catch(function () { return false; });
+          })).then(function (all) { return all.some(Boolean); });
+        };
+        var lo = 0, hi = levels.length - 1, best = -1;
+        var step = function () {
+          if (lo > hi) return Promise.resolve(best >= 0 ? levels[best] : null);
+          var mid = (lo + hi) >> 1;
+          return hasTiles(levels[mid]).then(function (ok) {
+            if (ok) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+            return step();
+          });
+        };
+        return step();
+      } catch (e) { return Promise.resolve(null); }
+    }
+
+    // fixedMax: a "Max zoom" set on the layer in the publisher. It is trusted as is (no service lookup).
+    // Blank: ask the service which tiles exist (probeCachedMaxLevel); if it can't say, fall back to its
+    // level list, which over-reports, so that fallback is held to TILE_ABS_MAX_ZOOM.
+    function applyEsriTileLods(layer, url, fixedMax) {
+      try {
+        var fixed = Number(fixedMax);
+        if (fixedMax !== undefined && fixedMax !== null && fixedMax !== '' && isFinite(fixed) && fixed >= 0) {
+          applyTileTop(layer, Math.round(fixed));
+          return;
+        }
+        var m = /^(.*?)\/tile\/\{z\}\/\{y\}\/\{x\}/.exec(String(url || ''));
+        if (!m || !window.fetch) return;
+        fetch(m[1] + '?f=json')
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (meta) {
+            var lods = meta && meta.tileInfo && meta.tileInfo.lods;
+            if (!lods || !lods.length) return;
+            return probeCachedMaxLevel(m[1], meta).then(function (found) {
+              if (found !== null && isFinite(found)) { applyTileTop(layer, found); return; }
+              var top = Math.max.apply(null, lods.map(function (l) { return l.level; }));
+              if (typeof meta.maxLOD === 'number' && isFinite(meta.maxLOD)) top = Math.min(top, meta.maxLOD);
+              if (!isFinite(top)) return;
+              applyTileTop(layer, Math.min(top, TILE_ABS_MAX_ZOOM));
+            });
+          })
+          .catch(function () {});
+      } catch (e) {}
+    }
+
     function buildBaseLayer(basemapType, basemapUrl) {
       if ((basemapType === 'esri_tile' || basemapType === 'xyz_tile') && basemapUrl) {
-        return L.tileLayer(basemapUrl, { maxZoom: 22, attribution: 'Imagery: SPSSEG' });
+        var baseTiles = L.tileLayer(basemapUrl, { maxZoom: TILE_ABS_MAX_ZOOM, attribution: 'Imagery: SPSSEG' });
+        if (/\/tile\/\{z\}\/\{y\}\/\{x\}/.test(basemapUrl)) {
+          applyEsriTileLods(baseTiles, basemapUrl);
+        } else {
+          // Plain {z}/{x}/{y} sources (Google satellite and the like) have no metadata to ask, and they
+          // return nothing past their last real level, which showed as gray. Stretch from this level instead.
+          baseTiles.options.maxNativeZoom = XYZ_NATIVE_MAX_ZOOM;
+        }
+        return baseTiles;
       }
       if (basemapType === 'esri_image' && basemapUrl && window.L && L.esri && L.esri.imageMapLayer) {
         return L.esri.imageMapLayer({ url: basemapUrl, attribution: 'Imagery: SPSSEG' });
       }
       return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
+        maxNativeZoom: 19, maxZoom: TILE_ABS_MAX_ZOOM,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>',
       });
     }
@@ -2699,13 +2822,37 @@
       var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
       return !!(opt && opt.overview);
     }
+    // Material "directions boat", marking float / raft stops.
+    var BOAT_PATH = 'M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99 2.52 1.29 5.48 1.29 8 0 1.26.65 2.62.99 4 .99h2v-2h-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42c-.26.08-.48.26-.6.5s-.15.52-.06.78L3.95 19zM6 6h12v3.97L12 8 6 9.97V6z';
+    function isFloatSite(sid) {
+      var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
+      return !!(opt && opt.platform === 'float');
+    }
+    // The name shown for a stop inside a tour. Always the tour's own label for the stop (the same name as the
+    // sidebar), never the photo's file name: a config label that looks like an image name (DJI_..., IMG_...,
+    // or ending .jpg) is ignored. Falls back to the other candidates in order, then to an empty string.
+    function looksLikeImageName(x) {
+      var t = String(x == null ? '' : x).trim();
+      return /^(DJI|IMG|PXL|PANO)_/i.test(t) || /\.(jpe?g|png|tiff?|webp)$/i.test(t);
+    }
+    function tourStopLabel(sid, sidebarText, configLabel) {
+      var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
+      var candidates = [opt && opt.display_name, sidebarText, configLabel];
+      for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i] == null ? '' : String(candidates[i]).trim();
+        if (c && !looksLikeImageName(c)) return c;
+      }
+      return '';
+    }
     function isAerialSite(sid) {
       var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
       var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
       return !!(opt && opt.platform === 'aerial');
     }
 
-    function buildMarkerIcon(active, aerial, overview) {
+    function buildMarkerIcon(active, aerial, overview, float) {
       var size = active ? 30 : 22;
       var color = active ? '#019fc4' : '#3f5a78';
       return L.divIcon({
@@ -2718,6 +2865,8 @@
                 ? '<path transform="translate(5.5 5.5) scale(0.55)" d="' + HOME_PATH + '" fill="#fff"/>'
                 : aerial
                 ? '<path transform="translate(5.5 5.5) scale(0.55)" d="' + AIRPLANE_PATH + '" fill="#fff"/>'
+                : float
+                ? '<path transform="translate(5.5 5.4) scale(0.55)" d="' + BOAT_PATH + '" fill="#fff"/>'
                 : '<path transform="translate(4.6 4.4) scale(0.64)" d="' + WALK_PATH + '" fill="#fff"/>') + '</svg>',
         iconSize: [size, Math.round(size * 1.33)],
         iconAnchor: [size / 2, Math.round(size * 1.33)],
@@ -3185,7 +3334,7 @@
       Object.keys(tourMarkersBySite).forEach(sid => {
         var m = tourMarkersBySite[sid];
         var active = sid === activeTourSiteId;
-        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid)));
+        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid)));
         if (active) m.setZIndexOffset(1000);
       });
       // Cluster icons are separate from the child markers' own icons,
@@ -3332,7 +3481,7 @@
 
     function ensureMapInitialized() {
       if (siteMap || typeof L === 'undefined') return;
-      siteMap = L.map('site-map', { attributionControl: true }).setView([0, 0], 2);
+      siteMap = L.map('site-map', { attributionControl: true, maxZoom: TILE_ABS_MAX_ZOOM }).setView([0, 0], 2);
       var basemapType = pendingMapData ? pendingMapData.basemapType : 'osm';
       var basemapUrl = pendingMapData ? pendingMapData.basemapUrl : '';
       osmLayer = buildBaseLayer('osm', '');
@@ -3401,12 +3550,23 @@
             var serviceRenderer = null;
             var labelInfo = null; // { expr, color, halo }
             var flatColor = o.color || '#019FC4';
+            // A line is never filled. Without this, a line layer whose saved symbol is a fill (or any style that
+            // carries a fill color) gets its path closed and shaded, so it reads as a polygon.
+            var isLineFeature = function (feature) {
+              var gt = feature && feature.geometry && feature.geometry.type;
+              return gt === 'LineString' || gt === 'MultiLineString';
+            };
             var styleFn = function (feature) {
+              var out;
               if (!o.color && serviceRenderer) {
-                var st = esriRendererStyle(serviceRenderer, feature && feature.properties, opacity);
-                if (st) return st;
+                out = esriRendererStyle(serviceRenderer, feature && feature.properties, opacity);
               }
-              return { color: flatColor, weight: 2, fillColor: flatColor, fillOpacity: opacity * 0.35, opacity: opacity };
+              if (!out) out = { color: flatColor, weight: 2, fillColor: flatColor, fillOpacity: opacity * 0.35, opacity: opacity };
+              if (isLineFeature(feature)) {
+                out = Object.assign({}, out, { fill: false, fillOpacity: 0 });
+                if (!out.weight) out.weight = 2;   // a line symbol drawn as a zero width outline would vanish
+              }
+              return out;
             };
             layerOpts.style = styleFn;
             var markerFor = function (feature, latlng) {
@@ -3498,6 +3658,7 @@
             }
           } else {
             layer = L.tileLayer(o.url, { maxZoom: 22, opacity: opacity, attribution: 'Imagery: SPSSEG', pane: paneName });
+            applyEsriTileLods(layer, o.url, o.max_zoom);
           }
           overlayLayers[o.label || 'Overlay'] = layer;
           if (o.default_on !== false) layer.addTo(siteMap);
@@ -3603,6 +3764,14 @@
       window.addEventListener('touchend', end);
     })();
 
+    // The inset map opens fitted to every stop, unless that fit would be zoomed out below MAP_FIT_MIN_ZOOM (the
+    // tour is spread over a long reach, so all you would see is a few cluster bubbles). Then it opens at
+    // MAP_START_ZOOM centred on the current stop instead. The Fit button always zooms out to everything.
+    // At 300 px wide, zoom 15 is roughly a kilometre across. Raise MAP_FIT_MIN_ZOOM to zoom in for more
+    // tours, lower it to keep the whole overview for more of them.
+    var MAP_FIT_MIN_ZOOM = 15;
+    var MAP_START_ZOOM = 17;
+
     function renderMapData() {
       ensureMapInitialized();
       if (!siteMap || !pendingMapData) return;
@@ -3618,15 +3787,17 @@
       } else if (pendingMapData.type === 'tour') {
         var bounds = [];
         var useCluster = typeof L.markerClusterGroup === 'function';
-        if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40 });
+        // Pins stop clustering once the map is zoomed in this far, so a stop's neighbours show as their own pins.
+        if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: MAP_START_ZOOM });
         pendingMapData.sites.forEach(s => {
           var isActive = s.site_id === activeTourSiteId;
-          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview) });
-          m.bindPopup(escapeHtml(s.display_name || s.site_id));
-          // Stop name on hover (mouse only; touch screens use the tap popup).
+          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview, s.platform === 'float') });
+          // The stop name is a small label on hover, and on tap for touch screens. There is no click
+          // popup any more: it covered the map and had to be closed by hand after every stop.
           m.bindTooltip(escapeHtml(s.display_name || s.site_id), { direction: 'top', className: 'stop-tooltip', opacity: 1 });
           if (isActive) m.setZIndexOffset(1000);
           m.on('click', () => {
+            m.openTooltip();
             if (tourLoadStopFn) tourLoadStopFn(s.site_id);
           });
           if (useCluster) markerClusterGroup.addLayer(m); else m.addTo(siteMap);
@@ -3635,8 +3806,21 @@
         });
         if (useCluster) markerClusterGroup.addTo(siteMap);
         if (bounds.length > 1) {
-          siteMap.fitBounds(bounds, { padding: [24, 24] });
-          lastMapFit = () => siteMap.fitBounds(bounds, { padding: [24, 24] });
+          var fitAll = () => siteMap.fitBounds(bounds, { padding: [24, 24] });
+          // How far the fit would zoom out depends on how spread out the stops are, not how many there are. If
+          // it would land below MAP_FIT_MIN_ZOOM, start close in on the current stop so its neighbours and the
+          // view cone are visible; the Fit button still zooms out to everything.
+          var startMarker = tourMarkersBySite[activeTourSiteId] || tourMarkersBySite[(pendingMapData.sites[0] || {}).site_id];
+          var fitZoom = null;
+          try {
+            siteMap.invalidateSize();
+            var mapSize = siteMap.getSize();
+            // A map that has no size yet (panel still hidden) cannot say; it is measured again when it opens.
+            if (mapSize.x > 50 && mapSize.y > 50) fitZoom = siteMap.getBoundsZoom(L.latLngBounds(bounds), false, L.point(48, 48));
+          } catch (e) {}
+          if (fitZoom !== null && fitZoom < MAP_FIT_MIN_ZOOM && startMarker) siteMap.setView(startMarker.getLatLng(), MAP_START_ZOOM);
+          else fitAll();
+          lastMapFit = fitAll;
         } else if (bounds.length === 1) {
           siteMap.setView(bounds[0], 15);
           lastMapFit = () => siteMap.setView(bounds[0], 15);
@@ -4244,6 +4428,7 @@
         '<select class="hf-link-icon">' +
         '<option value="ground">Ground-level (arrow)</option>' +
         '<option value="aerial">Aerial / drone (plane)</option>' +
+        '<option value="float">Float / raft (boat)</option>' +
         '<option value="overview">Overview (birds-eye)</option>' +
         '</select>' +
         '<label class="hf-return-link-label" style="display:none;">' +
@@ -4369,6 +4554,7 @@
         '<select class="hf-link-icon">' +
         '<option value="ground">Ground-level (arrow)</option>' +
         '<option value="aerial">Aerial / drone (plane)</option>' +
+        '<option value="float">Float / raft (boat)</option>' +
         '<option value="overview">Overview (birds-eye)</option>' +
         '</select>' +
         '</div>' +
@@ -4600,8 +4786,9 @@
             overview: document.getElementById('link-all-overview').checked,
             aerial: document.getElementById('link-all-aerial').checked,
             ground: document.getElementById('link-all-ground').checked,
+            float: document.getElementById('link-all-float').checked,
           };
-          if (!want.overview && !want.aerial && !want.ground) { flashMsg('Tick at least one type'); return; }
+          if (!want.overview && !want.aerial && !want.ground && !want.float) { flashMsg('Tick at least one type'); return; }
           var maxDist = parseFloat(document.getElementById('link-all-maxdist').value);
           if (!(maxDist > 0)) maxDist = Infinity;
           var added = 0, noGps = 0, typeSkipped = 0, tooFar = 0;
@@ -4613,7 +4800,7 @@
             var tid = normId(st.site_id);
             if (tid === sid || have[tid]) return;
             if (st.lat == null || st.lng == null) { noGps++; return; }
-            var kind = st.overview ? 'overview' : (st.platform === 'aerial' ? 'aerial' : 'ground');
+            var kind = st.overview ? 'overview' : (st.platform === 'aerial' ? 'aerial' : (st.platform === 'float' ? 'float' : 'ground'));
             if (!want[kind]) { typeSkipped++; return; }
             var dLat = (st.lat - me[0]) * 111320;
             var dLng = (st.lng - me[1]) * 111320 * Math.cos(me[0] * Math.PI / 180);
@@ -4738,7 +4925,7 @@
       }
 
       function showFlatStop(sid, config, fallbackLabel) {
-        var label = config.label || fallbackLabel;
+        var label = tourStopLabel(sid, fallbackLabel, config.label);
         document.getElementById('flat-stop-caption-text').textContent = label;
         document.getElementById('label-left').innerText = label;
         document.title = tourNameForTitle + ' \u2014 ' + label;
@@ -5182,7 +5369,7 @@
           refreshHotspotList();
           setTimeout(() => { viewerL.updateSize(); }, 100);
 
-          var resolvedLabel = config.label_1 || fallbackLabel;
+          var resolvedLabel = tourStopLabel(sid, fallbackLabel, config.label_1);
           document.getElementById('label-left').innerText = resolvedLabel;
           document.title = tourNameForTitle + ' \u2014 ' + resolvedLabel;
           siteDefaultPinStyle = config.pin_style === 'label' ? 'label' : 'dot';
@@ -5265,7 +5452,7 @@
           }
 
           // Icon slot only when at least one stop has an icon, so plain tours look as before.
-          var anyStopIcon = sites.some(function (x) { return x.platform === 'aerial' || x.kind === 'pdf' || x.overview; });
+          var anyStopIcon = sites.some(function (x) { return x.platform === 'aerial' || x.platform === 'float' || x.kind === 'pdf' || x.overview; });
           sites.forEach((s, idx) => {
             var link = document.createElement('div');
             link.className = 'tour-stop-link';
@@ -5273,6 +5460,7 @@
             var icon = '';
             if (s.overview) icon = stopIconSvg(HOME_PATH, 14, 'Overview');
             else if (s.platform === 'aerial') icon = stopIconSvg(AIRPLANE_PATH, 14, 'Drone photo');
+            else if (s.platform === 'float') icon = stopIconSvg(BOAT_PATH, 14, 'Float photo');
             else if (s.kind === 'pdf') icon = stopIconSvg(DOC_PATH, 14, 'PDF document');
             link.innerHTML = (anyStopIcon ? '<span class="stop-icon">' + icon + '</span>' : '') +
                              '<span class="stop-name">' + escapeHtml(label) + '</span>';

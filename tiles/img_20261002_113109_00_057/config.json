@@ -14,7 +14,7 @@
     {
       "yaw": 2.7319960849123004,
       "pitch": 0.0,
-      "title": "Stop 17",
+      "title": "Stop 17 \u00b7 20 m",
       "text": "",
       "link": "",
       "category": "link",
@@ -25,7 +25,7 @@
     {
       "yaw": 0.7529683476822532,
       "pitch": 0.0,
-      "title": "Stop 20",
+      "title": "Stop 20 \u00b7 21 m",
       "text": "",
       "link": "",
       "category": "link",
@@ -36,12 +36,34 @@
     {
       "yaw": 2.043735412243789,
       "pitch": 0.0,
-      "title": "Stop 21",
+      "title": "Stop 21 \u00b7 25 m",
       "text": "",
       "link": "",
       "category": "link",
       "pin_style": "label_hover",
       "target": "img_20261002_113226_00_059",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 4.986534090052156,
+      "pitch": 0.0,
+      "title": "Stop 18 \u00b7 34 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_112505_00_056",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 3.3854721013787747,
+      "pitch": 0.0,
+      "title": "Stop 16 \u00b7 83 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261002_111437_00_054",
       "link_icon": "ground"
     }
   ],
