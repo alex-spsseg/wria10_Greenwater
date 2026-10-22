@@ -243,7 +243,7 @@
 
     #site-map-panel {
       position: absolute; bottom: 12px; right: 12px; z-index: 1500;
-      width: 300px; height: 220px; min-width: 200px; min-height: 150px;
+      width: 450px; height: 330px; min-width: 200px; min-height: 150px;
       max-width: 90vw; max-height: 80vh;
       border: 1px solid #019fc4; border-radius: 8px;
       overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
@@ -828,6 +828,10 @@
       .pano-label { font-size: 12px; padding: 5px 10px; max-width: 70vw; }
       #label-right { top: 52px; }
     }
+    /* Auto-Rotate is left out on phones and other touch screens, and on narrow windows. */
+    @media (pointer: coarse), (max-width: 700px) {
+      #autorotate-btn { display: none !important; }
+    }
     /* A phone held sideways is wider than 700px, so the narrow screen rules above do not apply, yet it is only
     about 350px tall. The full row of buttons then runs into Prev and Next on the left. Phones in landscape get
     the same single menu button as a narrow screen, with the list opening as two columns so it fits the short
@@ -875,7 +879,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-22 15:32:17</div>
+  <div id="build-timestamp">Built 2026-10-22 15:56:01</div>
 
   <div id="status-banner"></div>
 
@@ -1748,6 +1752,8 @@
     // reopens it.
     (function () {
       var overlay = document.getElementById('info-overlay');
+      // Same test as the CSS that hides the Auto-Rotate button, so the guide never describes a button that is not there.
+      var noAutoRotate = !!(window.matchMedia && window.matchMedia('(pointer: coarse), (max-width: 700px)').matches);
       var stageEl = document.getElementById('info-stage');
       var countEl = document.getElementById('info-step-count');
       var titleEl = document.getElementById('info-title');
@@ -1830,7 +1836,7 @@
           '</svg>',
         controls:
           '<div class="hp-chips">' +
-          '<span class="hp-chip"><span class="hp-spin" style="display:inline-flex;">' + CHIP_ICONS.rotate + '</span>Auto-Rotate</span>' +
+          (noAutoRotate ? '' : '<span class="hp-chip"><span class="hp-spin" style="display:inline-flex;">' + CHIP_ICONS.rotate + '</span>Auto-Rotate</span>') +
           '<span class="hp-chip">' + CHIP_ICONS.full + 'Full Screen</span>' +
           '<span class="hp-chip">' + CHIP_ICONS.reset + 'Reset View</span>' +
           '</div>'
@@ -1936,7 +1942,9 @@
           stage: STAGES.controls,
           body:
             '<p>On stops with hotspots, <b>Hide Hotspots</b> and <b>Show Hotspots</b> turn the colored pins off and on.</p>' +
-            '<p><b>Auto-Rotate</b> slowly pans the view on its own. <b>Full Screen</b> expands the viewer. <b>Reset View</b> returns to the starting position.</p>' +
+            (noAutoRotate
+              ? '<p><b>Full Screen</b> expands the viewer. <b>Reset View</b> returns to the starting position.</p>'
+              : '<p><b>Auto-Rotate</b> slowly pans the view on its own. <b>Full Screen</b> expands the viewer. <b>Reset View</b> returns to the starting position.</p>') +
             '<p>On a phone these live under the \u22EE menu. Reopen this guide any time with <b>Help</b>.</p>'
         });
         return out;
@@ -4046,7 +4054,7 @@
     // tour is spread over a long reach, so all you would see is a few cluster bubbles). Then it opens at
     // MAP_START_ZOOM centred on the current stop instead. The Fit button always zooms out to everything.
     // A tour can set its own starting zoom (Start zoom in the publisher), which skips all of this.
-    // At 300 px wide, zoom 15 is roughly a kilometre across. Raise MAP_FIT_MIN_ZOOM to zoom in for more
+    // At the default 450 px wide, zoom 15 is roughly a kilometre and a half across. Raise MAP_FIT_MIN_ZOOM to zoom in for more
     // tours, lower it to keep the whole overview for more of them.
     var MAP_FIT_MIN_ZOOM = 15;
     var MAP_START_ZOOM = 17;
