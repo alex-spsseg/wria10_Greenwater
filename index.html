@@ -814,7 +814,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-22 12:59:37</div>
+  <div id="build-timestamp">Built 2026-10-22 13:22:10</div>
 
   <div id="status-banner"></div>
 
@@ -3767,6 +3767,7 @@
     // The inset map opens fitted to every stop, unless that fit would be zoomed out below MAP_FIT_MIN_ZOOM (the
     // tour is spread over a long reach, so all you would see is a few cluster bubbles). Then it opens at
     // MAP_START_ZOOM centred on the current stop instead. The Fit button always zooms out to everything.
+    // A tour can set its own starting zoom (Start zoom in the publisher), which skips all of this.
     // At 300 px wide, zoom 15 is roughly a kilometre across. Raise MAP_FIT_MIN_ZOOM to zoom in for more
     // tours, lower it to keep the whole overview for more of them.
     var MAP_FIT_MIN_ZOOM = 15;
@@ -3786,9 +3787,18 @@
         lastMapFit = () => siteMap.setView([pendingMapData.lat, pendingMapData.lng], 15);
       } else if (pendingMapData.type === 'tour') {
         var bounds = [];
+        // A starting zoom set for this tour in the publisher (map_start_zoom in its tour file) always wins. For a
+        // quick try, add ?mapzoom=16 to the page address, which wins over that. With neither, the automatic rule
+        // below decides.
+        var explicitZoom = null;
+        var zoomParam = parseInt(new URLSearchParams(location.search).get('mapzoom'), 10);
+        if (!isNaN(zoomParam)) explicitZoom = zoomParam;
+        else if (pendingMapData.startZoom != null && !isNaN(Number(pendingMapData.startZoom))) explicitZoom = Number(pendingMapData.startZoom);
+        if (explicitZoom !== null) explicitZoom = Math.max(1, Math.min(20, Math.round(explicitZoom)));
+        var startZoom = explicitZoom !== null ? explicitZoom : MAP_START_ZOOM;
         var useCluster = typeof L.markerClusterGroup === 'function';
         // Pins stop clustering once the map is zoomed in this far, so a stop's neighbours show as their own pins.
-        if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: MAP_START_ZOOM });
+        if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: startZoom });
         pendingMapData.sites.forEach(s => {
           var isActive = s.site_id === activeTourSiteId;
           var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview, s.platform === 'float') });
@@ -3818,11 +3828,12 @@
             // A map that has no size yet (panel still hidden) cannot say; it is measured again when it opens.
             if (mapSize.x > 50 && mapSize.y > 50) fitZoom = siteMap.getBoundsZoom(L.latLngBounds(bounds), false, L.point(48, 48));
           } catch (e) {}
-          if (fitZoom !== null && fitZoom < MAP_FIT_MIN_ZOOM && startMarker) siteMap.setView(startMarker.getLatLng(), MAP_START_ZOOM);
+          if (explicitZoom !== null && startMarker) siteMap.setView(startMarker.getLatLng(), explicitZoom);
+          else if (fitZoom !== null && fitZoom < MAP_FIT_MIN_ZOOM && startMarker) siteMap.setView(startMarker.getLatLng(), MAP_START_ZOOM);
           else fitAll();
           lastMapFit = fitAll;
         } else if (bounds.length === 1) {
-          siteMap.setView(bounds[0], 15);
+          siteMap.setView(bounds[0], explicitZoom !== null ? explicitZoom : 15);
           lastMapFit = () => siteMap.setView(bounds[0], 15);
         }
       }
@@ -5441,6 +5452,7 @@
               type: 'tour', sites: sitesWithGps,
               basemapType: manifest.basemap_type || 'osm', basemapUrl: manifest.basemap_url || '',
               overlays: manifest.overlays || [],
+              startZoom: manifest.map_start_zoom,
             };
             mapToggleBtn.style.display = 'inline-block';
             openSiteMap();
