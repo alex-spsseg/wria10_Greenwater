@@ -283,13 +283,34 @@
     /* Make the map bigger, on every screen. The map grows to nearly the whole window, leaving the top clear for the
     menu and Prev and Next, and the button (or Esc) puts it back at the size it was. On a desktop, --map-left is set
     from the tour sidebar so the enlarged map starts to the right of it instead of underneath. */
-    #site-map-expand-btn { right: 188px; }
+    /* On a desktop the make the map bigger button sits at the left, just under the + and - buttons. */
+    #site-map-expand-btn { left: 10px; top: 82px; }
     #site-map-expand-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
     #site-map-panel.expanded {
       width: calc(100vw - var(--map-left, 8px) - 8px) !important; height: calc(100vh - 112px) !important; height: calc(100dvh - 112px) !important;
       max-width: none !important; max-height: none !important; right: 8px; bottom: 8px;
     }
     #site-map-panel.expanded #site-map-resize-handle { display: none; }
+    /* Coordinates (desktop): a button in the top row opens a small box with a go to field and the cursor readout. */
+    #site-map-coords-btn {
+      position: absolute; z-index: 1600; top: 8px; right: 188px; width: 30px; height: 30px; border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.2); background: #fff; color: #333; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #site-map-coords-btn:hover { background: #f4f4f4; }
+    #site-map-coords-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
+    #site-map-coords-box {
+      display: none; position: absolute; z-index: 1700; top: 46px; right: 56px; width: 156px; padding: 5px;
+      background: rgba(14, 27, 51, 0.94); border: 1px solid rgba(255,255,255,0.25); border-radius: 4px;
+    }
+    #site-map-coords-box input { width: 100%; box-sizing: border-box; font-size: 12px; padding: 3px 5px; border: 1px solid #9fb2cc;
+      border-radius: 3px; background: #ffffff; color: #111111; }
+    #site-map-coords-box input.bad { border-color: #e05252; background: #ffe9e9; }
+    #site-map-coords-readout { display: block; width: 100%; margin-top: 4px; padding: 0; text-align: left; background: none; border: 0;
+      color: #cfe3f5; font: 11px/1.3 ui-monospace, Menlo, Consolas, monospace; cursor: pointer; }
+    #site-map-coords-readout:hover { color: #ffffff; text-decoration: underline; }
+    .coord-popup .coord-text { font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; margin-bottom: 6px; }
+    .coord-popup button { font-size: 11px; padding: 2px 8px; margin-right: 4px; cursor: pointer; }
     /* Measure tool: desktop only, the far left button of the top row. */
     #site-map-measure-btn { right: 152px; }
     #site-map-measure-btn.armed { background: #ffb84d; color: #1a1a1a; border-color: #ffb84d; }
@@ -319,6 +340,7 @@
       #site-map-expand-btn { display: flex; }
       #site-map-zoomto-btn { display: none; }
       #site-map-measure-btn, #site-map-measure-box { display: none !important; }
+      #site-map-coords-btn, #site-map-coords-box { display: none !important; }
       /* Finger sized buttons, all the same size and evenly spaced. */
       #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn,
       #site-map-locate-btn, #site-map-expand-btn { width: 38px; height: 38px; }
@@ -326,7 +348,7 @@
       #site-map-locate-btn { right: 52px; }
       #site-map-basemap-btn { right: 96px; }
       #site-map-follow-btn { right: 140px; }
-      #site-map-expand-btn { right: 184px; }
+      #site-map-expand-btn { right: 184px; left: auto; top: 8px; }
       #site-map-panel .leaflet-top.leaflet-right { margin-top: 54px; }
       #site-map-panel .leaflet-bar a { width: 38px; height: 38px; line-height: 38px; }
       #site-map-panel .leaflet-control-layers-toggle { width: 38px; height: 38px; background-size: 22px 22px; }
@@ -418,6 +440,15 @@
     #info-icon svg { width: 17px; height: 17px; stroke: #019fc4; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     #info-title { font-size: 18px; font-weight: 700; color: #ffffff; margin: 0; }
     #info-step-count .tour-name { color: #ffffff; }
+    /* About this tour panel: tour name and date as the banner headline, the note as plain text, quick facts as chips. */
+    .hp-about { text-align: center; padding: 0 24px; max-width: 100%; }
+    .hp-about::before { content: ''; display: block; width: 34px; height: 3px; border-radius: 2px; background: #019fc4; margin: 0 auto 10px; }
+    .hp-about-name { font-size: 21px; font-weight: 700; color: #ffffff; line-height: 1.2; letter-spacing: 0.01em;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .hp-about-sub { margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7fd4ea; }
+    .info-about-note { font-size: 14.5px !important; line-height: 1.6 !important; color: #e8eef7 !important; white-space: pre-line; margin: 0 0 12px !important; }
+    #info-body p.info-about-facts { margin: 4px 0 0; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12);
+      font-size: 12px; color: #9fb2cc; letter-spacing: 0.03em; }
     .info-intro {
       margin: 0 0 10px; padding: 9px 12px; border-radius: 8px;
       background: rgba(1, 159, 196, 0.12); border-left: 3px solid #019fc4;
@@ -809,6 +840,24 @@
     .tour-stop-link.unsaved::after { margin-left: 6px; }
     .tour-stop-link:hover { background: rgba(1, 159, 196, 0.3); }
     .tour-stop-link.active { background: #019fc4; font-weight: bold; }
+    /* Bookmarks: a named group of stops. Stops in the active bookmark get a gold edge; the rest fade. */
+    .tour-stop-link.bm-hit { box-shadow: inset 3px 0 0 #f5b942; }
+    .tour-stop-link.bm-dim:not(.active) { opacity: 0.4; }
+    #tour-bookmarks { display: none; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    #tour-bookmarks .bm-head { display: flex; align-items: center; justify-content: space-between; color: #9fb2cc;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+    #tour-bookmarks .bm-clear { background: none; border: 1px solid rgba(245,185,66,0.7); color: #f5b942; border-radius: 4px;
+      font-size: 10px; padding: 1px 6px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+    .tour-bookmark { color: #ffffff; padding: 7px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 3px;
+      display: flex; align-items: center; gap: 8px; transition: background 0.15s ease; }
+    .tour-bookmark:hover { background: rgba(245, 185, 66, 0.2); }
+    .tour-bookmark.active { background: rgba(245, 185, 66, 0.28); font-weight: bold; }
+    .tour-bookmark svg { flex: none; fill: #f5b942; }
+    #tour-bookmarks .bm-note { padding: 2px 10px 6px 30px; font-size: 12px; line-height: 1.45; color: #cbd8ec; white-space: pre-line; }
+    #tour-bookmarks .bm-hint { padding: 0 10px 6px 30px; font-size: 11px; color: #9fb2cc; font-style: italic; }
+    .tour-bookmark .bm-name { flex: 1; min-width: 0; }
+    .tour-bookmark .bm-count { flex: none; color: #9fb2cc; font-size: 11px; font-weight: 400; }
+    .tour-map-marker.bm-hl svg { filter: drop-shadow(0 0 3px #f5b942) drop-shadow(0 0 2px #f5b942); }
     /* Local preview: this stop has hotspot edits not yet written to disk. */
     .leaflet-popup-content-wrapper { background: #132447; color: #e8eef7; border: 1px solid #1b3f95;
       border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
@@ -926,7 +975,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-23 10:43:47</div>
+  <div id="build-timestamp">Built 2026-10-26 14:19:34</div>
 
   <div id="status-banner"></div>
 
@@ -986,6 +1035,7 @@
         <button id="autorotate-btn" class="ctrl-btn" type="button">Auto-Rotate</button>
         <button id="fullscreen-btn" class="ctrl-btn" type="button">Full Screen</button>
         <button id="reset-btn" class="ctrl-btn" type="button">Reset View</button>
+        <button id="copy-link-btn" class="ctrl-btn" type="button" style="display:none;" title="Copy a link to this stop and view">Copy Link</button>
         <button id="info-btn" class="ctrl-btn" type="button" title="Help">&#9432; Help</button>
       </div>
     </div>
@@ -1022,6 +1072,11 @@
       <button id="site-map-locate-btn" type="button" title="Show where you are on the map (tap again to stop)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></button>
       <button id="site-map-measure-btn" type="button" title="Measure distance or area on the map (click points, Esc to finish)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg></button>
       <button id="site-map-expand-btn" type="button" title="Make the map bigger"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+      <button id="site-map-coords-btn" type="button" title="Coordinates: go to a position, or copy the cursor position (right click the map to drop a pin)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg></button>
+      <div id="site-map-coords-box">
+        <input id="site-map-coords-input" type="text" placeholder="Go to lat, lng" autocomplete="off" spellcheck="false" aria-label="Go to coordinates, latitude then longitude">
+        <button id="site-map-coords-readout" type="button" title="Click to copy these coordinates">lat, lng</button>
+      </div>
       <div id="site-map-measure-box">
         <div id="site-map-measure-readout"></div>
         <div id="site-map-measure-actions">
@@ -1101,7 +1156,24 @@
     const siteId = rawSiteId.trim().toLowerCase().replace(/[\s-]+/g, '_');
 
     const tourParam = urlParams.get('tour');
+    // Deep link into a tour: ?stop=<site_id>&yaw=&pitch=&fov= (degrees). Only the
+    // stop is needed; the camera values are optional.
+    const stopParam = urlParams.get('stop');
+    var pendingStartView = null; // radians, applied once to the first stop that loads
+    (function () {
+      function num(k) { var v = urlParams.get(k); return (v !== null && v !== '' && isFinite(+v)) ? +v : null; }
+      var y = num('yaw'), pt = num('pitch'), f = num('fov');
+      if (stopParam && (y !== null || pt !== null || f !== null)) {
+        pendingStartView = {
+          yaw: (y || 0) * Math.PI / 180,
+          pitch: (pt || 0) * Math.PI / 180,
+          fov: f !== null ? Math.max(10, Math.min(120, f)) * Math.PI / 180 : null,
+        };
+      }
+    })();
     if (tourParam) document.body.classList.add('is-tour');
+    var updateTourUrl = function () {}; // real implementation assigned inside renderTourPage
+    var pendingStartSid = null;         // the stop a shared link points at, once the manifest is read
     var tourLoadStopFn = null; // set inside renderTourPage; lets a "link" hotspot
                                 // jump to another stop in the current tour, in place,
                                 // the same way the sidebar does.
@@ -1141,6 +1213,14 @@
                                  // display labels can differ completely once a
                                  // stop's been renamed in Site Tour Manager)
     var updateLinkAllUndoVisibility = function () {}; // set up once the editing tools exist
+    var tourLoopNav = true; // Prev and Next loop at the ends unless the tour turns it off (manifest loop_nav: false)
+    var tourStopSlugs = {}; // normalized site id -> short name for links, e.g. "stop-2"
+    function slugifyStopName(n) {
+      return String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    function stopLinkToken(sid) {
+      return tourStopSlugs[String(sid).trim().toLowerCase().replace(/[\s-]+/g, '_')] || sid;
+    }
     var activeTourSiteId = null; // which stop is currently showing, for Use This
                                   // View / hotspot editing / Save Hotspots to target
     var activeTourScene = null;  // that stop's live Marzipano scene, for placing
@@ -1745,18 +1825,25 @@
 
     document.getElementById('autorotate-btn').addEventListener('click', () => toggleAutorotate());
 
-    // Prev/Next: step through the tour's stops in Tour Order, same
-    // sequence Auto-Chain links against -- doesn't wrap at the ends
-    // unless the tour was actually built as a loop (no way to tell
-    // that from here, so both buttons just no-op past either end
-    // rather than guessing).
-    function stepTourStop(delta) {
+    // Prev/Next: step through the tour's stops in Tour Order, the same sequence Auto-Chain links against.
+    // Prev and Next loop: Next on the last stop goes to the first, Prev on the first goes to the last. While a
+    // bookmark is picked they loop through its stops only. noWrap stops at the ends (the local editing tools use it).
+    function stepTourStop(delta, noWrap) {
       if (!tourSiteOptions || !tourLoadStopFn) return;
       var idx = tourSiteOptions.findIndex(s =>
           s.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_') === activeTourSiteId);
       if (idx === -1) return;
-      var next = idx + delta;
-      if (next < 0 || next >= tourSiteOptions.length) return;
+      var n = tourSiteOptions.length;
+      var next = idx, found = false;
+      for (var tries = 0; tries < n; tries++) {
+        next += delta;
+        if (next < 0 || next >= n) {
+          if (noWrap || !tourLoopNav) return;
+          next = (next + n) % n;
+        }
+        if (!bookmarkHitSet || bookmarkHitSet[bmNorm(tourSiteOptions[next].site_id)]) { found = true; break; }
+      }
+      if (!found || next === idx) return;
       tourLoadStopFn(tourSiteOptions[next].site_id);
     }
     document.getElementById('prev-stop-btn').addEventListener('click', () => stepTourStop(-1));
@@ -1853,6 +1940,8 @@
                         '<b>Measure:</b> Click points, or stops, for a distance or area. Esc finishes.'),
         locate: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>',
                        '<b>My location:</b> Show where you are as a blue dot. Tap again to stop.'),
+        coords: mapIco('<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>',
+                       '<b>Coordinates:</b> Go to a typed lat, lng, or copy the cursor position. Right click the map to drop a pin.'),
         expand: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
                        '<b>Bigger:</b> Fill the window with the map. Click again, or press Esc, to shrink it.'),
         grip: mapIco('<svg viewBox="0 0 24 24"><path d="M4 20 20 4M4 14 14 4M10 20 20 10"/></svg>',
@@ -1864,10 +1953,19 @@
         map: '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
         stops: '<svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
         controls: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>',
+        about: '<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>',
         views: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>'
       };
 
       var STAGES = {
+        about:
+          '<svg viewBox="0 0 320 124" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+          '<rect x="104" y="20" width="112" height="84" rx="8" fill="#16294f" stroke="#019fc4" stroke-width="1.5"/>' +
+          '<circle cx="124" cy="41" r="6" fill="#019fc4"/>' +
+          '<rect x="138" y="37" width="62" height="6" rx="3" fill="#2c4a86"/>' +
+          '<rect x="118" y="59" width="86" height="5" rx="2.5" fill="#2c4a86"/>' +
+          '<rect x="118" y="72" width="70" height="5" rx="2.5" fill="#2c4a86"/>' +
+          '<rect x="118" y="85" width="52" height="5" rx="2.5" fill="#2c4a86"/></svg>',
         look:
           '<svg viewBox="0 0 320 124" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
           '<defs><linearGradient id="hpsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a4a86"/><stop offset="1" stop-color="#16294f"/></linearGradient></defs>' +
@@ -1937,9 +2035,22 @@
         if (isShown('hotspots-toggle-btn')) {
           look.push('<p>Colored pins in the photo are hotspots. Click one for more detail, or use <b>Hide Hotspots</b> and <b>Show Hotspots</b> to clear them from the view and bring them back.</p>');
         }
+        // The tour's own note (Intro Note in the publisher) gets its own first panel, only when the tour has one.
         var intro = (window.helpTourIntro || '');
-        if (intro) look.unshift('<p class="info-intro"></p>');
-        out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join(''), intro: intro });
+        if (intro) {
+          var info = window.helpTourInfo || {};
+          var facts = [];
+          if (info.stops) facts.push(info.stops + (info.stops === 1 ? ' stop' : ' stops'));
+          if (info.conditions) facts.push(info.conditions);
+          out.push({
+            title: 'About this tour', icon: STEP_ICONS.about, hideName: true, intro: intro,
+            stage: '<div class="hp-about"><div class="hp-about-name">' + escapeHtml(info.name || window.helpTourName || '') + '</div>' +
+                   (info.date ? '<div class="hp-about-sub">' + escapeHtml(info.date) + '</div>' : '') + '</div>',
+            body: '<p class="info-about-note"></p>' +
+                  (facts.length ? '<p class="info-about-facts">' + facts.map(escapeHtml).join(' \u00B7 ') + '</p>' : '')
+          });
+        }
+        out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join('') });
 
         if (isShown('prev-stop-btn')) {
           out.push({
@@ -2013,7 +2124,7 @@
               '<ul class="hp-list">' +
                 MAP_HELP_ITEMS.layers +
                 (isShown('prev-stop-btn') ? MAP_HELP_ITEMS.follow + MAP_HELP_ITEMS.fit : MAP_HELP_ITEMS.fit) +
-                (helpTouch ? MAP_HELP_ITEMS.locate : MAP_HELP_ITEMS.measure) +
+                (helpTouch ? MAP_HELP_ITEMS.locate : MAP_HELP_ITEMS.measure + MAP_HELP_ITEMS.coords) +
                 MAP_HELP_ITEMS.expand +
                 (helpTouch ? '' : MAP_HELP_ITEMS.grip) +
               '</ul>'
@@ -2038,7 +2149,7 @@
         var s = steps[idx];
         stageEl.innerHTML = s.stage;
         countEl.textContent = '';
-        if (window.helpTourName) {
+        if (window.helpTourName && !s.hideName) {
           var nm = document.createElement('span');
           nm.className = 'tour-name';
           nm.textContent = window.helpTourName;
@@ -2049,7 +2160,7 @@
         document.getElementById('info-icon').innerHTML = s.icon || '';
         titleEl.textContent = s.title;
         bodyEl.innerHTML = s.body;
-        var introEl = bodyEl.querySelector('.info-intro');
+        var introEl = bodyEl.querySelector('.info-intro, .info-about-note');
         if (introEl) introEl.textContent = s.intro;
         bodyEl.classList.remove('swap');
         if (animate) { void bodyEl.offsetWidth; bodyEl.classList.add('swap'); }
@@ -2965,6 +3076,11 @@
     // pin can be re-styled without rebuilding the whole map when the
     // person switches stops while the map panel is open.
     var tourMarkersBySite = {};
+    // Active bookmark: normalized site ids of its stops, or null when none is active.
+    var bookmarkHitSet = null;
+    function bmNorm(x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); }
+    function bmHit(sid) { return !!bookmarkHitSet && !!bookmarkHitSet[bmNorm(sid)]; }
+    function bmOpacity(sid) { return bookmarkHitSet ? (bmHit(sid) ? 1 : 0.35) : 1; }
     // Touch screens: the row of map buttons sits across the top of the map panel, so a stop centred in the panel
     // can end up under a button. mapCenterFor() shifts the centre so the stop shows left of and below the middle.
     var MAP_TOUCH = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -3035,11 +3151,11 @@
       return !!(opt && opt.platform === 'aerial');
     }
 
-    function buildMarkerIcon(active, aerial, overview, float) {
+    function buildMarkerIcon(active, aerial, overview, float, hl) {
       var size = active ? 30 : 22;
       var color = active ? '#019fc4' : '#3f5a78';
       return L.divIcon({
-        className: 'tour-map-marker' + (active ? ' active' : ''),
+        className: 'tour-map-marker' + (active ? ' active' : '') + (hl ? ' bm-hl' : ''),
         html: '<svg width="' + size + '" height="' + Math.round(size * 1.33) + '" viewBox="0 0 24 32" ' +
               'xmlns="http://www.w3.org/2000/svg">' +
               '<path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" ' +
@@ -3513,11 +3629,30 @@
     // isn't actively panning (harmless, just a cheap no-op redraw).
     setInterval(updateViewCone, 200);
 
+    // Re-style every pin for the active bookmark (or back to normal when none is active).
+    function refreshBookmarkMarkers() {
+      Object.keys(tourMarkersBySite).forEach(function (sid) {
+        var m = tourMarkersBySite[sid];
+        m.setIcon(buildMarkerIcon(sid === activeTourSiteId, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid), bmHit(sid)));
+        m.setOpacity(bmOpacity(sid));
+        if (sid === activeTourSiteId) m.setZIndexOffset(1000);
+      });
+      if (markerClusterGroup && markerClusterGroup.refreshClusters) markerClusterGroup.refreshClusters();
+    }
+    function bookmarkLatLngs(stops) {
+      var want = {};
+      stops.forEach(function (x) { want[bmNorm(x)] = true; });
+      var out = [];
+      Object.keys(tourMarkersBySite).forEach(function (sid) { if (want[bmNorm(sid)]) out.push(tourMarkersBySite[sid].getLatLng()); });
+      return out;
+    }
+
     function updateActiveMapMarker() {
       Object.keys(tourMarkersBySite).forEach(sid => {
         var m = tourMarkersBySite[sid];
         var active = sid === activeTourSiteId;
-        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid)));
+        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid), bmHit(sid)));
+        m.setOpacity(bmOpacity(sid));
         if (active) m.setZIndexOffset(1000);
       });
       // Cluster icons are separate from the child markers' own icons,
@@ -3540,7 +3675,7 @@
         // The first stop shown keeps the whole site view for orientation; after
         // that, picking a stop zooms the map in to it (never zooms back out).
         if (changed && !firstStop && autoZoomStops) zoomMapToStop(activeMarker.getLatLng());
-        else siteMap.panTo(mapCenterFor(activeMarker.getLatLng()));
+        else if (!(bookmarkHitSet && firstStop)) siteMap.panTo(mapCenterFor(activeMarker.getLatLng())); // a bookmark's framing wins on first load
       }
     }
 
@@ -3594,6 +3729,20 @@
       var a = c.length > 3 ? c[3] / 255 : (fallbackA == null ? 1 : fallbackA);
       return { css: 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')', a: a };
     }
+    // ArcGIS line styles as Leaflet dash arrays, in multiples of the line width so a thick dash stays
+    // proportionate. Solid and unknown styles return null, which Leaflet treats as a solid line.
+    function esriDashArray(style, weight) {
+      var w = Math.max(1, weight || 1);
+      var map = {
+        esriSLSDash: [4, 3], esriSLSShortDash: [3, 1], esriSLSLongDash: [7, 3],
+        esriSLSDot: [1, 2], esriSLSShortDot: [1, 1],
+        esriSLSDashDot: [4, 3, 1, 3], esriSLSShortDashDot: [3, 1, 1, 1],
+        esriSLSLongDashDot: [7, 3, 1, 3], esriSLSDashDotDot: [4, 3, 1, 3, 1, 3],
+        esriSLSShortDashDotDot: [3, 1, 1, 1, 1, 1],
+      };
+      var a = map[style];
+      return a ? a.map(function (n) { return Math.round(n * w * 10) / 10; }).join(' ') : null;
+    }
     function esriSymbolToStyle(sym, baseOpacity) {
       if (!sym) return null;
       var st = {};
@@ -3605,6 +3754,9 @@
         st.opacity = (main ? main.a : 1) * baseOpacity;
         st.weight = Math.max(1, (sym.width || 1) * 1.333);
         st.fill = false;
+        if (sym.style === 'esriSLSNull') st.opacity = 0;
+        var da = esriDashArray(sym.style, st.weight);
+        if (da) { st.dashArray = da; st.lineCap = 'butt'; }
       } else {
         // esriSFS (polygon) and esriSMS (point marker)
         st.fill = !!main && main.a > 0;
@@ -3614,6 +3766,9 @@
         st.opacity = (olc ? olc.a : 1) * baseOpacity;
         st.weight = ol && ol.width != null ? Math.max(ol.width > 0 ? 1 : 0, ol.width * 1.333) : 1;
         if (olc && olc.a === 0) st.weight = 0;
+        if (ol && ol.style === 'esriSLSNull') st.weight = 0;
+        var oda = ol ? esriDashArray(ol.style, st.weight) : null;
+        if (oda) { st.dashArray = oda; st.lineCap = 'butt'; }
         if (sym.type === 'esriSMS') st.radius = Math.max(3, (sym.size || 8) / 2 * 1.333);
       }
       return st;
@@ -3750,6 +3905,14 @@
                 out = Object.assign({}, out, { fill: false, fillOpacity: 0 });
                 if (!out.weight) out.weight = 2;   // a line symbol drawn as a zero width outline would vanish
               }
+              // Line style picked in the publisher: dashed or dotted lines and polygon outlines (not points).
+              var gtype = feature && feature.geometry && feature.geometry.type;
+              if ((o.line_style === 'dashed' || o.line_style === 'dotted') && gtype && !/Point/.test(gtype)) {
+                var lw = Math.max(2, out.weight || 2);
+                out = Object.assign({}, out);
+                if (o.line_style === 'dashed') { out.dashArray = (lw * 4) + ' ' + (lw * 3); out.lineCap = 'butt'; }
+                else { out.dashArray = '1 ' + (lw * 2.2); out.lineCap = 'round'; }
+              }
               return out;
             };
             layerOpts.style = styleFn;
@@ -3865,6 +4028,103 @@
       }
       wireZoomToPoint();
       wireMeasure();
+      wireCoordTools();
+    }
+
+    // -- coordinates (desktop) --------------------------------------------------
+    // A readout of the cursor position (click it to copy), a box to go to a typed position, and right click on the
+    // map to drop a pin with a Copy button. Positions are WGS84 decimal degrees, "lat, lng", 6 places (about 10 cm).
+    var coordPin = null;
+    function fmtCoord(ll) { return ll.lat.toFixed(6) + ', ' + ll.lng.toFixed(6); }
+    function copyTextToClipboard(text, done) {
+      var ok = function () { if (done) done(); };
+      var fallback = function () {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(ta); ok();
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+      else fallback();
+    }
+    // Accepts decimal degrees as "lat, lng" or "lat lng", like 47.1234, -122.5678. If the first number can only be a
+    // longitude (over 90), the two are swapped. Returns {lat, lng} or null.
+    function parseCoordInput(str) {
+      var m = String(str || '').trim().match(/^(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)$/);
+      if (!m) return null;
+      var lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+      if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) { var tmp = lat; lat = lng; lng = tmp; }
+      if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+      return { lat: lat, lng: lng };
+    }
+    function dropCoordPin(ll) {
+      if (coordPin) { siteMap.removeLayer(coordPin); coordPin = null; }
+      coordPin = L.circleMarker(ll, { radius: 8, color: '#ffffff', weight: 2, fillColor: '#ffb84d', fillOpacity: 1 }).addTo(siteMap);
+      var box = document.createElement('div');
+      box.className = 'coord-popup';
+      var txt = document.createElement('div');
+      txt.className = 'coord-text';
+      txt.textContent = fmtCoord(ll);
+      var copyBtn = document.createElement('button');
+      copyBtn.type = 'button'; copyBtn.textContent = 'Copy';
+      copyBtn.addEventListener('click', function () {
+        copyTextToClipboard(fmtCoord(ll), function () {
+          copyBtn.textContent = 'Copied';
+          setTimeout(function () { copyBtn.textContent = 'Copy'; }, 1200);
+        });
+      });
+      var rmBtn = document.createElement('button');
+      rmBtn.type = 'button'; rmBtn.textContent = 'Remove';
+      rmBtn.addEventListener('click', function () { if (coordPin) { siteMap.removeLayer(coordPin); coordPin = null; } });
+      box.appendChild(txt); box.appendChild(copyBtn); box.appendChild(rmBtn);
+      coordPin.bindPopup(box, { closeButton: false }).openPopup();
+    }
+    function wireCoordTools() {
+      if (!siteMap || !window.L) return;
+      if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return; // desktop only
+      var btn = document.getElementById('site-map-coords-btn');
+      var box = document.getElementById('site-map-coords-box');
+      var input = document.getElementById('site-map-coords-input');
+      var readout = document.getElementById('site-map-coords-readout');
+      if (!btn || !box || !input || !readout) return;
+      function setOpen(open) {
+        box.style.display = open ? 'block' : 'none';
+        btn.classList.toggle('armed', open);
+        if (open) input.focus();
+      }
+      btn.addEventListener('click', function () { setOpen(box.style.display !== 'block'); });
+      // Typing here must not trigger map or page shortcuts (arrow keys, Esc to collapse the map, and so on).
+      input.addEventListener('keydown', function (e) {
+        e.stopPropagation();
+        if (e.key === 'Enter') {
+          var ll = parseCoordInput(input.value);
+          if (!ll) {
+            input.classList.add('bad'); input.title = 'Use decimal degrees, like 47.1234, -122.5678';
+            setTimeout(function () { input.classList.remove('bad'); }, 1600);
+            return;
+          }
+          input.classList.remove('bad');
+          var z = Math.min(Math.max(siteMap.getZoom(), 17), siteMap.getMaxZoom());
+          siteMap.setView([ll.lat, ll.lng], z);
+          dropCoordPin(L.latLng(ll.lat, ll.lng));
+        } else if (e.key === 'Escape') {
+          input.value = ''; input.classList.remove('bad'); input.blur(); setOpen(false);
+        }
+      });
+      input.addEventListener('keyup', function (e) { e.stopPropagation(); });
+      readout.addEventListener('click', function () {
+        var txt = readout.textContent;
+        if (!/\d/.test(txt)) return;
+        copyTextToClipboard(txt, function () {
+          readout.textContent = 'Copied';
+          setTimeout(function () { readout.textContent = txt; }, 900);
+        });
+      });
+      siteMap.on('mousemove', function (e) {
+        if (box.style.display === 'block' && readout.textContent !== 'Copied') readout.textContent = fmtCoord(e.latlng);
+      });
+      siteMap.on('contextmenu', function (e) { if (!measureActive) dropCoordPin(e.latlng); });
     }
 
     // -- measure tool (desktop) -------------------------------------------------
@@ -4241,7 +4501,7 @@
         if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: startZoom });
         pendingMapData.sites.forEach(s => {
           var isActive = s.site_id === activeTourSiteId;
-          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview, s.platform === 'float') });
+          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview, s.platform === 'float', bmHit(s.site_id)), opacity: bmOpacity(s.site_id) });
           // The stop name is a small label on hover, and on tap for touch screens. There is no click
           // popup any more: it covered the map and had to be closed by hand after every stop.
           m.bindTooltip(escapeHtml(s.display_name || s.site_id), { direction: 'top', className: 'stop-tooltip', opacity: 1 });
@@ -4583,7 +4843,7 @@
           if (typeof updateViewCone === 'function') updateViewCone();
           if (advance && document.getElementById('hdg-autoadv').checked) {
             // brief pause so the cone is visible before moving on
-            setTimeout(function () { if (activeTourSiteId === sid) stepTourStop(1); }, 700);
+            setTimeout(function () { if (activeTourSiteId === sid) stepTourStop(1, true); }, 700);
           }
         }).catch(function () { if (btn) flash(btn, 'Save failed', 1800); });
       }
@@ -5317,6 +5577,10 @@
       titleEl.textContent = 'Loading\u2026';
       sidebar.appendChild(titleEl);
 
+      var bmEl = document.createElement('div');
+      bmEl.id = 'tour-bookmarks';
+      sidebar.appendChild(bmEl);
+
       var listEl = document.createElement('div');
       listEl.id = 'tour-sidebar-list';
       sidebar.appendChild(listEl);
@@ -5337,6 +5601,101 @@
       // otherwise ever turn it back on.
       var tourHasMap = false;
       var activeLink = null;
+
+      // -- bookmarks: named groups of stops (like an ArcGIS Online bookmark) --------------------
+      // manifest.bookmarks = [{ id, name, stops: [site_id, ...] }]. Stops are stored by their permanent site id,
+      // so renaming or renumbering stops never breaks a bookmark. Picking one frames those stops on the map,
+      // highlights them in the sidebar and on the map, and fades the rest. ?bookmark=<id> opens a tour that way.
+      var tourBookmarkList = [];
+      var activeBookmarkId = null;
+      function setBookmarkUrl(id) {
+        try {
+          var q = new URLSearchParams(window.location.search);
+          if (id) q.set('bookmark', id); else q.delete('bookmark');
+          history.replaceState(null, '', window.location.pathname + '?' + q.toString() + window.location.hash);
+        } catch (err) {}
+      }
+      function renderBookmarkList() {
+        bmEl.innerHTML = '';
+        if (!tourBookmarkList.length) { bmEl.style.display = 'none'; return; }
+        bmEl.style.display = 'block';
+        var head = document.createElement('div');
+        head.className = 'bm-head';
+        var ht = document.createElement('span');
+        ht.textContent = 'Bookmarks';
+        head.appendChild(ht);
+        if (activeBookmarkId) {
+          var clr = document.createElement('button');
+          clr.type = 'button'; clr.className = 'bm-clear'; clr.textContent = 'Show all';
+          clr.addEventListener('click', function (e) { e.stopPropagation(); clearBookmark(); });
+          head.appendChild(clr);
+        }
+        bmEl.appendChild(head);
+        tourBookmarkList.forEach(function (b) {
+          var row = document.createElement('div');
+          row.className = 'tour-bookmark' + (b.id === activeBookmarkId ? ' active' : '');
+          row.innerHTML = '<svg width="12" height="14" viewBox="0 0 24 24"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>' +
+                          '<span class="bm-name"></span><span class="bm-count">' + b.stops.length + '</span>';
+          row.querySelector('.bm-name').textContent = b.name;
+          row.addEventListener('click', function () { activateBookmark(b.id, true); });
+          bmEl.appendChild(row);
+          if (b.id === activeBookmarkId) {
+            if (b.note) {
+              var noteEl = document.createElement('div');
+              noteEl.className = 'bm-note';
+              noteEl.textContent = b.note;
+              bmEl.appendChild(noteEl);
+            }
+            if (b.stops.length > 1) {
+              var hintEl = document.createElement('div');
+              hintEl.className = 'bm-hint';
+              hintEl.textContent = 'Prev and Next stay within this bookmark.';
+              bmEl.appendChild(hintEl);
+            }
+          }
+        });
+      }
+      function paintBookmarkSidebar() {
+        Object.keys(siteLinkElements).forEach(function (k) {
+          var el = siteLinkElements[k];
+          el.classList.toggle('bm-hit', !!bookmarkHitSet && !!bookmarkHitSet[k]);
+          el.classList.toggle('bm-dim', !!bookmarkHitSet && !bookmarkHitSet[k]);
+        });
+      }
+      function activateBookmark(id, doFit) {
+        var bm = null;
+        tourBookmarkList.forEach(function (b) { if (b.id === id) bm = b; });
+        if (!bm) return;
+        activeBookmarkId = id;
+        bookmarkHitSet = {};
+        bm.stops.forEach(function (x) { bookmarkHitSet[x] = true; });
+        paintBookmarkSidebar();
+        renderBookmarkList();
+        setBookmarkUrl(id);
+        refreshBookmarkMarkers();
+        if (doFit && tourHasMap) {
+          var pts = bookmarkLatLngs(bm.stops);
+          if (pts.length) {
+            if (siteMapPanel.style.display === 'none' || !siteMapPanel.style.display) openSiteMap();
+            // The panel may have only just opened, so give the map a moment to measure itself first.
+            setTimeout(function () {
+              if (!siteMap || activeBookmarkId !== id) return;
+              siteMap.invalidateSize();
+              if (pts.length === 1) zoomMapToStop(pts[0]);
+              else siteMap.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 19 });
+            }, 90);
+          }
+        }
+      }
+      function clearBookmark() {
+        activeBookmarkId = null;
+        bookmarkHitSet = null;
+        paintBookmarkSidebar();
+        renderBookmarkList();
+        setBookmarkUrl(null);
+        refreshBookmarkMarkers();
+        if (siteMap && lastMapFit && siteMapPanel.style.display !== 'none') lastMapFit();
+      }
 
       // -- flat (non-pano) tour stops -----------------------------------
       // A stop published via "Flat image or PDF" (see write_flat_config
@@ -5792,6 +6151,7 @@
         }
         var fallbackLabel = linkEl ? linkEl.textContent : sid;
         activeTourSiteId = sid;
+        updateTourUrl(sid);
         updateLinkAllUndoVisibility();
         updateActiveMapMarker();
         updateTourCompareButton(null);
@@ -5854,6 +6214,14 @@
           var facingYaw = computeDefaultYawFacingNext(sid, config);
           if (facingYaw != null) defaultViewL.yaw = facingYaw;
           viewL = new Marzipano.RectilinearView(defaultViewL, limiter);
+          if (pendingStartView && sid === pendingStartSid) {
+            // From a shared link: open aimed where the link points. defaultViewL is left alone, so Reset View still goes home.
+            viewL.setParameters({
+              yaw: pendingStartView.yaw, pitch: pendingStartView.pitch,
+              fov: pendingStartView.fov != null ? pendingStartView.fov : defaultViewL.fov,
+            });
+            pendingStartView = null;
+          }
 
           var geometry, source, stopUpgrade = null;
           if (isTiled) {
@@ -5927,6 +6295,53 @@
         });
       }
       tourLoadStopFn = loadStop;
+
+      // Keep the address bar on the stop being viewed, so a refresh or a copied
+      // address lands here. replaceState: no reload, no extra history entries.
+      // Any camera values in the address are dropped, since they no longer match.
+      updateTourUrl = function (sid) {
+        try {
+          var q = new URLSearchParams(window.location.search);
+          q.set('stop', stopLinkToken(sid));
+          ['yaw', 'pitch', 'fov'].forEach(function (k) { q.delete(k); });
+          history.replaceState(null, '', window.location.pathname + '?' + q.toString() + window.location.hash);
+        } catch (err) {}
+      };
+
+      var copyLinkBtn = document.getElementById('copy-link-btn');
+      copyLinkBtn.style.display = 'inline-block';
+      copyLinkBtn.addEventListener('click', function () {
+        var q = new URLSearchParams();
+        q.set('tour', tourId);
+        if (activeTourSiteId) q.set('stop', stopLinkToken(activeTourSiteId));
+        if (activeBookmarkId) q.set('bookmark', activeBookmarkId);
+        var cur = sceneCache[activeTourSiteId];
+        if (cur && !cur.flat && viewL) {
+          var pr = viewL.parameters();
+          q.set('yaw', (((pr.yaw * 180 / Math.PI) % 360 + 360) % 360).toFixed(1));
+          q.set('pitch', (pr.pitch * 180 / Math.PI).toFixed(1));
+          q.set('fov', (pr.fov * 180 / Math.PI).toFixed(0));
+        }
+        var mz = new URLSearchParams(window.location.search).get('mapzoom');
+        if (mz) q.set('mapzoom', mz);
+        var url = window.location.origin + window.location.pathname + '?' + q.toString();
+        var done = function () {
+          var old = 'Copy Link';
+          copyLinkBtn.textContent = 'Link Copied';
+          setTimeout(function () { copyLinkBtn.textContent = old; }, 1600);
+        };
+        var fallback = function () {
+          var ta = document.createElement('textarea');
+          ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          var ok = false;
+          try { ok = document.execCommand('copy'); } catch (err) {}
+          document.body.removeChild(ta);
+          if (ok) done(); else window.prompt('Copy this link:', url);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, fallback);
+        else fallback();
+      });
       tourReloadStopFn = function (sid) {
         delete configCache[sid];
         delete sceneCache[sid];
@@ -5958,8 +6373,50 @@
           tourNameForTitle = shownName;
           window.helpTourName = shownName;
           window.helpTourIntro = (manifest.intro_note || '').toString().trim();
+          tourLoopNav = manifest.loop_nav !== false;
+          (function () {
+            var full = String(manifest.name || tourId);
+            var pm = full.match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+            var cond = pm ? pm[2].replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b/g, '').replace(/\s*,\s*/g, ', ').replace(/^[\s,]+|[\s,]+$/g, '') : '';
+            var dateLbl = '';
+            if (manifest.field_visit_date) {
+              var dd = new Date(manifest.field_visit_date + 'T00:00:00');
+              if (!isNaN(dd.getTime())) dateLbl = dd.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            window.helpTourInfo = { name: pm ? pm[1].trim() : full, date: dateLbl, conditions: cond, stops: (manifest.sites || []).length };
+          })();
           var sites = manifest.sites || [];
+          // Links use the stop's display name (Stop 2, IMG_5469). A name shared by two stops, or one with no
+          // letters or digits, falls back to the full site id so every link stays unambiguous.
+          (function () {
+            var counts = {};
+            sites.forEach(function (x) { var k = slugifyStopName(x.display_name || x.site_id); counts[k] = (counts[k] || 0) + 1; });
+            tourStopSlugs = {};
+            sites.forEach(function (x) {
+              var k = slugifyStopName(x.display_name || x.site_id);
+              if (k && counts[k] === 1) tourStopSlugs[x.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_')] = k;
+            });
+          })();
           tourSiteOptions = sites;
+          // Bookmarks: keep only stops this tour still has, and drop any bookmark left empty.
+          (function () {
+            var present = {};
+            sites.forEach(function (x) { present[bmNorm(x.site_id)] = true; });
+            var seenIds = {};
+            tourBookmarkList = (manifest.bookmarks || []).map(function (b) {
+              var name = String((b && b.name) || '').trim();
+              var seen = {};
+              var stops = ((b && b.stops) || []).map(bmNorm).filter(function (x) {
+                if (!present[x] || seen[x]) return false;
+                seen[x] = true; return true;
+              });
+              return { id: slugifyStopName((b && b.id) || name), name: name, stops: stops, note: String((b && b.note) || '').trim() };
+            }).filter(function (b) {
+              if (!b.name || !b.id || !b.stops.length || seenIds[b.id]) return false;
+              seenIds[b.id] = true; return true;
+            });
+            renderBookmarkList();
+          })();
 
           var sitesWithGps = sites.filter(s => s.lat != null && s.lng != null);
           tourHasMap = sitesWithGps.length > 0;
@@ -5981,6 +6438,35 @@
 
           // Icon slot only when at least one stop has an icon, so plain tours look as before.
           var anyStopIcon = sites.some(function (x) { return x.platform === 'aerial' || x.platform === 'float' || x.kind === 'pdf' || x.overview; });
+          // Open on the stop a shared link names, if this tour has it; otherwise the first stop.
+          var startIdx = 0, stopFound = false;
+          if (stopParam) {
+            var wantSid = stopParam.trim().toLowerCase().replace(/[\s-]+/g, '_');
+            for (var si = 0; si < sites.length; si++) {
+              if (sites[si].site_id.trim().toLowerCase().replace(/[\s-]+/g, '_') === wantSid) { startIdx = si; stopFound = true; break; }
+            }
+            // Otherwise match on the stop's display name (?stop=stop-2).
+            if (!stopFound) {
+              var wantSlug = slugifyStopName(stopParam);
+              for (var sj = 0; sj < sites.length; sj++) {
+                if (slugifyStopName(sites[sj].display_name || sites[sj].site_id) === wantSlug) { startIdx = sj; stopFound = true; break; }
+              }
+            }
+          }
+          if (!stopFound) pendingStartView = null; // unknown stop: ignore the camera values too
+          // ?bookmark=<id>: open the tour framed on that bookmark, starting at its first stop unless a stop was named.
+          var startBm = null;
+          var bmParam = urlParams.get('bookmark');
+          if (bmParam) {
+            var wantBm = slugifyStopName(bmParam);
+            tourBookmarkList.forEach(function (b) { if (b.id === wantBm) startBm = b; });
+            if (startBm && !stopFound) {
+              for (var bi = 0; bi < sites.length; bi++) {
+                if (bmNorm(sites[bi].site_id) === startBm.stops[0]) { startIdx = bi; break; }
+              }
+            }
+          }
+          if (sites[startIdx]) pendingStartSid = sites[startIdx].site_id.trim().toLowerCase().replace(/[\s-]+/g, '_');
           sites.forEach((s, idx) => {
             var link = document.createElement('div');
             link.className = 'tour-stop-link';
@@ -5997,8 +6483,9 @@
             siteLinkElements[sidKey] = link;
             link.addEventListener('click', () => loadStop(s.site_id));
             listEl.appendChild(link);
-            if (idx === 0) loadStop(s.site_id);
+            if (idx === startIdx) loadStop(s.site_id);
           });
+          if (startBm) activateBookmark(startBm.id, true);
           if (!sites.length) {
             var empty = document.createElement('div');
             empty.className = 'tour-sidebar-error';
