@@ -1032,7 +1032,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-26 17:31:04</div>
+  <div id="build-timestamp">Built 2026-10-27 10:24:04</div>
 
   <div id="status-banner"></div>
 
@@ -6736,15 +6736,23 @@
             window.helpTourInfo = { name: pm ? pm[1].trim() : full, date: dateLbl, conditions: cond, stops: (manifest.sites || []).length };
           })();
           var sites = manifest.sites || [];
-          // Links use the stop's display name (Stop 2, IMG_5469). A name shared by two stops, or one with no
-          // letters or digits, falls back to the full site id so every link stays unambiguous.
+          // Links use the stop's display name (Stop 2, Lower Pond). Stops that share a name get a number after it,
+          // in tour order (lower-pond, lower-pond-2), and a stop with no usable name is called stop-N by its place
+          // in the tour, so links never show a photo file name.
           (function () {
-            var counts = {};
-            sites.forEach(function (x) { var k = slugifyStopName(x.display_name || x.site_id); counts[k] = (counts[k] || 0) + 1; });
             tourStopSlugs = {};
-            sites.forEach(function (x) {
-              var k = slugifyStopName(x.display_name || x.site_id);
-              if (k && counts[k] === 1) tourStopSlugs[x.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_')] = k;
+            var used = {}, pending = [];
+            sites.forEach(function (x, i) {
+              var key = bmNorm(x.site_id);
+              var base = slugifyStopName(x.display_name) || ('stop-' + (i + 1));
+              if (!used[base]) { used[base] = true; tourStopSlugs[key] = base; }
+              else pending.push({ key: key, base: base });
+            });
+            pending.forEach(function (d) {
+              var n = 2, cand = d.base + '-' + n;
+              while (used[cand]) { n++; cand = d.base + '-' + n; }
+              used[cand] = true;
+              tourStopSlugs[d.key] = cand;
             });
           })();
           tourSiteOptions = sites;
@@ -6800,7 +6808,7 @@
             if (!stopFound) {
               var wantSlug = slugifyStopName(stopParam);
               for (var sj = 0; sj < sites.length; sj++) {
-                if (slugifyStopName(sites[sj].display_name || sites[sj].site_id) === wantSlug) { startIdx = sj; stopFound = true; break; }
+                if (tourStopSlugs[bmNorm(sites[sj].site_id)] === wantSlug) { startIdx = sj; stopFound = true; break; }
               }
             }
           }
