@@ -268,7 +268,7 @@
       background-repeat: no-repeat;
     }
 
-    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn, #site-map-locate-btn, #site-map-measure-btn, #site-map-expand-btn {
+    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn, #site-map-locate-btn, #site-map-measure-btn, #site-map-expand-btn, #site-map-flow-btn, #site-map-swap-btn {
       position: absolute; z-index: 1600; top: 8px;
       width: 30px; height: 30px; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2);
       background: #fff; color: #333; font-size: 15px; line-height: 1;
@@ -279,7 +279,74 @@
     #site-map-follow-btn { right: 116px; font-size: 17px; }
     #site-map-follow-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
     #site-map-basemap-btn { right: 80px; font-size: 16px; display: none; }
-    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover, #site-map-follow-btn:hover, #site-map-locate-btn:hover, #site-map-measure-btn:hover, #site-map-expand-btn:hover { background: #f4f4f4; }
+    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover, #site-map-follow-btn:hover, #site-map-locate-btn:hover, #site-map-measure-btn:hover, #site-map-expand-btn:hover, #site-map-flow-btn:hover, #site-map-swap-btn:hover { background: #f4f4f4; }
+    /* The Flow button opens the project's flow viewer (water depth, velocity and flow direction). Hidden until the
+    repo has a flow link saved in the publisher (Tours Page Settings). */
+    #site-map-flow-btn { right: 224px; display: none; }
+    #site-map-flow-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
+    /* Swap: the map takes the big screen (placed exactly like the enlarged map) and the 360 view moves into the inset,
+    at the size the map inset was. The swap button sits under the make the map bigger button on a desktop. */
+    #site-map-swap-btn { left: 10px; top: 118px; }
+    #site-map-swap-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
+    #container.swapped #pano-left {
+      position: absolute; right: 12px; bottom: 12px; flex: none;
+      width: var(--swap-w, 450px); height: var(--swap-h, 330px); max-width: 90vw; max-height: 80vh;
+      z-index: 1550; border: 1px solid #019fc4; border-radius: 8px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+    #container.swapped #site-map-resize-handle { display: none; }
+    /* The 360 view covers the corner where the map keeps its credit line and the flow box, so move those over. */
+    #container.swapped #site-map .leaflet-bottom.leaflet-right { right: auto; left: 110px; }
+    /* Edge to edge: the map fills the whole window, underneath the menu, Prev and Next and the stop list, which float on
+    top of it. Its own buttons move down to sit below the menu row, and (on a desktop) clear of an open stop list. */
+    #container.swapped #site-map-panel {
+      top: 0; left: 0; right: 0; bottom: 0; width: 100% !important; height: 100% !important;
+      max-width: none !important; max-height: none !important; border: 0; border-radius: 0; box-shadow: none; z-index: 900;
+    }
+    #container.swapped #site-map .leaflet-top.leaflet-left { margin-top: 56px; margin-left: calc(var(--map-left, 8px) - 8px); }
+    #container.swapped #site-map-panel .leaflet-top.leaflet-right { margin-top: 98px; }
+    #container.swapped #site-map-fit-btn, #container.swapped #site-map-zoomto-btn, #container.swapped #site-map-basemap-btn,
+    #container.swapped #site-map-follow-btn, #container.swapped #site-map-locate-btn, #container.swapped #site-map-measure-btn,
+    #container.swapped #site-map-flow-btn, #container.swapped #site-map-coords-btn { top: 64px; }
+    #container.swapped #site-map-coords-box { top: 102px; }
+    #container.swapped #edit-tools-panel { z-index: 800; }   /* local preview only: tucked behind the map while swapped */
+    @media (pointer: fine) {
+      #container.swapped #site-map-expand-btn { top: 138px; left: calc(var(--map-left, 8px) + 2px); }
+      #container.swapped #site-map-swap-btn { top: 174px; left: calc(var(--map-left, 8px) + 2px); }
+    }
+    @media (pointer: coarse) {
+      #container.swapped #site-map-expand-btn, #container.swapped #site-map-swap-btn { top: 64px; }
+      #container.swapped #site-map-panel .leaflet-top.leaflet-right { margin-top: 110px; }
+    }
+    #container.swapped #flow-box { right: auto; left: 8px; bottom: 56px; }
+    #pano-swap-back-btn {
+      display: none; position: absolute; top: 8px; right: 8px; z-index: 60; width: 30px; height: 30px; border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.2); background: #fff; color: #333; cursor: pointer; align-items: center; justify-content: center;
+    }
+    #pano-swap-back-btn:hover { background: #f4f4f4; }
+    #container.swapped #pano-swap-back-btn { display: flex; }
+    #site-map-flow-btn.armed:hover { background: #019fc4; }
+    /* The flow animation sits in its own map layers, under the stop pins and the view cone, so the 360 stops stay on top. */
+    .leaflet-flowFill-pane, .leaflet-flowLines-pane { pointer-events: none; }
+    #flow-box {
+      display: none; position: absolute; right: 8px; bottom: 24px; z-index: 1650; max-width: calc(100% - 16px);
+      padding: 6px 7px; border-radius: 8px; border: 1px solid #1b3f95; background: rgba(14, 27, 51, 0.93);
+      color: #e8eef7; font: 11px/1.3 -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    #flow-box .frow { display: flex; align-items: center; gap: 5px; }
+    #flow-box .frow + .frow { margin-top: 5px; }
+    #flow-box select { flex: 1 1 0; min-width: 0; height: 24px; padding: 0 4px; font-size: 11px; color: #fff; background: #132447;
+      border: 1px solid #1b3f95; border-radius: 5px; }
+    #flow-box .fseg { display: flex; border: 1px solid #1b3f95; border-radius: 5px; overflow: hidden; }
+    #flow-box .fseg button { height: 22px; padding: 0 7px; font-size: 11px; color: #fff; background: #132447; border: 0; cursor: pointer; }
+    #flow-box .fseg button + button { border-left: 1px solid #1b3f95; }
+    #flow-box .fseg button.on { background: #019fc4; font-weight: 600; }
+    #flow-box .ficon { height: 22px; min-width: 24px; padding: 0 5px; font-size: 12px; color: #fff; background: #132447; border: 1px solid #1b3f95;
+      border-radius: 5px; cursor: pointer; }
+    #flow-box .ficon:hover { border-color: #019fc4; }
+    #flow-box .ficon.off { opacity: 0.5; }
+    #flow-box .fstat { color: #9fb2cc; margin-left: 2px; white-space: nowrap; }
+    #flow-box .fleg { height: 6px; border-radius: 3px; margin-top: 5px; }
+    #flow-box .fnum { display: flex; justify-content: space-between; color: #9fb2cc; font-size: 10px; margin-top: 1px; }
     /* Make the map bigger, on every screen. The map grows to nearly the whole window, leaving the top clear for the
     menu and Prev and Next, and the button (or Esc) puts it back at the size it was. On a desktop, --map-left is set
     from the tour sidebar so the enlarged map starts to the right of it instead of underneath. */
@@ -357,12 +424,14 @@
       #site-map-coords-btn, #site-map-coords-box { display: none !important; }
       /* Finger sized buttons, all the same size and evenly spaced. */
       #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn,
-      #site-map-locate-btn, #site-map-expand-btn { width: 38px; height: 38px; }
+      #site-map-locate-btn, #site-map-expand-btn, #site-map-flow-btn, #site-map-swap-btn { width: 38px; height: 38px; }
       #site-map-fit-btn { right: 8px; }
       #site-map-locate-btn { right: 52px; }
       #site-map-basemap-btn { right: 96px; }
       #site-map-follow-btn { right: 140px; }
       #site-map-expand-btn { right: 184px; left: auto; top: 8px; }
+      #site-map-flow-btn { right: 228px; }
+      #site-map-swap-btn { right: 272px; left: auto; top: 8px; }
       #site-map-panel .leaflet-top.leaflet-right { margin-top: 54px; }
       #site-map-panel .leaflet-bar a { width: 38px; height: 38px; line-height: 38px; }
       #site-map-panel .leaflet-control-layers-toggle { width: 38px; height: 38px; background-size: 22px 22px; }
@@ -604,6 +673,9 @@
     .edit-group > summary:hover { color: #ffffff; }
     .edit-group-body { display: flex; flex-direction: column; gap: 6px; padding-top: 6px; }
     #heading-group #heading-dial-row { margin-top: 0; padding-top: 0; border-top: none; }
+    #position-coords { color: #d9b3ff; font-size: 12px; margin-bottom: 4px; word-break: break-all; }
+    #pos-help { display: none; color: #d8c8f0; font-size: 11px; line-height: 1.4; margin-bottom: 4px; }
+    .tour-stop-link.pos-unsaved::after { content: ' \25CF'; color: #7fd6ff; margin-left: 6px; }
     #heading-dial-label { color: #d9b3ff; font-size: 12px; margin-bottom: 6px; }
     #heading-value-display { font-weight: bold; color: #fff; }
     #heading-dial-nudges { display: flex; gap: 4px; margin-bottom: 6px; }
@@ -1032,6 +1104,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
+  <script src="https://unpkg.com/proj4@2.9.2/dist/proj4.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
@@ -1040,7 +1113,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-29 14:09:29</div>
+  <div id="build-timestamp">Built 2026-10-30 16:51:48</div>
 
   <div id="status-banner"></div>
 
@@ -1049,6 +1122,7 @@
       <div class="pano-label" id="label-left">360° View</div>
       <div class="pano-loading" id="pano-loading-left"><div class="spinner"></div><div>Loading imagery&hellip;</div></div>
       <div class="center-crosshair" id="center-crosshair-left"></div>
+      <button id="pano-swap-back-btn" type="button" title="Swap back: 360 view big, map in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
     </div>
 
     <div id="pano-right-wrapper">
@@ -1142,6 +1216,8 @@
       <button id="site-map-locate-btn" type="button" title="Show where you are on the map (tap again to stop)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></button>
       <button id="site-map-measure-btn" type="button" title="Measure distance or area on the map (click points, Esc to finish)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg></button>
       <button id="site-map-expand-btn" type="button" title="Make the map bigger"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+      <button id="site-map-swap-btn" type="button" title="Swap: show the map big and the 360 view in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
+      <button id="site-map-flow-btn" type="button" title="Show the animated water flow on this map"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2 0 2-2 4.5-2S10 8 12 8s2.5-2 4.5-2S19 8 21 8"/><path d="M3 13c2 0 2-2 4.5-2S10 13 12 13s2.5-2 4.5-2S19 13 21 13"/><path d="M3 18c2 0 2-2 4.5-2S10 18 12 18s2.5-2 4.5-2S19 18 21 18"/></svg></button>
       <button id="site-map-coords-btn" type="button" title="Coordinates: go to a position, or copy the cursor position (right click the map to drop a pin)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg></button>
       <div id="site-map-coords-box">
         <input id="site-map-coords-input" type="text" placeholder="Go to lat, lng" autocomplete="off" spellcheck="false" aria-label="Go to coordinates, latitude then longitude">
@@ -1196,6 +1272,17 @@
       <button id="save-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Save Hotspots</button>
       <button id="hotspot-list-btn" class="edit-tool-btn" type="button" style="display:none;">Show Hotspot List</button>
       <div id="hotspot-list-content" style="display:none;"></div>
+      </div>
+      </details>
+      <details class="edit-group" id="position-group" style="display:none;"><summary>Position</summary>
+      <div class="edit-group-body">
+      <div id="position-row" style="display:none;">
+        <div id="position-coords">No position for this stop.</div>
+        <button id="pos-move-btn" class="edit-tool-btn" type="button">Move This Pin</button>
+        <div id="pos-help">Drag this stop's pin on the map, or click the map to put it there. Zoom in for fine placement. Pins turn the stop's sidebar entry blue until saved.</div>
+        <button id="pos-save-btn" class="edit-tool-btn" type="button" style="display:none;">Save Position</button>
+        <button id="pos-revert-btn" class="edit-tool-btn" type="button" style="display:none;">Revert This Stop</button>
+      </div>
       </div>
       </details>
       <details class="edit-group" id="heading-group" style="display:none;"><summary>Heading</summary>
@@ -1524,7 +1611,7 @@
     (function () {
       var panel = document.getElementById('edit-tools-panel');
       function syncEditGroups() {
-        ['hotspots-group', 'heading-group'].forEach(function (id) {
+        ['hotspots-group', 'position-group', 'heading-group'].forEach(function (id) {
           var g = document.getElementById(id);
           var body = g && g.querySelector('.edit-group-body');
           if (!body) return;
@@ -3323,6 +3410,122 @@
       } catch (e) {}
     }
 
+    // Esri cached tile services in WA State Plane South (EPSG 2927, US feet), such as Pierce County's
+    // orthophoto caches. Their tile grid is not Web Mercator, so a plain {z}/{y}/{x} layer would pull the
+    // wrong tiles. This layer reprojects in the browser: for each Web Mercator tile it works out which
+    // native tiles cover it, then draws each one onto a canvas with an affine transform (a native tile
+    // is tiny on the ground, so one affine per tile is accurate). No pixels are read back, so no CORS
+    // setup is needed on the image tiles. Tiles are drawn at 512 px for sharp results on any screen.
+    var SP_FT_PER_M = 1 / 0.3048006096012192;
+    var SP_DEFS = {
+      2927: '+proj=lcc +lat_0=45.3333333333333 +lon_0=-120.5 +lat_1=47.3333333333333 +lat_2=45.8333333333333 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs',
+      2926: '+proj=lcc +lat_0=47 +lon_0=-120.833333333333 +lat_1=48.7333333333333 +lat_2=47.5 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs'
+    };
+    var SP_DEFAULT_META = (function () {
+      var lods = [];
+      for (var i = 0; i <= 13; i++) lods.push({ level: i, resolution: 533.3333333333333 / Math.pow(2, i) });
+      return { wkid: 2927, origin: { x: 890000, y: 967000 }, size: 256, lods: lods };
+    })();
+    var spImgCache = {};
+    var spImgCacheKeys = [];
+    function spLoadImg(url) {
+      if (spImgCache[url]) return spImgCache[url];
+      var p = new Promise(function (resolve) {
+        var im = new Image();
+        im.onload = function () { resolve(im); };
+        im.onerror = function () { resolve(null); };
+        im.src = url;
+      });
+      spImgCache[url] = p;
+      spImgCacheKeys.push(url);
+      if (spImgCacheKeys.length > 600) delete spImgCache[spImgCacheKeys.shift()];
+      return p;
+    }
+    function spMerc2LL(x, y) {
+      var R = 6378137;
+      return [x / R * 180 / Math.PI, (2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * 180 / Math.PI];
+    }
+    function spLL2Merc(lon, lat) {
+      var R = 6378137;
+      return [lon * Math.PI / 180 * R, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * R];
+    }
+    var SpTileLayer = L.GridLayer.extend({
+      initialize: function (url, options) {
+        L.GridLayer.prototype.initialize.call(this, options);
+        this._root = String(url || '').replace(/\/tile(\/.*)?$/i, '').replace(/\/+$/, '');
+        this._meta = null;
+        var self = this;
+        this._metaReady = (window.fetch ? fetch(this._root + '?f=json').then(function (r) { return r.ok ? r.json() : null; }) : Promise.resolve(null))
+          .catch(function () { return null; })
+          .then(function (m) {
+            var ti = m && m.tileInfo;
+            var wk = ti && ti.spatialReference && (ti.spatialReference.latestWkid || ti.spatialReference.wkid);
+            if (ti && ti.lods && ti.lods.length && ti.origin && SP_DEFS[wk]) {
+              var lods = ti.lods.slice().sort(function (a, b) { return a.level - b.level; });
+              self._meta = { wkid: wk, origin: ti.origin, size: ti.rows || 256, lods: lods };
+            } else {
+              self._meta = SP_DEFAULT_META;
+            }
+            self._projName = 'SP' + self._meta.wkid;
+            if (!proj4.defs(self._projName)) proj4.defs(self._projName, SP_DEFS[self._meta.wkid]);
+          });
+      },
+      createTile: function (coords, done) {
+        var P = 512;
+        var canvas = document.createElement('canvas');
+        canvas.width = P; canvas.height = P;
+        var self = this;
+        this._metaReady.then(function () {
+          try { self._draw(canvas, coords, P, done); } catch (e) { done(null, canvas); }
+        });
+        return canvas;
+      },
+      _draw: function (canvas, coords, P, done) {
+        var m = this._meta, pn = this._projName;
+        var ws = 40075016.68557849 / Math.pow(2, coords.z);
+        var minx = -20037508.342789244 + coords.x * ws;
+        var maxy = 20037508.342789244 - coords.y * ws;
+        var toSP = function (X, Y) { var ll = spMerc2LL(X, Y); return proj4('EPSG:4326', pn, ll); };
+        var fromSP = function (x, y) { var ll = proj4(pn, 'EPSG:4326', [x, y]); return spLL2Merc(ll[0], ll[1]); };
+        var cLat = spMerc2LL(minx + ws / 2, maxy - ws / 2)[1];
+        var destRes = (ws / P) * Math.cos(cLat * Math.PI / 180) * SP_FT_PER_M; // ground feet per output pixel
+        var lod = m.lods[m.lods.length - 1];
+        for (var i = 0; i < m.lods.length; i++) {
+          if (m.lods[i].resolution <= destRes * 1.15) { lod = m.lods[i]; break; }
+        }
+        var T = m.size * lod.resolution;
+        var cs = [toSP(minx, maxy), toSP(minx + ws, maxy), toSP(minx, maxy - ws), toSP(minx + ws, maxy - ws)];
+        var xs = cs.map(function (c) { return c[0]; }), ys = cs.map(function (c) { return c[1]; });
+        var c0 = Math.floor((Math.min.apply(null, xs) - m.origin.x) / T), c1 = Math.floor((Math.max.apply(null, xs) - m.origin.x) / T);
+        var r0 = Math.floor((m.origin.y - Math.max.apply(null, ys)) / T), r1 = Math.floor((m.origin.y - Math.min.apply(null, ys)) / T);
+        if (c1 < 0 || r1 < 0 || (c1 - c0 + 1) * (r1 - r0 + 1) > 25) { done(null, canvas); return; }
+        c0 = Math.max(0, c0); r0 = Math.max(0, r0);
+        var ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        var jobs = [];
+        for (var c = c0; c <= c1; c++) {
+          for (var r = r0; r <= r1; r++) {
+            (function (col, row) {
+              var url = this._root + '/tile/' + lod.level + '/' + row + '/' + col;
+              jobs.push(spLoadImg(url).then(function (img) {
+                if (!img) return;
+                var x0 = m.origin.x + col * T, y0 = m.origin.y - row * T;
+                var tl = fromSP(x0, y0), tr = fromSP(x0 + T, y0), bl = fromSP(x0, y0 - T);
+                var px = function (p) { return [(p[0] - minx) / ws * P, (maxy - p[1]) / ws * P]; };
+                var a = px(tl), b = px(tr), d = px(bl), sz = m.size;
+                ctx.save();
+                ctx.setTransform((b[0] - a[0]) / sz, (b[1] - a[1]) / sz, (d[0] - a[0]) / sz, (d[1] - a[1]) / sz, a[0], a[1]);
+                ctx.drawImage(img, -0.4, -0.4, sz + 0.8, sz + 0.8);
+                ctx.restore();
+              }));
+            }).call(this, c, r);
+          }
+        }
+        Promise.all(jobs).then(function () { done(null, canvas); });
+      }
+    });
+
     function buildBaseLayer(basemapType, basemapUrl) {
       if ((basemapType === 'esri_tile' || basemapType === 'xyz_tile') && basemapUrl) {
         var baseTiles = L.tileLayer(basemapUrl, { maxZoom: TILE_ABS_MAX_ZOOM, attribution: 'Imagery: SPSSEG' });
@@ -3334,6 +3537,12 @@
           baseTiles.options.maxNativeZoom = XYZ_NATIVE_MAX_ZOOM;
         }
         return baseTiles;
+      }
+      if (basemapType === 'esri_tile_sp' && basemapUrl && window.proj4) {
+        // Deepest useful level: the finest native cache (about 0.065 ft per pixel) lines up with web zoom 21 at 512 px tiles.
+        var spLayer = new SpTileLayer(basemapUrl, { maxZoom: TILE_ABS_MAX_ZOOM, attribution: 'Imagery: Pierce County GIS' });
+        applyTileTop(spLayer, 21);
+        return spLayer;
       }
       if (basemapType === 'esri_image' && basemapUrl && window.L && L.esri && L.esri.imageMapLayer) {
         return L.esri.imageMapLayer({ url: basemapUrl, attribution: 'Imagery: SPSSEG' });
@@ -3851,6 +4060,358 @@
       return yawDeg * Math.PI / 180;
     }
 
+    // ---- Flow animation on the site map ----------------------------------------------------------------------
+    // landing_config.json (repo root) can hold flow_url, set in the publisher under Tours Page Settings: the link to
+    // this project's flow viewer. The map gets a Flow button. Pressing it draws that flow site's water depth or
+    // velocity, with moving flow lines, directly on this map, underneath the stop pins and the view cone. A link to
+    // the flow site list (no ?site=) just opens in a new tab instead.
+    var flowLink = '';
+    var flowLayer = null;
+    function updateFlowButton() {
+      var b = document.getElementById('site-map-flow-btn');
+      if (b) b.style.display = flowLink ? 'flex' : 'none';
+    }
+    fetch('landing_config.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .catch(function () { return {}; })
+      .then(function (c) { flowLink = String((c && c.flow_url) || '').trim(); updateFlowButton(); });
+
+    function flowInfo() {
+      var u;
+      try { u = new URL(flowLink, location.href); } catch (e) { return null; }
+      var site = u.searchParams.get('site');
+      if (!site) return null;
+      return { base: u.origin + u.pathname.replace(/[^\/]*$/, ''), site: site, a: u.searchParams.get('a'), f: u.searchParams.get('f') };
+    }
+
+    // The same link, opened in its own tab on the stop being shown, with a marker where you were standing.
+    function openFlowViewer() {
+      var u;
+      try { u = new URL(flowLink, location.href); } catch (e) { return; }
+      var ll = currentSiteLatLng();
+      if (!ll && siteMap) { var c = siteMap.getCenter(); ll = [c.lat, c.lng]; }
+      if (ll && u.searchParams.has('site')) {
+        var zoom = siteMap ? Math.max(12, Math.min(21, Math.round(siteMap.getZoom() * 4) / 4)) : 18;
+        u.searchParams.set('ll', ll[0].toFixed(5) + ',' + ll[1].toFixed(5));
+        u.searchParams.set('z', zoom.toFixed(2));
+        u.searchParams.set('pin', ll[0].toFixed(5) + ',' + ll[1].toFixed(5));
+        var name = '';
+        if (pendingMapData && pendingMapData.type === 'tour') {
+          var s = (pendingMapData.sites || []).filter(function (x) { return x.site_id === activeTourSiteId; })[0];
+          name = (s && (s.display_name || s.site_id)) || '';
+        } else if (pendingMapData && pendingMapData.label) {
+          name = pendingMapData.label;
+        }
+        if (name) u.searchParams.set('pn', name); else u.searchParams.delete('pn');
+      }
+      window.open(u.toString(), '_blank', 'noopener');
+    }
+
+    function createFlowLayer(map, info) {
+      var base = info.base, siteId = info.site;
+      var manifest = null, cache = {}, cacheOrder = [], cur = null, fillMode = info.f === 'velocity' ? 'velocity' : 'depth';
+      var linesOn = true, shown = false, token = 0, raf = null, view = null, frameNo = 0, particles = [], grid = null;
+      var DENS_K = 0.012, MAX_PARTS = window.innerWidth < 700 ? 3500 : 8000;
+      var box = null, els = {};
+
+      var fillPane = map.getPane('flowFill') || map.createPane('flowFill');
+      var linePane = map.getPane('flowLines') || map.createPane('flowLines');
+      fillPane.style.zIndex = 250; linePane.style.zIndex = 255;     // above the basemap, below overlays, pins and the cone
+      var fillCv = document.createElement('canvas'), lineCv = document.createElement('canvas');
+      fillCv.style.position = lineCv.style.position = 'absolute';
+      fillPane.appendChild(fillCv); linePane.appendChild(lineCv);
+      var fctx = fillCv.getContext('2d'), lctx = lineCv.getContext('2d');
+
+      // ---- colours (the same ramps as the flow viewer) ----
+      var VEL = [[0, [68, 1, 84]], [0.25, [59, 82, 139]], [0.5, [33, 145, 140]], [0.75, [94, 201, 98]], [1, [253, 231, 37]]];
+      function velColor(t, o) {
+        t = Math.max(0, Math.min(1, t));
+        for (var k = 1; k < VEL.length; k++) if (t <= VEL[k][0]) {
+          var a = VEL[k - 1], b = VEL[k], f = (t - a[0]) / (b[0] - a[0]);
+          o[0] = a[1][0] + (b[1][0] - a[1][0]) * f; o[1] = a[1][1] + (b[1][1] - a[1][1]) * f; o[2] = a[1][2] + (b[1][2] - a[1][2]) * f; o[3] = 225; return;
+        }
+      }
+      function depthColor(t, o) {
+        var s = Math.sqrt(Math.max(0, Math.min(1, t)));
+        if (s < 0.5) { var k = s / 0.5; o[0] = 150 - 120 * k; o[1] = 225 - 105 * k; o[2] = 240 - 20 * k; o[3] = 150 + 60 * k; }
+        else { var k2 = (s - 0.5) / 0.5; o[0] = 30 - 20 * k2; o[1] = 120 - 80 * k2; o[2] = 220 - 70 * k2; o[3] = 210 + 40 * k2; }
+      }
+      var ramp = [];
+      for (var q = 0; q < 32; q++) { var t = q / 31; ramp.push('rgba(' + Math.round(170 + 85 * t) + ',' + Math.round(235 + 20 * t) + ',255,' + (0.45 + 0.5 * t).toFixed(2) + ')'); }
+      var LEG = { depth: 'linear-gradient(90deg, rgba(150,225,240,0.6) 0%, rgba(30,120,220,0.82) 25%, rgba(10,40,150,0.98) 100%)',
+                  velocity: 'linear-gradient(90deg, rgb(68,1,84), rgb(59,82,139) 25%, rgb(33,145,140) 50%, rgb(94,201,98) 75%, rgb(253,231,37))' };
+
+      function merc2ll(x, y) { var R = 6378137; return L.latLng((2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * 180 / Math.PI, x / R * 180 / Math.PI); }
+
+      // ---- data ----
+      function loadImg(url) {
+        return new Promise(function (resolve, reject) {
+          function attempt(cors) {
+            var im = new Image();
+            if (cors) im.crossOrigin = 'anonymous';
+            im.onload = function () {
+              try {
+                var c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+                var x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
+                resolve(x.getImageData(0, 0, c.width, c.height));
+              } catch (e) { reject(new Error('The flow data could not be read from this address.')); }
+            };
+            im.onerror = function () { if (cors) attempt(false); else reject(new Error('Could not load ' + url)); };
+            im.src = url;
+          }
+          attempt(true);
+        });
+      }
+      function loadScenario(id) {
+        if (cache[id]) return Promise.resolve(cache[id]);
+        return Promise.all([loadImg(base + 'sites/' + encodeURIComponent(siteId) + '/depth_' + encodeURIComponent(id) + '.png'),
+                            loadImg(base + 'sites/' + encodeURIComponent(siteId) + '/flow_' + encodeURIComponent(id) + '.png')]).then(function (r) {
+          var meta = manifest.discharges.filter(function (d) { return d.id === id; })[0] || { id: id, label: id };
+          cache[id] = { id: id, meta: meta, depth: r[0], flow: r[1], fills: {} };
+          cacheOrder.push(id);
+          while (cacheOrder.length > 2) { delete cache[cacheOrder.shift()]; }   // keep memory modest
+          return cache[id];
+        });
+      }
+      function fillFor(scn, mode) {
+        if (scn.fills[mode]) return scn.fills[mode];
+        var W = manifest.width, H = manifest.height, c = document.createElement('canvas'); c.width = W; c.height = H;
+        var x = c.getContext('2d'), out = x.createImageData(W, H), o = out.data, rgba = [0, 0, 0, 0], d = scn.depth.data, f = scn.flow.data;
+        for (var i = 0, n = W * H; i < n; i++) {
+          var p = i * 4;
+          if (d[p + 3] === 0) continue;
+          if (mode === 'depth') depthColor((d[p] * 256 + d[p + 1]) / 65535, rgba); else velColor(f[p + 2] / 255, rgba);
+          o[p] = rgba[0]; o[p + 1] = rgba[1]; o[p + 2] = rgba[2]; o[p + 3] = rgba[3];
+        }
+        x.putImageData(out, 0, 0);
+        return (scn.fills[mode] = c);
+      }
+
+      // ---- canvases follow the map ----
+      function place() {
+        var s = map.getSize(), dpr = window.devicePixelRatio || 1;
+        [fillCv, lineCv].forEach(function (c) {
+          var w = Math.round(s.x * dpr), h = Math.round(s.y * dpr);
+          if (c.width !== w || c.height !== h) { c.width = w; c.height = h; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); }
+          c.style.width = s.x + 'px'; c.style.height = s.y + 'px';
+          L.DomUtil.setPosition(c, map.containerPointToLayerPoint([0, 0]));
+        });
+      }
+      function computeView() {
+        var b = manifest.bounds3857, W = manifest.width, H = manifest.height;
+        var tl = map.latLngToContainerPoint(merc2ll(b[0], b[3])), br = map.latLngToContainerPoint(merc2ll(b[2], b[1]));
+        var sx = (br.x - tl.x) / W, sy = (br.y - tl.y) / H, size = map.getSize();
+        var i0 = Math.max(0, Math.floor(-tl.x / sx)), i1 = Math.min(W - 1, Math.ceil((size.x - tl.x) / sx));
+        var j0 = Math.max(0, Math.floor(-tl.y / sy)), j1 = Math.min(H - 1, Math.ceil((size.y - tl.y) / sy));
+        return (view = { tlx: tl.x, tly: tl.y, sx: sx, sy: sy, i0: i0, i1: i1, j0: j0, j1: j1, ok: i1 > i0 && j1 > j0 });
+      }
+      function clearLines() { var s = map.getSize(); lctx.clearRect(0, 0, s.x, s.y); }
+      function drawFill() {
+        var s = map.getSize();
+        fctx.clearRect(0, 0, s.x, s.y);
+        if (!shown || !cur || fillMode === 'none') return;
+        var v = computeView();
+        if (!v.ok) return;
+        fctx.globalAlpha = 0.8; fctx.imageSmoothingEnabled = true;
+        fctx.drawImage(fillFor(cur, fillMode), v.tlx, v.tly, v.sx * manifest.width, v.sy * manifest.height);
+        fctx.globalAlpha = 1;
+      }
+      function onMove() { if (!shown) return; place(); clearLines(); drawFill(); }
+
+      // ---- flow lines ----
+      function wetArea(vw) {
+        var W = manifest.width, H = manifest.height, f = cur.flow.data, N = 14, wet = 0;
+        for (var a = 0; a < N; a++) for (var b = 0; b < N; b++) {
+          var i = Math.min(W - 1, Math.floor(vw.i0 + (vw.i1 - vw.i0) * (a + 0.5) / N)), j = Math.min(H - 1, Math.floor(vw.j0 + (vw.j1 - vw.j0) * (b + 0.5) / N));
+          if (f[(j * W + i) * 4 + 3] > 0) wet++;
+        }
+        return (vw.i1 - vw.i0) * Math.abs(vw.sx) * (vw.j1 - vw.j0) * Math.abs(vw.sy) * wet / (N * N);
+      }
+      function resizeParticles(vw) {
+        var want = vw.ok ? Math.max(200, Math.min(MAX_PARTS, Math.round(DENS_K * wetArea(vw)))) : 0;
+        while (particles.length < want) particles.push({ i: 0, j: 0, pi: 0, pj: 0, life: 0 });
+        if (particles.length > want) particles.length = want;
+      }
+      function spawn(p, vw) {
+        var W = manifest.width, f = cur.flow.data;
+        for (var t = 0; t < 10; t++) {
+          var i = vw.i0 + Math.random() * (vw.i1 - vw.i0), j = vw.j0 + Math.random() * (vw.j1 - vw.j0);
+          if (f[((j | 0) * W + (i | 0)) * 4 + 3] > 0) { p.i = i; p.j = j; p.pi = i; p.pj = j; p.life = 50 + Math.random() * 80; return; }
+        }
+        p.life = 0;
+      }
+      function frame() {
+        raf = null;
+        if (!shown) return;
+        raf = requestAnimationFrame(frame);
+        if (!cur || !linesOn || document.hidden || cur.meta.flow === false) return;
+        var s = map.getSize();
+        lctx.globalCompositeOperation = 'destination-in'; lctx.fillStyle = 'rgba(0,0,0,0.94)'; lctx.fillRect(0, 0, s.x, s.y); lctx.globalCompositeOperation = 'source-over';
+        var vw = computeView();
+        if (!vw.ok) return;
+        if (++frameNo % 8 === 1 || !particles.length) resizeParticles(vw);
+        var W = manifest.width, H = manifest.height, f = cur.flow.data, perPx = (Math.abs(vw.sx) + Math.abs(vw.sy)) / 2, buckets = {};
+        for (var n = 0; n < particles.length; n++) {
+          var p = particles[n];
+          if (p.life <= 0) { spawn(p, vw); if (p.life <= 0) continue; }
+          var ii = p.i | 0, jj = p.j | 0;
+          if (ii < 0 || jj < 0 || ii >= W || jj >= H) { p.life = 0; continue; }
+          var idx = (jj * W + ii) * 4;
+          if (f[idx + 3] === 0) { p.life = 0; continue; }
+          var ux = f[idx] / 255 * 2 - 1, uy = f[idx + 1] / 255 * 2 - 1, sp = f[idx + 2] / 255;
+          var step = 1.6 * (0.25 + 2.2 * Math.sqrt(sp)) / perPx;
+          p.pi = p.i; p.pj = p.j; p.i += ux * step; p.j += uy * step; p.life--;
+          var c = Math.min(31, (sp * 31) | 0); (buckets[c] || (buckets[c] = [])).push(p);
+        }
+        lctx.lineWidth = 1.3; lctx.lineCap = 'round';
+        for (var key in buckets) {
+          lctx.strokeStyle = ramp[key]; lctx.beginPath();
+          buckets[key].forEach(function (a) { lctx.moveTo(vw.tlx + a.pi * vw.sx, vw.tly + a.pj * vw.sy); lctx.lineTo(vw.tlx + a.i * vw.sx, vw.tly + a.j * vw.sy); });
+          lctx.stroke();
+        }
+      }
+      function startLoop() { if (!raf && shown) raf = requestAnimationFrame(frame); }
+
+      // ---- choosing a scenario ----
+      function buildGrid() {
+        var items = [];
+        for (var k = 0; k < manifest.discharges.length; k++) {
+          var d = manifest.discharges[k], m = /^(Q\d+)(?:[_\s\-]+(.*))?$/i.exec(String(d.name || d.id));
+          if (!m) return null;
+          items.push({ d: d, flow: m[1].toUpperCase(), scen: (m[2] || '').trim() });
+        }
+        var flows = [], scens = [];
+        items.forEach(function (it) { if (flows.indexOf(it.flow) < 0) flows.push(it.flow); if (scens.indexOf(it.scen) < 0) scens.push(it.scen); });
+        flows.sort(function (a, b) { return parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10); });
+        return (flows.length < 2 && scens.length < 2) ? null : { items: items, flows: flows, scens: scens };
+      }
+      function isExisting(t) { return /(^|[^a-z])(ec|existing)([^a-z]|$)/i.test(String(t || '')); }
+      function scenText(s) { return s ? s.replace(/_/g, ' ').split(' ').map(function (w) { return w.length <= 2 ? w.toUpperCase() : w; }).join(' ') : 'All'; }
+      function fillScen(flow, keep) {
+        els.scen.innerHTML = '';
+        grid.items.filter(function (it) { return it.flow === flow; }).forEach(function (it) {
+          var o = document.createElement('option'); o.value = it.scen; o.textContent = scenText(it.scen); els.scen.appendChild(o);
+        });
+        var have = Array.prototype.map.call(els.scen.options, function (o) { return o.value; });
+        els.scen.value = have.indexOf(keep) >= 0 ? keep : have[0];
+      }
+      function currentId() {
+        if (grid) { var it = grid.items.filter(function (x) { return x.flow === els.flow.value && x.scen === els.scen.value; })[0]; return it ? it.d.id : null; }
+        return els.flow.value;
+      }
+      function choose() {
+        var id = currentId();
+        if (!id) return;
+        var my = ++token;
+        els.stat.textContent = 'Loading...';
+        loadScenario(id).then(function (scn) {
+          if (my !== token) return;
+          cur = scn; particles = []; els.stat.textContent = '';
+          els.noflow.style.display = scn.meta.flow === false ? 'inline' : 'none';
+          legend(); place(); clearLines(); drawFill(); startLoop();
+        }).catch(function (e) { if (my === token) els.stat.textContent = e.message || 'Could not load the flow data.'; });
+      }
+      function legend() {
+        els.leg.style.background = LEG[fillMode === 'none' ? 'depth' : fillMode];
+        els.leg.style.display = fillMode === 'none' ? 'none' : 'block'; els.nums.style.display = fillMode === 'none' ? 'none' : 'flex';
+        var u = manifest.units;
+        els.max.textContent = fillMode === 'depth' ? manifest.maxDepth.toFixed(1) + ' ' + u.length : manifest.maxSpeed.toFixed(1) + ' ' + u.velocity;
+      }
+
+      // ---- the small control box ----
+      function buildBox() {
+        box = document.createElement('div'); box.id = 'flow-box';
+        box.innerHTML =
+          '<div class="frow"><select id="flow-sel-flow" aria-label="Flow"></select><select id="flow-sel-scen" aria-label="Scenario"></select></div>' +
+          '<div class="frow"><div class="fseg" id="flow-seg"><button type="button" data-v="depth">Depth</button><button type="button" data-v="velocity">Velocity</button><button type="button" data-v="none">None</button></div>' +
+          '<button type="button" class="ficon" id="flow-lines" title="Moving flow lines on or off">~</button>' +
+          '<button type="button" class="ficon" id="flow-fit" title="Zoom the map to the flow area">&#8982;</button>' +
+          '<button type="button" class="ficon" id="flow-open" title="Open the full flow viewer in a new tab">&#8599;</button></div>' +
+          '<div class="fleg" id="flow-leg"></div><div class="fnum" id="flow-nums"><span>0</span><span id="flow-max"></span></div>' +
+          '<div class="fstat"><span id="flow-stat"></span><span id="flow-noflow" style="display:none;color:#f2b36b">No flow direction for this scenario.</span></div>';
+        document.getElementById('site-map-panel').appendChild(box);
+        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'leg', 'nums', 'max', 'stat', 'noflow'].forEach(function (k) {
+          els[k] = box.querySelector(k === 'flow' || k === 'scen' ? '#flow-sel-' + k : '#flow-' + k);
+        });
+        ['mousedown', 'dblclick', 'wheel', 'touchstart', 'pointerdown'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+        grid = buildGrid();
+        if (grid) {
+          grid.flows.forEach(function (f) {
+            var its = grid.items.filter(function (it) { return it.flow === f; }), vals = [];
+            its.forEach(function (it) { if (it.d.value && vals.indexOf(it.d.value) < 0) vals.push(it.d.value); });
+            var o = document.createElement('option'); o.value = f;
+            o.textContent = grid.scens.length === 1 ? (its[0].d.label || f) : f + (vals.length === 1 ? ' (' + vals[0] + ')' : '');
+            els.flow.appendChild(o);
+          });
+          // open on the flow and scenario the link names, else existing conditions at the lowest flow
+          var named = grid.items.filter(function (it) { return it.d.id === info.a; })[0];
+          var ex = grid.items.filter(function (it) { return isExisting(it.scen); });
+          var first = named || ex.filter(function (it) { return it.flow === grid.flows[0]; })[0] || ex[0] || grid.items[0];
+          els.flow.value = first.flow; fillScen(first.flow, first.scen);
+          els.scen.style.display = grid.scens.length < 2 ? 'none' : '';
+          els.flow.style.display = grid.flows.length < 2 ? 'none' : '';
+          els.flow.addEventListener('change', function () { fillScen(els.flow.value, els.scen.value); choose(); });
+          els.scen.addEventListener('change', choose);
+        } else {
+          manifest.discharges.forEach(function (d) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.label || d.id; els.flow.appendChild(o); });
+          var named2 = manifest.discharges.filter(function (d) { return d.id === info.a; })[0] || manifest.discharges.filter(function (d) { return isExisting((d.name || '') + ' ' + (d.label || '')); })[0];
+          if (named2) els.flow.value = named2.id;
+          els.scen.style.display = 'none';
+          els.flow.addEventListener('change', choose);
+        }
+        function syncSeg() { Array.prototype.forEach.call(els.seg.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === fillMode); }); }
+        Array.prototype.forEach.call(els.seg.querySelectorAll('button'), function (b) {
+          b.addEventListener('click', function () { fillMode = b.getAttribute('data-v'); syncSeg(); legend(); drawFill(); });
+        });
+        syncSeg();
+        els.lines.addEventListener('click', function () { linesOn = !linesOn; els.lines.classList.toggle('off', !linesOn); if (!linesOn) clearLines(); });
+        els.fit.addEventListener('click', function () { map.fitBounds(L.latLngBounds(manifest.bounds4326), { padding: [20, 20] }); });
+        els.open.addEventListener('click', openFlowViewer);
+      }
+
+      // ---- on, off ----
+      function bindMap() {
+        map.on('move zoom viewreset resize', onMove);
+        map.on('zoomstart', function () { if (shown) { fillCv.style.visibility = lineCv.style.visibility = 'hidden'; } });
+        map.on('zoomend', function () { if (shown) { fillCv.style.visibility = lineCv.style.visibility = ''; onMove(); } });
+      }
+      var bound = false;
+      return {
+        show: function () {
+          shown = true;
+          if (!bound) { bindMap(); bound = true; }
+          fillPane.style.display = linePane.style.display = '';
+          if (manifest) { box.style.display = 'block'; place(); drawFill(); startLoop(); return Promise.resolve(); }
+          return fetch(base + 'sites/' + encodeURIComponent(siteId) + '/manifest.json', { cache: 'no-store' })
+            .then(function (r) { if (!r.ok) throw new Error('missing'); return r.json(); })
+            .then(function (m) { manifest = m; buildBox(); box.style.display = 'block'; legend(); choose(); })
+            .catch(function () { shown = false; fillPane.style.display = linePane.style.display = 'none'; throw new Error('The flow site "' + siteId + '" could not be loaded.'); });
+        },
+        hide: function () {
+          shown = false; if (box) box.style.display = 'none';
+          fillPane.style.display = linePane.style.display = 'none';
+          if (raf) { cancelAnimationFrame(raf); raf = null; }
+        },
+        isOn: function () { return shown; },
+        zoomToFlow: function () { if (manifest) map.fitBounds(L.latLngBounds(manifest.bounds4326), { padding: [20, 20] }); }
+      };
+    }
+
+    function toggleFlowLayer() {
+      var btn = document.getElementById('site-map-flow-btn');
+      var info = flowInfo();
+      if (!info) { openFlowViewer(); return; }           // a link to the site list: just open it
+      if (!siteMap) return;
+      if (!flowLayer) flowLayer = createFlowLayer(siteMap, info);
+      if (flowLayer.isOn()) { flowLayer.hide(); btn.classList.remove('armed'); return; }
+      btn.classList.add('armed');
+      flowLayer.show().catch(function (e) {
+        btn.classList.remove('armed');
+        try { var t = document.getElementById('site-map-toast'); t.textContent = e.message; t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 4000); } catch (x) {}
+      });
+    }
+    document.getElementById('site-map-flow-btn').addEventListener('click', toggleFlowLayer);
+
     function currentSiteLatLng() {
       if (pendingMapData && pendingMapData.type === 'single') {
         return [pendingMapData.lat, pendingMapData.lng];
@@ -3984,6 +4545,7 @@
         if (changed && !firstStop && autoZoomStops) zoomMapToStop(activeMarker.getLatLng());
         else if (!(bookmarkHitSet && firstStop)) siteMap.panTo(mapCenterFor(activeMarker.getLatLng())); // a bookmark's framing wins on first load
       }
+      if (window.__posSync) window.__posSync();
     }
 
     // -- zoom the map to each stop as it is selected -----------------------
@@ -4606,9 +5168,10 @@
       };
       window.addEventListener('resize', function () { updateExpandedOffset(); });
       var COLLAPSE_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>';
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var on = siteMapPanel.classList.toggle('expanded');
+      // One function does the work, so the button, Esc and the swap between the 360 view and the map all use it.
+      function setExpanded(on) {
+        if (on === siteMapPanel.classList.contains('expanded')) return;
+        siteMapPanel.classList.toggle('expanded', on);
         if (on) updateExpandedOffset();
         btn.classList.toggle('armed', on);
         btn.title = on ? 'Shrink the map' : 'Make the map bigger';
@@ -4622,11 +5185,91 @@
           var m = tourMarkersBySite[activeTourSiteId];
           if (MAP_TOUCH && m) siteMap.setView(mapCenterFor(m.getLatLng(), siteMap.getZoom()), siteMap.getZoom(), { animate: true });
         }, 260);
+      }
+      window.setMapExpanded = setExpanded;
+      window.updateMapOffset = updateExpandedOffset;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setExpanded(!siteMapPanel.classList.contains('expanded'));
       });
       // Esc shrinks an enlarged map, unless the measure tool just used that key to finish measuring.
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !e.defaultPrevented && siteMapPanel.classList.contains('expanded')) btn.click();
+        if (e.key === 'Escape' && !e.defaultPrevented && siteMapPanel.classList.contains('expanded')) setExpanded(false);
       });
+    })();
+
+    // -- swap the 360 view and the map -------------------------------------------------
+    // One press and the map takes the big screen, placed exactly as the enlarged map is, while the 360 view moves into
+    // the inset, at the size the map inset was. Press again (or Esc, or the button on the 360 inset) to swap back.
+    // It only applies to a plain 360 stop: comparison views, the dates view, flat pictures and plans step aside.
+    (function () {
+      var swapBtn = document.getElementById('site-map-swap-btn');
+      var backBtn = document.getElementById('pano-swap-back-btn');
+      var expandBtn = document.getElementById('site-map-expand-btn');
+      var cont = document.getElementById('container');
+      if (!swapBtn || !expandBtn || !cont) return;
+      var watch = null, sbWatch = null;
+
+      // While swapped, the map's left buttons stay clear of the stop list: they sit to its right while it is open
+      // and slide over to the edge when it is closed.
+      function followSidebar(on) {
+        var sb = document.getElementById('tour-sidebar');
+        if (sbWatch) { sbWatch.disconnect(); sbWatch = null; }
+        if (!on || !sb || !window.MutationObserver) return;
+        sbWatch = new MutationObserver(function () { if (window.updateMapOffset) window.updateMapOffset(); });
+        sbWatch.observe(sb, { attributes: true, attributeFilter: ['class'] });
+        if (window.updateMapOffset) window.updateMapOffset();
+      }
+
+      function swapAllowed() {
+        var rw = document.getElementById('pano-right-wrapper');
+        var flat = document.getElementById('flat-stop-viewer');
+        return !cont.classList.contains('curtain-mode') && !!rw && rw.classList.contains('hidden') &&
+               !(flat && flat.classList.contains('visible')) && !(typeof isTimeseriesModeGlobal !== 'undefined' && isTimeseriesModeGlobal);
+      }
+      function toast(msg) {
+        var t = document.getElementById('site-map-toast');
+        if (!t) return;
+        t.textContent = msg; t.style.display = 'block';
+        setTimeout(function () { t.style.display = 'none'; }, 3200);
+      }
+      // The 360 view and the map both need to re-measure their new boxes. A resize event does it for the 360 view.
+      function relayout() {
+        window.dispatchEvent(new Event('resize'));
+        if (siteMap) siteMap.invalidateSize();
+      }
+      function setSwapped(on) {
+        if (on === cont.classList.contains('swapped')) return;
+        if (on) {
+          if (!swapAllowed()) { toast('Swap works on a plain 360 stop. Comparison views and flat pictures stay as they are.'); return; }
+          cont.style.setProperty('--swap-w', Math.max(220, siteMapPanel.offsetWidth) + 'px');
+          cont.style.setProperty('--swap-h', Math.max(150, siteMapPanel.offsetHeight) + 'px');
+          cont.classList.add('swapped');
+          window.setMapExpanded(true);
+          followSidebar(true);
+          swapBtn.classList.add('armed');
+          swapBtn.title = 'Swap back: 360 view big, map in the inset';
+          // A stop that cannot sit in the inset (a comparison, a flat picture) puts everything back.
+          watch = setInterval(function () { if (!swapAllowed()) setSwapped(false); }, 600);
+        } else {
+          cont.classList.remove('swapped');
+          window.setMapExpanded(false);
+          followSidebar(false);
+          swapBtn.classList.remove('armed');
+          swapBtn.title = 'Swap: show the map big and the 360 view in the inset';
+          if (watch) { clearInterval(watch); watch = null; }
+        }
+        setTimeout(relayout, 30);
+        setTimeout(relayout, 330);
+      }
+      swapBtn.addEventListener('click', function (e) { e.stopPropagation(); setSwapped(!cont.classList.contains('swapped')); });
+      if (backBtn) backBtn.addEventListener('click', function (e) { e.stopPropagation(); setSwapped(false); });
+      // Shrinking the enlarged map any other way (its own button, Esc) also swaps back.
+      if (window.MutationObserver) {
+        new MutationObserver(function () {
+          if (cont.classList.contains('swapped') && !siteMapPanel.classList.contains('expanded')) setSwapped(false);
+        }).observe(siteMapPanel, { attributes: true, attributeFilter: ['class'] });
+      }
     })();
 
     // -- "you are here" (touch screens) -------------------------------------
@@ -4878,6 +5521,7 @@
       // to be told to re-measure once it's actually visible, or tiles
       // render into a collapsed 0x0 area.
       setTimeout(() => { if (siteMap) siteMap.invalidateSize(); }, 60);
+      if (window.__posAfterRender) window.__posAfterRender();
       updateViewCone();
     }
 
@@ -5247,6 +5891,137 @@
         else if (k === ']') nudgeKey(1);
         else if (k === '{') nudgeKey(-5);
         else if (k === '}') nudgeKey(5);
+      });
+    })();
+    // ---- Position: drag a stop's pin on the map to where its photo was really taken (local preview only) ----
+    (function () {
+      var moveBtn = document.getElementById('pos-move-btn');
+      var saveBtn = document.getElementById('pos-save-btn');
+      var revertBtn = document.getElementById('pos-revert-btn');
+      var coordsEl = document.getElementById('position-coords');
+      var helpEl = document.getElementById('pos-help');
+      var moving = false;
+      var pending = {};   // site id -> {lat, lng}: moved, not saved yet
+      var original = {};  // site id -> [lat, lng]: where it was before the first move, or at the last save
+      var mapClickWired = false;
+
+      function marker(sid) { return sid ? tourMarkersBySite[sid] : null; }
+      function sidebarEl(sid) { return document.querySelector('.tour-stop-link[data-site-id="' + sid + '"]'); }
+      function remember(sid) {
+        var m = marker(sid);
+        if (m && !original[sid]) { var c = m.getLatLng(); original[sid] = [c.lat, c.lng]; }
+      }
+      function refreshUi() {
+        var sid = activeTourSiteId, m = marker(sid);
+        if (!m) coordsEl.textContent = 'This stop has no position. Place it with Place Stops on Map in the publisher.';
+        else {
+          var ll = m.getLatLng();
+          coordsEl.textContent = ll.lat.toFixed(6) + ', ' + ll.lng.toFixed(6) + (pending[sid] ? '  (moved, not saved)' : '');
+        }
+        var n = Object.keys(pending).length;
+        saveBtn.textContent = n > 1 ? 'Save Positions (' + n + ' stops)' : 'Save Position';
+        saveBtn.style.display = n ? 'inline-block' : 'none';
+        revertBtn.style.display = (sid && pending[sid]) ? 'inline-block' : 'none';
+        moveBtn.textContent = moving ? 'Done Moving' : 'Move This Pin';
+        moveBtn.style.display = m ? 'inline-block' : 'none';
+        helpEl.style.display = moving ? 'block' : 'none';
+      }
+      function noteMove(sid) {
+        var m = marker(sid), o = original[sid];
+        if (!m || !o) return;
+        var ll = m.getLatLng();
+        if (Math.abs(ll.lat - o[0]) < 1e-9 && Math.abs(ll.lng - o[1]) < 1e-9) delete pending[sid];
+        else pending[sid] = { lat: ll.lat, lng: ll.lng };
+        var el = sidebarEl(sid);
+        if (el) el.classList.toggle('pos-unsaved', !!pending[sid]);
+        updateViewCone();
+        refreshUi();
+      }
+      function setDraggable(sid, on) {
+        var m = marker(sid);
+        if (!m) return;
+        if (on) remember(sid);
+        m.options.draggable = on;
+        if (m.dragging) { if (on) m.dragging.enable(); else m.dragging.disable(); }
+        if (on && !m.__posWired) {
+          m.__posWired = true;
+          m.on('drag', function () { noteMove(sid); });
+          m.on('dragend', function () { noteMove(sid); });
+        }
+      }
+      function wireMapClick() {
+        if (mapClickWired || !siteMap) return;
+        mapClickWired = true;
+        siteMap.on('click', function (e) {
+          if (!moving || (typeof measureActive !== 'undefined' && measureActive)) return;
+          var sid = activeTourSiteId, m = marker(sid);
+          if (!m) return;
+          remember(sid);
+          m.setLatLng(e.latlng);
+          noteMove(sid);
+        });
+      }
+      function sync() {
+        wireMapClick();
+        Object.keys(tourMarkersBySite).forEach(function (sid) {
+          var want = moving && sid === activeTourSiteId;
+          var m = marker(sid);
+          if (m && !!m.options.draggable !== want) setDraggable(sid, want);
+        });
+        refreshUi();
+      }
+      window.__posSync = sync;
+      window.__posAfterRender = function () {
+        // The map was rebuilt from the saved positions, so put back any pins moved but not saved yet.
+        Object.keys(pending).forEach(function (sid) {
+          var m = marker(sid);
+          if (m) { remember(sid); m.setLatLng([pending[sid].lat, pending[sid].lng]); }
+        });
+        sync();
+      };
+      moveBtn.addEventListener('click', function () {
+        if (!marker(activeTourSiteId)) { refreshUi(); return; }
+        if (!moving) {
+          if (siteMapPanel.style.display === 'none' || !siteMapPanel.style.display) openSiteMap();
+          moving = true;
+        } else {
+          moving = false;
+        }
+        setTimeout(sync, 0);
+      });
+      revertBtn.addEventListener('click', function () {
+        var sid = activeTourSiteId, m = marker(sid), o = original[sid];
+        if (!m || !o) return;
+        m.setLatLng(o);
+        noteMove(sid);
+      });
+      saveBtn.addEventListener('click', function () {
+        var ids = Object.keys(pending);
+        if (!ids.length) return;
+        var label = saveBtn.textContent;
+        fetch('/__save_position', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ positions: ids.map(function (sid) { return { site_id: sid, lat: pending[sid].lat, lng: pending[sid].lng }; }) }),
+        }).then(function (res) {
+          if (res.ok) {
+            ids.forEach(function (sid) {
+              var p = pending[sid];
+              original[sid] = [p.lat, p.lng];
+              [pendingMapData && pendingMapData.sites, tourSiteOptions].forEach(function (list) {
+                (list || []).forEach(function (s) { if (s && s.site_id === sid) { s.lat = p.lat; s.lng = p.lng; } });
+              });
+              delete pending[sid];
+              var el = sidebarEl(sid);
+              if (el) el.classList.remove('pos-unsaved');
+            });
+            refreshUi();
+          }
+          saveBtn.textContent = res.ok ? 'Saved!' : 'Failed, try again';
+          setTimeout(refreshUi, 1400);
+        }).catch(function () {
+          saveBtn.textContent = 'Preview server not reachable';
+          setTimeout(function () { saveBtn.textContent = label; }, 1800);
+        });
       });
     })();
     var editHotspotsBtn = document.getElementById('edit-hotspots-btn');
@@ -5768,6 +6543,7 @@
         placeHotspotBtn.style.display = 'inline-block';
         saveHotspotsBtn.style.display = 'inline-block';
         hotspotListBtn.style.display = 'inline-block';
+        document.getElementById('position-row').style.display = 'block';
         document.getElementById('heading-dial-row').style.display = 'block';
         document.getElementById('crosshair-toggle-btn').style.display = 'inline-block';
 
