@@ -258,13 +258,13 @@
     #site-map-resize-handle {
       position: absolute; z-index: 1600; top: 0; left: 0;
       width: 20px; height: 20px; cursor: nwse-resize;
-      background-color: rgba(1, 159, 196, 0.25);
+      background-color: rgba(1, 159, 196, 0.7);
       border-top-left-radius: 8px;
       /* Diagonal grip lines, the same visual convention textareas and
       windows already use for a draggable corner -- a plain colored
       triangle here didn't read as "draggable" on its own, easy to
       mistake for decoration instead of a control. */
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cg stroke='%23019fc4' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='4' y1='16' x2='16' y2='4'/%3E%3Cline x1='4' y1='11' x2='11' y2='4'/%3E%3Cline x1='4' y1='6' x2='6' y2='4'/%3E%3C/g%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cg stroke='%23ffffff' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='4' y1='16' x2='16' y2='4'/%3E%3Cline x1='4' y1='11' x2='11' y2='4'/%3E%3Cline x1='4' y1='6' x2='6' y2='4'/%3E%3C/g%3E%3C/svg%3E");
       background-repeat: no-repeat;
     }
 
@@ -324,22 +324,29 @@
     }
     #pano-swap-back-btn:hover { background: #f4f4f4; }
     #container.swapped #pano-swap-back-btn { display: flex; }
-    /* Size buttons: S, M and L set the small view to a set share of the window in one tap. They sit on whichever view is the
-    inset: down the map's left side under the swap button, or on the 360 view (next to its swap back button) while swapped.
-    Desktop and tablet only; phones keep their own layout and use the Bigger button. */
-    .inset-size { position: absolute; z-index: 1600; display: none; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden; background: #fff; }
-    .inset-size button { height: 26px; width: 26px; padding: 0; border: 0; background: #fff; color: #333; cursor: pointer;
-      font: 700 11px/1 -apple-system, Segoe UI, Roboto, sans-serif; }
-    .inset-size button + button { border-left: 1px solid rgba(0,0,0,0.15); }
-    .inset-size button:hover { background: #f4f4f4; }
-    .inset-size button.on { background: #019fc4; color: #fff; }
-    @media (pointer: fine) and (min-width: 701px) {
-      #site-map-size { display: flex; left: 10px; top: 154px; }
-      #container.swapped #site-map-size, #site-map-panel.expanded #site-map-size { display: none; }
-      #container.swapped #pano-size { display: flex; top: 8px; right: 44px; z-index: 60; }
+    /* While swapped, the 360 view is the small inset and gets the same drag grip the map has: the top left corner. */
+    #pano-resize-handle {
+      display: none; position: absolute; z-index: 70; top: 0; left: 0; width: 20px; height: 20px; cursor: nwse-resize;
+      background-color: rgba(1, 159, 196, 0.7); border-top-left-radius: 8px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cg stroke='%23ffffff' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='4' y1='16' x2='16' y2='4'/%3E%3Cline x1='4' y1='11' x2='11' y2='4'/%3E%3Cline x1='4' y1='6' x2='6' y2='4'/%3E%3C/g%3E%3C/svg%3E");
+      background-repeat: no-repeat;
     }
+    #container.swapped #pano-resize-handle { display: block; }
     /* While swapped, the swap button already does what Bigger would (it puts the map back), so Bigger steps aside. */
     #container.swapped #site-map-expand-btn { display: none !important; }
+    /* Swapped, the map's zoom and swap buttons join the other map tools on the right, under the layers button. On the left they
+    sat beside the stop list and moved whenever it opened or closed. Touch screens keep their own layout. */
+    #swap-tools { display: none; position: absolute; z-index: 1600; right: 8px; top: var(--swap-tools-top, 104px); flex-direction: column; gap: 6px; }
+    #swap-tools button { width: 30px; height: 30px; padding: 0; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2); background: #fff; color: #333;
+      font: 700 18px/1 -apple-system, Segoe UI, Roboto, sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #swap-tools button:hover { background: #f4f4f4; }
+    #swap-tools #swap-tools-back { background: #019fc4; color: #fff; border-color: #019fc4; }
+    #swap-tools #swap-tools-back:hover { background: #0189a8; }
+    @media (pointer: fine) {
+      #container.swapped #swap-tools { display: flex; }
+      #container.swapped #site-map-swap-btn { display: none !important; }
+      #container.swapped #site-map .leaflet-control-zoom { display: none; }
+    }
     #site-map-flow-btn.armed:hover { background: #019fc4; }
     /* The flow animation sits in its own map layers, under the stop pins and the view cone, so the 360 stops stay on top. */
     .leaflet-flowFill-pane, .leaflet-flowLines-pane { pointer-events: none; }
@@ -361,6 +368,10 @@
     #flow-box .ficon:hover { border-color: #019fc4; }
     #flow-box .ficon.off { opacity: 0.5; }
     #flow-box .fstat { color: #9fb2cc; margin-left: 2px; white-space: nowrap; }
+    #flow-box .fsum { display: none; flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e8eef7; font-size: 11px; }
+    #flow-box.collapsed { min-width: 210px; max-width: 280px; }
+    #flow-box.collapsed .fsum { display: block; }
+    #flow-box.collapsed select, #flow-box.collapsed .fhide { display: none !important; }
     #flow-box .fleg { height: 6px; border-radius: 3px; margin-top: 5px; }
     #flow-box .fnum { display: flex; justify-content: space-between; color: #9fb2cc; font-size: 10px; margin-top: 1px; }
     /* Make the map bigger, on every screen. The map grows to nearly the whole window, leaving the top clear for the
@@ -1129,7 +1140,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-31 18:34:47</div>
+  <div id="build-timestamp">Built 2026-10-31 18:52:32</div>
 
   <div id="status-banner"></div>
 
@@ -1139,7 +1150,7 @@
       <div class="pano-loading" id="pano-loading-left"><div class="spinner"></div><div>Loading imagery&hellip;</div></div>
       <div class="center-crosshair" id="center-crosshair-left"></div>
       <button id="pano-swap-back-btn" type="button" title="Swap back: 360 view big, map in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
-      <div id="pano-size" class="inset-size" role="group" aria-label="360 view size"><button type="button" data-size="s" title="Small 360 view">S</button><button type="button" data-size="m" title="Medium 360 view">M</button><button type="button" data-size="l" title="Large 360 view">L</button></div>
+      <div id="pano-resize-handle" title="Drag to resize"></div>
     </div>
 
     <div id="pano-right-wrapper">
@@ -1234,7 +1245,7 @@
       <button id="site-map-measure-btn" type="button" title="Measure distance or area on the map (click points, Esc to finish)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg></button>
       <button id="site-map-expand-btn" type="button" title="Make the map bigger"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
       <button id="site-map-swap-btn" type="button" title="Swap: show the map big and the 360 view in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
-      <div id="site-map-size" class="inset-size" role="group" aria-label="Map size"><button type="button" data-size="s" title="Small map">S</button><button type="button" data-size="m" title="Medium map">M</button><button type="button" data-size="l" title="Large map">L</button></div>
+      <div id="swap-tools"><button type="button" id="swap-zoom-in" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="swap-zoom-out" title="Zoom out" aria-label="Zoom out">&#8722;</button><button type="button" id="swap-tools-back" title="Swap back: 360 view big, map in the inset" aria-label="Swap back"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button></div>
       <button id="site-map-flow-btn" type="button" title="Show the animated water flow on this map"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2 0 2-2 4.5-2S10 8 12 8s2.5-2 4.5-2S19 8 21 8"/><path d="M3 13c2 0 2-2 4.5-2S10 13 12 13s2.5-2 4.5-2S19 13 21 13"/><path d="M3 18c2 0 2-2 4.5-2S10 18 12 18s2.5-2 4.5-2S19 18 21 18"/></svg></button>
       <button id="site-map-coords-btn" type="button" title="Coordinates: go to a position, or copy the cursor position (right click the map to drop a pin)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg></button>
       <div id="site-map-coords-box">
@@ -2164,9 +2175,7 @@
         expand: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
                        '<b>Bigger:</b> Fill the window with the map. Click again, or press Esc, to shrink it.'),
         grip: mapIco('<svg viewBox="0 0 24 24"><path d="M4 20 20 4M4 14 14 4M10 20 20 10"/></svg>',
-                     '<b>Grip:</b> Drag the map\u2019s top left corner to resize it.'),
-        size: mapIco('<svg viewBox="0 0 24 24"><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="3" y="9" width="12" height="12" rx="1" opacity="0.7"/><rect x="3" y="3" width="18" height="18" rx="1" opacity="0.5"/></svg>',
-                     '<b>S M L:</b> Make the small view smaller, medium or larger in one tap. It resizes the map, and the 360 view while swapped.'),
+                     '<b>Grip:</b> Drag the top left corner to resize the small view. The 360 view has the same grip while swapped.'),
         swap: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg>',
                      '<b>Swap:</b> Show the map big and the 360 view in the small inset. Press it again, or the same button on the inset, to swap back.'),
         flow: mapIco('~', '<b>Flow:</b> Draw the project\u2019s water on the map as depth or velocity, with moving flow lines. Choose a color scheme under the buttons.')
@@ -2371,7 +2380,7 @@
                 (helpTouch ? MAP_HELP_ITEMS.locate : MAP_HELP_ITEMS.measure + MAP_HELP_ITEMS.coords) +
                 MAP_HELP_ITEMS.expand +
                 (isShown('site-map-swap-btn') ? MAP_HELP_ITEMS.swap : '') +
-                (helpTouch ? '' : MAP_HELP_ITEMS.size + MAP_HELP_ITEMS.grip) +
+                (helpTouch ? '' : MAP_HELP_ITEMS.grip) +
                 (isShown('site-map-flow-btn') ? MAP_HELP_ITEMS.flow : '') +
               '</ul>'
           });
@@ -4359,7 +4368,12 @@
         return (flows.length < 2 && scens.length < 2) ? null : { items: items, flows: flows, scens: scens };
       }
       function isExisting(t) { return /(^|[^a-z])(ec|existing)([^a-z]|$)/i.test(String(t || '')); }
-      function scenText(s) { return s ? s.replace(/_/g, ' ').split(' ').map(function (w) { return w.length <= 2 ? w.toUpperCase() : w; }).join(' ') : 'All'; }
+      // EC, PC and FG are spelled out for readers: existing conditions, proposed conditions, final grade.
+      var SCEN_WORDS = { ec: 'Existing', pc: 'Proposed', fg: 'final grade' };
+      function scenText(s) {
+        var t = s ? s.replace(/_/g, ' ').split(' ').map(function (w) { return SCEN_WORDS[w.toLowerCase()] || (w.length <= 2 ? w.toUpperCase() : w); }).join(' ') : 'All';
+        return t.charAt(0).toUpperCase() + t.slice(1);
+      }
       function fillScen(flow, keep) {
         els.scen.innerHTML = '';
         grid.items.filter(function (it) { return it.flow === flow; }).forEach(function (it) {
@@ -4384,6 +4398,23 @@
           legend(); place(); clearLines(); drawFill(); startLoop();
         }).catch(function (e) { if (my === token) els.stat.textContent = e.message || 'Could not load the flow data.'; });
       }
+      // The controls fold away to a one line summary and the legend, so the box does not cover a small map.
+      function flowSummary() {
+        if (!els.sum) return;
+        var f = els.flow.options[els.flow.selectedIndex], sc = (grid && els.scen.style.display !== 'none') ? els.scen.options[els.scen.selectedIndex] : null;
+        var parts = [f ? f.textContent : ''];
+        if (sc) parts.push(sc.textContent);
+        parts.push(fillMode === 'depth' ? 'Depth' : fillMode === 'velocity' ? 'Velocity' : 'Flow lines');
+        els.sum.textContent = parts.filter(Boolean).join(' \u00b7 ');
+        els.sum.title = els.sum.textContent;
+      }
+      function setCollapsed(on, save) {
+        box.classList.toggle('collapsed', on);
+        els.collapse.innerHTML = on ? '&#9652;' : '&#9662;';
+        els.collapse.title = on ? 'Show the flow controls' : 'Hide the flow controls and keep the legend';
+        if (save) { try { localStorage.setItem('flowBoxCollapsed', on ? '1' : '0'); } catch (e) {} }
+        flowSummary();
+      }
       function syncRamp() {
         if (!els.ramp) return;
         if (fillMode === 'none') { els.ramprow.style.display = 'none'; return; }
@@ -4399,6 +4430,7 @@
         var lm = fillMode === 'none' ? 'depth' : fillMode;
         els.leg.style.background = rampCss(lm, rampSel[lm]);
         syncRamp();
+        flowSummary();
         els.leg.style.display = fillMode === 'none' ? 'none' : 'block'; els.nums.style.display = fillMode === 'none' ? 'none' : 'flex';
         var u = manifest.units;
         els.max.textContent = fillMode === 'depth' ? manifest.maxDepth.toFixed(1) + ' ' + u.length : manifest.maxSpeed.toFixed(1) + ' ' + u.velocity;
@@ -4408,16 +4440,16 @@
       function buildBox() {
         box = document.createElement('div'); box.id = 'flow-box';
         box.innerHTML =
-          '<div class="frow"><select id="flow-sel-flow" aria-label="Flow"></select><select id="flow-sel-scen" aria-label="Scenario"></select></div>' +
-          '<div class="frow"><div class="fseg" id="flow-seg"><button type="button" data-v="depth">Depth</button><button type="button" data-v="velocity">Velocity</button><button type="button" data-v="none">None</button></div>' +
+          '<div class="frow"><select id="flow-sel-flow" aria-label="Flow"></select><select id="flow-sel-scen" aria-label="Scenario"></select><span class="fsum" id="flow-sum"></span><button type="button" class="ficon" id="flow-collapse" title="Hide the flow controls and keep the legend">&#9662;</button></div>' +
+          '<div class="frow fhide"><div class="fseg" id="flow-seg"><button type="button" data-v="depth">Depth</button><button type="button" data-v="velocity">Velocity</button><button type="button" data-v="none">None</button></div>' +
           '<button type="button" class="ficon" id="flow-lines" title="Moving flow lines on or off">~</button>' +
           '<button type="button" class="ficon" id="flow-fit" title="Zoom the map to the flow area">&#8982;</button>' +
           '<button type="button" class="ficon" id="flow-open" title="Open the full flow viewer in a new tab">&#8599;</button></div>' +
-          '<div class="frow" id="flow-ramprow"><select id="flow-ramp" aria-label="Color scheme" title="Color scheme"></select></div>' +
+          '<div class="frow fhide" id="flow-ramprow"><select id="flow-ramp" aria-label="Color scheme" title="Color scheme"></select></div>' +
           '<div class="fleg" id="flow-leg"></div><div class="fnum" id="flow-nums"><span>0</span><span id="flow-max"></span></div>' +
           '<div class="fstat"><span id="flow-stat"></span><span id="flow-noflow" style="display:none;color:#f2b36b">No flow direction for this scenario.</span></div>';
         document.getElementById('site-map-panel').appendChild(box);
-        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'ramp', 'ramprow', 'leg', 'nums', 'max', 'stat', 'noflow'].forEach(function (k) {
+        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'ramp', 'ramprow', 'sum', 'collapse', 'leg', 'nums', 'max', 'stat', 'noflow'].forEach(function (k) {
           els[k] = box.querySelector(k === 'flow' || k === 'scen' ? '#flow-sel-' + k : '#flow-' + k);
         });
         ['mousedown', 'dblclick', 'wheel', 'touchstart', 'pointerdown'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }); });
@@ -4457,6 +4489,11 @@
           Object.keys(cache).forEach(function (k) { cache[k].fills = {}; });
           legend(); drawFill();
         });
+        els.collapse.addEventListener('click', function () { setCollapsed(!box.classList.contains('collapsed'), true); });
+        var storedCollapse = null;
+        try { storedCollapse = localStorage.getItem('flowBoxCollapsed'); } catch (e) {}
+        // start folded on a small inset, unless the person chose either way before
+        setCollapsed(storedCollapse === '1' ? true : storedCollapse === '0' ? false : (siteMapPanel.offsetWidth < 400 || siteMapPanel.offsetHeight < 320), false);
         els.lines.addEventListener('click', function () { linesOn = !linesOn; els.lines.classList.toggle('off', !linesOn); if (!linesOn) clearLines(); });
         els.fit.addEventListener('click', function () { map.fitBounds(L.latLngBounds(manifest.bounds4326), { padding: [20, 20] }); });
         els.open.addEventListener('click', openFlowViewer);
@@ -5336,15 +5373,16 @@
         if (on === cont.classList.contains('swapped')) return;
         if (on) {
           if (!swapAllowed()) { toast('Swap works on a plain 360 stop. Comparison views and flat pictures stay as they are.'); return; }
-          cont.style.setProperty('--swap-w', Math.max(220, siteMapPanel.offsetWidth) + 'px');
-          cont.style.setProperty('--swap-h', Math.max(150, siteMapPanel.offsetHeight) + 'px');
+          var kept = window.panoInsetSize;
+          cont.style.setProperty('--swap-w', (kept ? kept.w : Math.max(220, siteMapPanel.offsetWidth)) + 'px');
+          cont.style.setProperty('--swap-h', (kept ? kept.h : Math.max(150, siteMapPanel.offsetHeight)) + 'px');
           cont.classList.add('swapped');
           window.setMapExpanded(true);
           followSidebar(true);
           swapBtn.classList.add('armed');
           swapBtn.title = 'Swap back: 360 view big, map in the inset';
           // A stop that cannot sit in the inset (a comparison, a flat picture) puts everything back.
-          watch = setInterval(function () { if (!swapAllowed()) setSwapped(false); }, 600);
+          watch = setInterval(function () { if (!swapAllowed()) setSwapped(false); else placeTools(); }, 600);
         } else {
           cont.classList.remove('swapped');
           window.setMapExpanded(false);
@@ -5355,8 +5393,24 @@
         }
         setTimeout(relayout, 30);
         setTimeout(relayout, 330);
+        setTimeout(placeTools, 60);
+        setTimeout(placeTools, 360);
       }
       swapBtn.addEventListener('click', function (e) { e.stopPropagation(); setSwapped(!cont.classList.contains('swapped')); });
+      // The right hand tools while swapped: sit just under the layers button (or under the tool row when there is none).
+      var tools = document.getElementById('swap-tools');
+      function placeTools() {
+        if (!tools || !cont.classList.contains('swapped')) return;
+        var lc = siteMapPanel.querySelector('.leaflet-control-layers'), top = 104;
+        if (lc) { var r = lc.getBoundingClientRect(), p = siteMapPanel.getBoundingClientRect(); if (r.height) top = Math.max(top, Math.round(r.bottom - p.top + 8)); }
+        tools.style.setProperty('--swap-tools-top', top + 'px');
+      }
+      if (tools) {
+        document.getElementById('swap-zoom-in').addEventListener('click', function (e) { e.stopPropagation(); if (siteMap) siteMap.zoomIn(); });
+        document.getElementById('swap-zoom-out').addEventListener('click', function (e) { e.stopPropagation(); if (siteMap) siteMap.zoomOut(); });
+        document.getElementById('swap-tools-back').addEventListener('click', function (e) { e.stopPropagation(); setSwapped(false); });
+        window.addEventListener('resize', placeTools);
+      }
       if (backBtn) backBtn.addEventListener('click', function (e) { e.stopPropagation(); setSwapped(false); });
       // Shrinking the enlarged map any other way (its own button, Esc) also swaps back.
       if (window.MutationObserver) {
@@ -5366,71 +5420,52 @@
       }
     })();
 
-    // -- inset size buttons: S, M and L -----------------------------------------------------------------
-    // One tap sets the small view (the map, or the 360 view while swapped) to a set share of the window width. The map
-    // keeps the size too, so swapping back lands on the size just chosen. The last choice is remembered. Phones and
-    // narrow windows keep their own layout, so the buttons do nothing there.
+    // -- drag to resize the 360 inset ---------------------------------------------------------------------
+    // While swapped, the 360 view is the small inset. Its top left corner works like the map's grip: drag it to make the inset
+    // bigger or smaller. The size is kept for the next swap, and remembered on this device.
     (function () {
+      var handle = document.getElementById('pano-resize-handle');
       var cont = document.getElementById('container');
       var pano = document.getElementById('pano-left');
-      var groups = [document.getElementById('site-map-size'), document.getElementById('pano-size')];
-      if (!cont || !pano || !groups[0] || !groups[1]) return;
-      var SHARE = { s: 0.21, m: 0.31, l: 0.52 }, RATIO = 0.733, KEY = 'tourInsetSize';
-      function fine() { return !!(window.matchMedia && window.matchMedia('(pointer: fine) and (min-width: 701px)').matches); }
-      function sizeFor(key) {
-        var vw = window.innerWidth, vh = window.innerHeight;
-        var left = parseFloat(siteMapPanel.style.getPropertyValue('--map-left')) || 8;
-        var maxW = Math.min(vw * 0.9, vw - left - 12), maxH = vh * 0.8;
-        var w = Math.max(220, Math.min(maxW, vw * SHARE[key]));
-        var h = Math.max(150, Math.min(maxH, w * RATIO));
-        return { w: Math.round(w), h: Math.round(h) };
-      }
-      function isSwapped() { return cont.classList.contains('swapped'); }
-      // Light up the button whose size matches the current one (none, after dragging the grip to some other size).
-      function refresh() {
-        var box = isSwapped() ? pano : siteMapPanel, cw = box.offsetWidth, ch = box.offsetHeight;
-        groups.forEach(function (g) {
-          Array.prototype.forEach.call(g.querySelectorAll('button'), function (b) {
-            var s = sizeFor(b.getAttribute('data-size'));
-            b.classList.toggle('on', Math.abs(s.w - cw) <= 6 && Math.abs(s.h - ch) <= 6);
-          });
-        });
-      }
-      function relayout() {
-        window.dispatchEvent(new Event('resize'));
-        if (siteMap) siteMap.invalidateSize();
-      }
-      function apply(key) {
-        if (!SHARE[key] || !fine()) return;
-        if (siteMapPanel.classList.contains('expanded') && !isSwapped()) return;
-        var s = sizeFor(key);
-        siteMapPanel.style.width = s.w + 'px';
-        siteMapPanel.style.height = s.h + 'px';
-        if (isSwapped()) { cont.style.setProperty('--swap-w', s.w + 'px'); cont.style.setProperty('--swap-h', s.h + 'px'); }
-        try { localStorage.setItem(KEY, key); } catch (e) {}
-        relayout(); setTimeout(relayout, 120); setTimeout(refresh, 160);
-      }
-      window.setInsetSize = apply;
+      if (!handle || !cont || !pano) return;
+      var KEY = 'panoInsetSize', dragging = false, sx = 0, sy = 0, sw = 0, sh = 0, raf = 0;
+      window.panoInsetSize = null;
       try {
-        var saved = localStorage.getItem(KEY);
-        if (saved && SHARE[saved] && fine()) { var s0 = sizeFor(saved); siteMapPanel.style.width = s0.w + 'px'; siteMapPanel.style.height = s0.h + 'px'; }
+        var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+        if (saved && saved.w >= 200 && saved.h >= 150) window.panoInsetSize = { w: saved.w, h: saved.h };
       } catch (e) {}
-      groups.forEach(function (g) {
-        ['mousedown', 'dblclick', 'wheel', 'touchstart', 'pointerdown'].forEach(function (ev) { g.addEventListener(ev, function (e) { e.stopPropagation(); }); });
-        g.addEventListener('click', function (e) {
-          var b = e.target && e.target.closest ? e.target.closest('button') : null;
-          if (!b) return;
-          e.stopPropagation(); apply(b.getAttribute('data-size'));
-        });
-      });
-      window.addEventListener('resize', refresh);
-      window.addEventListener('mouseup', function () { setTimeout(refresh, 0); });
-      if (window.MutationObserver) {
-        var mo = new MutationObserver(refresh);
-        mo.observe(cont, { attributes: true, attributeFilter: ['class'] });
-        mo.observe(siteMapPanel, { attributes: true, attributeFilter: ['class', 'style'] });
+      function relayout() { window.dispatchEvent(new Event('resize')); if (siteMap) siteMap.invalidateSize(); }
+      function begin(x, y) {
+        dragging = true;
+        document.body.classList.add('map-resizing');
+        try { window.getSelection().removeAllRanges(); } catch (err) {}
+        sx = x; sy = y; sw = pano.offsetWidth; sh = pano.offsetHeight;
       }
-      setTimeout(refresh, 400);
+      function move(x, y) {
+        if (!dragging) return;
+        var maxW = Math.min(window.innerWidth * 0.9, window.innerWidth - 20), maxH = window.innerHeight * 0.8;
+        var w = Math.round(Math.min(maxW, Math.max(200, sw + (sx - x))));
+        var h = Math.round(Math.min(maxH, Math.max(150, sh + (sy - y))));
+        cont.style.setProperty('--swap-w', w + 'px');
+        cont.style.setProperty('--swap-h', h + 'px');
+        window.panoInsetSize = { w: w, h: h };
+        // the 360 view re-measures on a resize event; once per frame is plenty while dragging
+        if (!raf) raf = requestAnimationFrame(function () { raf = 0; window.dispatchEvent(new Event('resize')); });
+      }
+      function end() {
+        if (!dragging) return;
+        dragging = false;
+        document.body.classList.remove('map-resizing');
+        try { if (window.panoInsetSize) localStorage.setItem(KEY, JSON.stringify(window.panoInsetSize)); } catch (e) {}
+        relayout();
+      }
+      handle.addEventListener('mousedown', function (e) { e.preventDefault(); e.stopPropagation(); begin(e.clientX, e.clientY); });
+      window.addEventListener('mousemove', function (e) { move(e.clientX, e.clientY); });
+      window.addEventListener('mouseup', end);
+      window.addEventListener('blur', end);
+      handle.addEventListener('touchstart', function (e) { e.stopPropagation(); if (e.touches[0]) begin(e.touches[0].clientX, e.touches[0].clientY); });
+      window.addEventListener('touchmove', function (e) { if (dragging && e.touches[0]) move(e.touches[0].clientX, e.touches[0].clientY); });
+      window.addEventListener('touchend', end);
     })();
 
     // -- "you are here" (touch screens) -------------------------------------
@@ -5585,9 +5620,18 @@
         siteMapPanel.style.height = newH + 'px';
       }
       function end() {
+        if (dragging) { try { localStorage.setItem('mapInsetSize', JSON.stringify({ w: siteMapPanel.offsetWidth, h: siteMapPanel.offsetHeight })); } catch (err) {} }
         dragging = false;
         document.body.classList.remove('map-resizing');
       }
+      // Open at the size it was last dragged to (desktop and tablet), kept inside the window.
+      try {
+        var keptMap = JSON.parse(localStorage.getItem('mapInsetSize') || 'null');
+        if (keptMap && keptMap.w >= 200 && keptMap.h >= 150 && window.matchMedia && window.matchMedia('(pointer: fine) and (min-width: 701px)').matches) {
+          siteMapPanel.style.width = Math.min(keptMap.w, window.innerWidth * 0.9) + 'px';
+          siteMapPanel.style.height = Math.min(keptMap.h, window.innerHeight * 0.8) + 'px';
+        }
+      } catch (err) {}
 
       handle.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); begin(e.clientX, e.clientY); });
       window.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
