@@ -311,7 +311,7 @@
     #container.swapped #edit-tools-panel { z-index: 800; }   /* local preview only: tucked behind the map while swapped */
     @media (pointer: fine) {
       #container.swapped #site-map-expand-btn { top: 138px; left: calc(var(--map-left, 8px) + 2px); }
-      #container.swapped #site-map-swap-btn { top: 174px; left: calc(var(--map-left, 8px) + 2px); }
+      #container.swapped #site-map-swap-btn { top: 138px; left: calc(var(--map-left, 8px) + 2px); }
     }
     @media (pointer: coarse) {
       #container.swapped #site-map-expand-btn, #container.swapped #site-map-swap-btn { top: 64px; }
@@ -324,6 +324,22 @@
     }
     #pano-swap-back-btn:hover { background: #f4f4f4; }
     #container.swapped #pano-swap-back-btn { display: flex; }
+    /* Size buttons: S, M and L set the small view to a set share of the window in one tap. They sit on whichever view is the
+    inset: down the map's left side under the swap button, or on the 360 view (next to its swap back button) while swapped.
+    Desktop and tablet only; phones keep their own layout and use the Bigger button. */
+    .inset-size { position: absolute; z-index: 1600; display: none; border: 2px solid rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden; background: #fff; }
+    .inset-size button { height: 26px; width: 26px; padding: 0; border: 0; background: #fff; color: #333; cursor: pointer;
+      font: 700 11px/1 -apple-system, Segoe UI, Roboto, sans-serif; }
+    .inset-size button + button { border-left: 1px solid rgba(0,0,0,0.15); }
+    .inset-size button:hover { background: #f4f4f4; }
+    .inset-size button.on { background: #019fc4; color: #fff; }
+    @media (pointer: fine) and (min-width: 701px) {
+      #site-map-size { display: flex; left: 10px; top: 154px; }
+      #container.swapped #site-map-size, #site-map-panel.expanded #site-map-size { display: none; }
+      #container.swapped #pano-size { display: flex; top: 8px; right: 44px; z-index: 60; }
+    }
+    /* While swapped, the swap button already does what Bigger would (it puts the map back), so Bigger steps aside. */
+    #container.swapped #site-map-expand-btn { display: none !important; }
     #site-map-flow-btn.armed:hover { background: #019fc4; }
     /* The flow animation sits in its own map layers, under the stop pins and the view cone, so the 360 stops stay on top. */
     .leaflet-flowFill-pane, .leaflet-flowLines-pane { pointer-events: none; }
@@ -1113,7 +1129,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-30 16:51:48</div>
+  <div id="build-timestamp">Built 2026-10-31 18:34:47</div>
 
   <div id="status-banner"></div>
 
@@ -1123,6 +1139,7 @@
       <div class="pano-loading" id="pano-loading-left"><div class="spinner"></div><div>Loading imagery&hellip;</div></div>
       <div class="center-crosshair" id="center-crosshair-left"></div>
       <button id="pano-swap-back-btn" type="button" title="Swap back: 360 view big, map in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
+      <div id="pano-size" class="inset-size" role="group" aria-label="360 view size"><button type="button" data-size="s" title="Small 360 view">S</button><button type="button" data-size="m" title="Medium 360 view">M</button><button type="button" data-size="l" title="Large 360 view">L</button></div>
     </div>
 
     <div id="pano-right-wrapper">
@@ -1217,6 +1234,7 @@
       <button id="site-map-measure-btn" type="button" title="Measure distance or area on the map (click points, Esc to finish)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h2v4h2V8h2v4h2V8h2v4h2V8h2v4h2V8h2v8z"/></svg></button>
       <button id="site-map-expand-btn" type="button" title="Make the map bigger"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
       <button id="site-map-swap-btn" type="button" title="Swap: show the map big and the 360 view in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
+      <div id="site-map-size" class="inset-size" role="group" aria-label="Map size"><button type="button" data-size="s" title="Small map">S</button><button type="button" data-size="m" title="Medium map">M</button><button type="button" data-size="l" title="Large map">L</button></div>
       <button id="site-map-flow-btn" type="button" title="Show the animated water flow on this map"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2 0 2-2 4.5-2S10 8 12 8s2.5-2 4.5-2S19 8 21 8"/><path d="M3 13c2 0 2-2 4.5-2S10 13 12 13s2.5-2 4.5-2S19 13 21 13"/><path d="M3 18c2 0 2-2 4.5-2S10 18 12 18s2.5-2 4.5-2S19 18 21 18"/></svg></button>
       <button id="site-map-coords-btn" type="button" title="Coordinates: go to a position, or copy the cursor position (right click the map to drop a pin)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg></button>
       <div id="site-map-coords-box">
@@ -2146,7 +2164,12 @@
         expand: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
                        '<b>Bigger:</b> Fill the window with the map. Click again, or press Esc, to shrink it.'),
         grip: mapIco('<svg viewBox="0 0 24 24"><path d="M4 20 20 4M4 14 14 4M10 20 20 10"/></svg>',
-                     '<b>Grip:</b> Drag the map\u2019s top left corner to resize it.')
+                     '<b>Grip:</b> Drag the map\u2019s top left corner to resize it.'),
+        size: mapIco('<svg viewBox="0 0 24 24"><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="3" y="9" width="12" height="12" rx="1" opacity="0.7"/><rect x="3" y="3" width="18" height="18" rx="1" opacity="0.5"/></svg>',
+                     '<b>S M L:</b> Make the small view smaller, medium or larger in one tap. It resizes the map, and the 360 view while swapped.'),
+        swap: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg>',
+                     '<b>Swap:</b> Show the map big and the 360 view in the small inset. Press it again, or the same button on the inset, to swap back.'),
+        flow: mapIco('~', '<b>Flow:</b> Draw the project\u2019s water on the map as depth or velocity, with moving flow lines. Choose a color scheme under the buttons.')
       };
 
       var STEP_ICONS = {
@@ -2347,7 +2370,9 @@
                 (isShown('prev-stop-btn') ? MAP_HELP_ITEMS.follow + MAP_HELP_ITEMS.fit : MAP_HELP_ITEMS.fit) +
                 (helpTouch ? MAP_HELP_ITEMS.locate : MAP_HELP_ITEMS.measure + MAP_HELP_ITEMS.coords) +
                 MAP_HELP_ITEMS.expand +
-                (helpTouch ? '' : MAP_HELP_ITEMS.grip) +
+                (isShown('site-map-swap-btn') ? MAP_HELP_ITEMS.swap : '') +
+                (helpTouch ? '' : MAP_HELP_ITEMS.size + MAP_HELP_ITEMS.grip) +
+                (isShown('site-map-flow-btn') ? MAP_HELP_ITEMS.flow : '') +
               '</ul>'
           });
         }
@@ -4081,7 +4106,7 @@
       try { u = new URL(flowLink, location.href); } catch (e) { return null; }
       var site = u.searchParams.get('site');
       if (!site) return null;
-      return { base: u.origin + u.pathname.replace(/[^\/]*$/, ''), site: site, a: u.searchParams.get('a'), f: u.searchParams.get('f') };
+      return { base: u.origin + u.pathname.replace(/[^\/]*$/, ''), site: site, a: u.searchParams.get('a'), f: u.searchParams.get('f'), rd: u.searchParams.get('rd'), rv: u.searchParams.get('rv') };
     }
 
     // The same link, opened in its own tab on the stop being shown, with a marker where you were standing.
@@ -4104,6 +4129,11 @@
         }
         if (name) u.searchParams.set('pn', name); else u.searchParams.delete('pn');
       }
+      if (flowLayer && flowLayer.ramps) {
+        var rr = flowLayer.ramps();
+        if (rr.depth !== rr.def.depth) u.searchParams.set('rd', rr.depth); else u.searchParams.delete('rd');
+        if (rr.velocity !== rr.def.velocity) u.searchParams.set('rv', rr.velocity); else u.searchParams.delete('rv');
+      }
       window.open(u.toString(), '_blank', 'noopener');
     }
 
@@ -4122,25 +4152,66 @@
       fillPane.appendChild(fillCv); linePane.appendChild(lineCv);
       var fctx = fillCv.getContext('2d'), lctx = lineCv.getContext('2d');
 
-      // ---- colours (the same ramps as the flow viewer) ----
-      var VEL = [[0, [68, 1, 84]], [0.25, [59, 82, 139]], [0.5, [33, 145, 140]], [0.75, [94, 201, 98]], [1, [253, 231, 37]]];
-      function velColor(t, o) {
+      // ---- colour schemes -----------------------------------------------------------------------------------
+      // Each scheme is a list of stops: [position 0 to 1, [red, green, blue, alpha]]. Depth positions follow the square
+      // root of depth (shallow water gets more of the colours); velocity positions are linear. Add a scheme by adding a line.
+      var RAMP_DEFS = {
+        depth: [
+          { id: 'blues2', label: 'Blues, strong', stops: [[0, [120, 225, 255, 235]], [0.35, [40, 150, 250, 240]], [0.7, [10, 70, 200, 245]], [1, [10, 20, 110, 250]]] },
+          { id: 'blues', label: 'Blues, soft', stops: [[0, [150, 225, 240, 150]], [0.5, [30, 120, 220, 210]], [1, [10, 40, 150, 250]]] },
+          { id: 'rainbow', label: 'Rainbow (RAS Mapper style)', stops: [[0, [40, 60, 255, 235]], [0.2, [0, 180, 255, 235]], [0.4, [0, 215, 130, 235]], [0.6, [225, 235, 40, 235]], [0.8, [255, 150, 20, 235]], [1, [215, 20, 20, 240]]] },
+          { id: 'viridisr', label: 'Viridis, bright shallow', stops: [[0, [253, 231, 37, 235]], [0.25, [94, 201, 98, 235]], [0.5, [33, 145, 140, 235]], [0.75, [59, 82, 139, 240]], [1, [68, 1, 84, 245]]] },
+          { id: 'ylorrd', label: 'Yellow to red', stops: [[0, [255, 237, 160, 235]], [0.25, [254, 178, 76, 235]], [0.5, [253, 141, 60, 238]], [0.75, [227, 26, 28, 240]], [1, [128, 0, 38, 245]]] }
+        ],
+        velocity: [
+          { id: 'viridis', label: 'Viridis', stops: [[0, [68, 1, 84, 225]], [0.25, [59, 82, 139, 225]], [0.5, [33, 145, 140, 225]], [0.75, [94, 201, 98, 225]], [1, [253, 231, 37, 225]]] },
+          { id: 'rainbow', label: 'Rainbow (RAS Mapper style)', stops: [[0, [40, 60, 255, 230]], [0.2, [0, 180, 255, 230]], [0.4, [0, 215, 130, 230]], [0.6, [225, 235, 40, 230]], [0.8, [255, 150, 20, 230]], [1, [215, 20, 20, 235]]] },
+          { id: 'plasma', label: 'Plasma', stops: [[0, [13, 8, 135, 225]], [0.25, [126, 3, 168, 225]], [0.5, [204, 71, 120, 225]], [0.75, [248, 149, 64, 225]], [1, [240, 249, 33, 225]]] },
+          { id: 'ylorrd', label: 'Yellow to red', stops: [[0, [255, 237, 160, 225]], [0.25, [254, 178, 76, 230]], [0.5, [253, 141, 60, 232]], [0.75, [227, 26, 28, 235]], [1, [128, 0, 38, 240]]] },
+          { id: 'coolwarm', label: 'Cool to warm', stops: [[0, [59, 76, 192, 225]], [0.25, [141, 176, 254, 225]], [0.5, [221, 221, 221, 225]], [0.75, [244, 154, 123, 230]], [1, [180, 4, 38, 235]]] }
+        ]
+      };
+      var RAMP_DEFAULT = { depth: 'blues2', velocity: 'viridis' };
+      function rampValid(mode, id) {
+        var l = RAMP_DEFS[mode];
+        for (var i = 0; i < l.length; i++) if (l[i].id === id) return id;
+        return RAMP_DEFAULT[mode];
+      }
+      function rampFind(mode, id) {
+        var l = RAMP_DEFS[mode];
+        for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+        return l[0];
+      }
+      function rampColor(stops, t, out) {
         t = Math.max(0, Math.min(1, t));
-        for (var k = 1; k < VEL.length; k++) if (t <= VEL[k][0]) {
-          var a = VEL[k - 1], b = VEL[k], f = (t - a[0]) / (b[0] - a[0]);
-          o[0] = a[1][0] + (b[1][0] - a[1][0]) * f; o[1] = a[1][1] + (b[1][1] - a[1][1]) * f; o[2] = a[1][2] + (b[1][2] - a[1][2]) * f; o[3] = 225; return;
+        for (var k = 1; k < stops.length; k++) {
+          if (t <= stops[k][0]) {
+            var a = stops[k - 1], b = stops[k], f = (t - a[0]) / (b[0] - a[0]);
+            for (var c = 0; c < 4; c++) out[c] = a[1][c] + (b[1][c] - a[1][c]) * f;
+            return;
+          }
         }
+        var last = stops[stops.length - 1][1];
+        for (var c2 = 0; c2 < 4; c2++) out[c2] = last[c2];
       }
-      function depthColor(t, o) {
-        var s = Math.sqrt(Math.max(0, Math.min(1, t)));
-        if (s < 0.5) { var k = s / 0.5; o[0] = 150 - 120 * k; o[1] = 225 - 105 * k; o[2] = 240 - 20 * k; o[3] = 150 + 60 * k; }
-        else { var k2 = (s - 0.5) / 0.5; o[0] = 30 - 20 * k2; o[1] = 120 - 80 * k2; o[2] = 220 - 70 * k2; o[3] = 210 + 40 * k2; }
+      // legend colours sampled along the scale: [[position, 'rgba(...)'], ...]
+      function rampStops(mode, id) {
+        var r = rampFind(mode, id), out = [0, 0, 0, 0], res = [];
+        for (var i = 0; i <= 12; i++) {
+          var p = i / 12;
+          rampColor(r.stops, mode === 'depth' ? Math.sqrt(p) : p, out);
+          res.push([p, 'rgba(' + Math.round(out[0]) + ',' + Math.round(out[1]) + ',' + Math.round(out[2]) + ',' + (out[3] / 255).toFixed(2) + ')']);
+        }
+        return res;
       }
+      function rampCss(mode, id) {
+        return 'linear-gradient(90deg, ' + rampStops(mode, id).map(function (s) { return s[1] + ' ' + Math.round(s[0] * 100) + '%'; }).join(', ') + ')';
+      }
+      var rampSel = { depth: rampValid('depth', info.rd), velocity: rampValid('velocity', info.rv) };
+      function velColor(t, o) { rampColor(rampFind('velocity', rampSel.velocity).stops, t, o); }
+      function depthColor(t, o) { rampColor(rampFind('depth', rampSel.depth).stops, Math.sqrt(Math.max(0, Math.min(1, t))), o); }
       var ramp = [];
       for (var q = 0; q < 32; q++) { var t = q / 31; ramp.push('rgba(' + Math.round(170 + 85 * t) + ',' + Math.round(235 + 20 * t) + ',255,' + (0.45 + 0.5 * t).toFixed(2) + ')'); }
-      var LEG = { depth: 'linear-gradient(90deg, rgba(150,225,240,0.6) 0%, rgba(30,120,220,0.82) 25%, rgba(10,40,150,0.98) 100%)',
-                  velocity: 'linear-gradient(90deg, rgb(68,1,84), rgb(59,82,139) 25%, rgb(33,145,140) 50%, rgb(94,201,98) 75%, rgb(253,231,37))' };
-
       function merc2ll(x, y) { var R = 6378137; return L.latLng((2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * 180 / Math.PI, x / R * 180 / Math.PI); }
 
       // ---- data ----
@@ -4174,7 +4245,8 @@
         });
       }
       function fillFor(scn, mode) {
-        if (scn.fills[mode]) return scn.fills[mode];
+        var fkey = mode + ':' + rampSel[mode];
+        if (scn.fills[fkey]) return scn.fills[fkey];
         var W = manifest.width, H = manifest.height, c = document.createElement('canvas'); c.width = W; c.height = H;
         var x = c.getContext('2d'), out = x.createImageData(W, H), o = out.data, rgba = [0, 0, 0, 0], d = scn.depth.data, f = scn.flow.data;
         for (var i = 0, n = W * H; i < n; i++) {
@@ -4184,7 +4256,8 @@
           o[p] = rgba[0]; o[p + 1] = rgba[1]; o[p + 2] = rgba[2]; o[p + 3] = rgba[3];
         }
         x.putImageData(out, 0, 0);
-        return (scn.fills[mode] = c);
+        Object.keys(scn.fills).forEach(function (k) { if (k.indexOf(mode + ':') === 0) delete scn.fills[k]; });
+        return (scn.fills[fkey] = c);
       }
 
       // ---- canvases follow the map ----
@@ -4311,8 +4384,21 @@
           legend(); place(); clearLines(); drawFill(); startLoop();
         }).catch(function (e) { if (my === token) els.stat.textContent = e.message || 'Could not load the flow data.'; });
       }
+      function syncRamp() {
+        if (!els.ramp) return;
+        if (fillMode === 'none') { els.ramprow.style.display = 'none'; return; }
+        els.ramprow.style.display = '';
+        if (els.ramp.getAttribute('data-mode') !== fillMode) {
+          els.ramp.innerHTML = '';
+          RAMP_DEFS[fillMode].forEach(function (r) { var o = document.createElement('option'); o.value = r.id; o.textContent = r.label; els.ramp.appendChild(o); });
+          els.ramp.setAttribute('data-mode', fillMode);
+        }
+        els.ramp.value = rampSel[fillMode];
+      }
       function legend() {
-        els.leg.style.background = LEG[fillMode === 'none' ? 'depth' : fillMode];
+        var lm = fillMode === 'none' ? 'depth' : fillMode;
+        els.leg.style.background = rampCss(lm, rampSel[lm]);
+        syncRamp();
         els.leg.style.display = fillMode === 'none' ? 'none' : 'block'; els.nums.style.display = fillMode === 'none' ? 'none' : 'flex';
         var u = manifest.units;
         els.max.textContent = fillMode === 'depth' ? manifest.maxDepth.toFixed(1) + ' ' + u.length : manifest.maxSpeed.toFixed(1) + ' ' + u.velocity;
@@ -4327,10 +4413,11 @@
           '<button type="button" class="ficon" id="flow-lines" title="Moving flow lines on or off">~</button>' +
           '<button type="button" class="ficon" id="flow-fit" title="Zoom the map to the flow area">&#8982;</button>' +
           '<button type="button" class="ficon" id="flow-open" title="Open the full flow viewer in a new tab">&#8599;</button></div>' +
+          '<div class="frow" id="flow-ramprow"><select id="flow-ramp" aria-label="Color scheme" title="Color scheme"></select></div>' +
           '<div class="fleg" id="flow-leg"></div><div class="fnum" id="flow-nums"><span>0</span><span id="flow-max"></span></div>' +
           '<div class="fstat"><span id="flow-stat"></span><span id="flow-noflow" style="display:none;color:#f2b36b">No flow direction for this scenario.</span></div>';
         document.getElementById('site-map-panel').appendChild(box);
-        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'leg', 'nums', 'max', 'stat', 'noflow'].forEach(function (k) {
+        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'ramp', 'ramprow', 'leg', 'nums', 'max', 'stat', 'noflow'].forEach(function (k) {
           els[k] = box.querySelector(k === 'flow' || k === 'scen' ? '#flow-sel-' + k : '#flow-' + k);
         });
         ['mousedown', 'dblclick', 'wheel', 'touchstart', 'pointerdown'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }); });
@@ -4364,6 +4451,12 @@
           b.addEventListener('click', function () { fillMode = b.getAttribute('data-v'); syncSeg(); legend(); drawFill(); });
         });
         syncSeg();
+        els.ramp.addEventListener('change', function () {
+          if (fillMode === 'none') return;
+          rampSel[fillMode] = els.ramp.value;
+          Object.keys(cache).forEach(function (k) { cache[k].fills = {}; });
+          legend(); drawFill();
+        });
         els.lines.addEventListener('click', function () { linesOn = !linesOn; els.lines.classList.toggle('off', !linesOn); if (!linesOn) clearLines(); });
         els.fit.addEventListener('click', function () { map.fitBounds(L.latLngBounds(manifest.bounds4326), { padding: [20, 20] }); });
         els.open.addEventListener('click', openFlowViewer);
@@ -4393,6 +4486,7 @@
           if (raf) { cancelAnimationFrame(raf); raf = null; }
         },
         isOn: function () { return shown; },
+        ramps: function () { return { depth: rampSel.depth, velocity: rampSel.velocity, def: RAMP_DEFAULT }; },
         zoomToFlow: function () { if (manifest) map.fitBounds(L.latLngBounds(manifest.bounds4326), { padding: [20, 20] }); }
       };
     }
@@ -5270,6 +5364,73 @@
           if (cont.classList.contains('swapped') && !siteMapPanel.classList.contains('expanded')) setSwapped(false);
         }).observe(siteMapPanel, { attributes: true, attributeFilter: ['class'] });
       }
+    })();
+
+    // -- inset size buttons: S, M and L -----------------------------------------------------------------
+    // One tap sets the small view (the map, or the 360 view while swapped) to a set share of the window width. The map
+    // keeps the size too, so swapping back lands on the size just chosen. The last choice is remembered. Phones and
+    // narrow windows keep their own layout, so the buttons do nothing there.
+    (function () {
+      var cont = document.getElementById('container');
+      var pano = document.getElementById('pano-left');
+      var groups = [document.getElementById('site-map-size'), document.getElementById('pano-size')];
+      if (!cont || !pano || !groups[0] || !groups[1]) return;
+      var SHARE = { s: 0.21, m: 0.31, l: 0.52 }, RATIO = 0.733, KEY = 'tourInsetSize';
+      function fine() { return !!(window.matchMedia && window.matchMedia('(pointer: fine) and (min-width: 701px)').matches); }
+      function sizeFor(key) {
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var left = parseFloat(siteMapPanel.style.getPropertyValue('--map-left')) || 8;
+        var maxW = Math.min(vw * 0.9, vw - left - 12), maxH = vh * 0.8;
+        var w = Math.max(220, Math.min(maxW, vw * SHARE[key]));
+        var h = Math.max(150, Math.min(maxH, w * RATIO));
+        return { w: Math.round(w), h: Math.round(h) };
+      }
+      function isSwapped() { return cont.classList.contains('swapped'); }
+      // Light up the button whose size matches the current one (none, after dragging the grip to some other size).
+      function refresh() {
+        var box = isSwapped() ? pano : siteMapPanel, cw = box.offsetWidth, ch = box.offsetHeight;
+        groups.forEach(function (g) {
+          Array.prototype.forEach.call(g.querySelectorAll('button'), function (b) {
+            var s = sizeFor(b.getAttribute('data-size'));
+            b.classList.toggle('on', Math.abs(s.w - cw) <= 6 && Math.abs(s.h - ch) <= 6);
+          });
+        });
+      }
+      function relayout() {
+        window.dispatchEvent(new Event('resize'));
+        if (siteMap) siteMap.invalidateSize();
+      }
+      function apply(key) {
+        if (!SHARE[key] || !fine()) return;
+        if (siteMapPanel.classList.contains('expanded') && !isSwapped()) return;
+        var s = sizeFor(key);
+        siteMapPanel.style.width = s.w + 'px';
+        siteMapPanel.style.height = s.h + 'px';
+        if (isSwapped()) { cont.style.setProperty('--swap-w', s.w + 'px'); cont.style.setProperty('--swap-h', s.h + 'px'); }
+        try { localStorage.setItem(KEY, key); } catch (e) {}
+        relayout(); setTimeout(relayout, 120); setTimeout(refresh, 160);
+      }
+      window.setInsetSize = apply;
+      try {
+        var saved = localStorage.getItem(KEY);
+        if (saved && SHARE[saved] && fine()) { var s0 = sizeFor(saved); siteMapPanel.style.width = s0.w + 'px'; siteMapPanel.style.height = s0.h + 'px'; }
+      } catch (e) {}
+      groups.forEach(function (g) {
+        ['mousedown', 'dblclick', 'wheel', 'touchstart', 'pointerdown'].forEach(function (ev) { g.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+        g.addEventListener('click', function (e) {
+          var b = e.target && e.target.closest ? e.target.closest('button') : null;
+          if (!b) return;
+          e.stopPropagation(); apply(b.getAttribute('data-size'));
+        });
+      });
+      window.addEventListener('resize', refresh);
+      window.addEventListener('mouseup', function () { setTimeout(refresh, 0); });
+      if (window.MutationObserver) {
+        var mo = new MutationObserver(refresh);
+        mo.observe(cont, { attributes: true, attributeFilter: ['class'] });
+        mo.observe(siteMapPanel, { attributes: true, attributeFilter: ['class', 'style'] });
+      }
+      setTimeout(refresh, 400);
     })();
 
     // -- "you are here" (touch screens) -------------------------------------
