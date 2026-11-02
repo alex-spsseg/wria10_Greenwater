@@ -1253,7 +1253,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-11-01 18:40:06</div>
+  <div id="build-timestamp">Built 2026-11-02 12:07:25</div>
 
   <div id="status-banner"></div>
 
@@ -5622,6 +5622,7 @@
         setTimeout(placeTools, 60);
         setTimeout(placeTools, 360);
       }
+      window.setTourSwapped = setSwapped;   // lets Hide Map put the 360 view back as the main view
       swapBtn.addEventListener('click', function (e) { e.stopPropagation(); setSwapped(!cont.classList.contains('swapped')); });
       // The right hand tools while swapped: sit just under the layers button (or under the tool row when there is none).
       var tools = document.getElementById('swap-tools');
@@ -5969,6 +5970,9 @@
       if (isHidden) {
         openSiteMap();
       } else {
+        // With the map enlarged and the 360 view down in the inset, hiding the map would leave an empty screen, so swap
+        // back first: the 360 view becomes the main view and the map then hides.
+        if (document.getElementById('container').classList.contains('swapped') && window.setTourSwapped) window.setTourSwapped(false);
         siteMapPanel.style.display = 'none';
         setCtrl(mapToggleBtn, 'Show Map');
       }
