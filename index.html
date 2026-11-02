@@ -1253,7 +1253,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-11-01 18:16:17</div>
+  <div id="build-timestamp">Built 2026-11-01 18:40:06</div>
 
   <div id="status-banner"></div>
 
@@ -1829,6 +1829,7 @@
 
       // Header: which stop is open, and how much is waiting to be saved.
       function updateEditHeader() {
+        if (panel.style.display === 'none') return;   // published tours never show the editing tools
         try {
           var nameEl = document.getElementById('edit-stop-name');
           var name = 'No stop open';
