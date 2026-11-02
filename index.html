@@ -1127,6 +1127,119 @@
       opacity: 0; transition: opacity 0.5s ease;
     }
     #hd-pill.show { opacity: 1; }
+
+    /* ---- Editing toolbar v2: header with the open stop, tabs, clear button hierarchy ---- */
+    #edit-tools-panel { width: 320px; max-height: calc(100vh - 76px); padding: 0; gap: 0; overflow: hidden; }
+    #edit-tools-header { margin: 0; padding: 10px 14px 9px; border-bottom: 1px solid rgba(179, 102, 255, 0.35); background: rgba(58, 31, 102, 0.55); }
+    .eh-top { display: flex; align-items: center; justify-content: space-between; }
+    .eh-title { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #e6ccff; }
+    .eh-badge { font-size: 9px; letter-spacing: 0.05em; text-transform: uppercase; color: #b9a3d9; border: 1px solid rgba(179, 102, 255, 0.5); border-radius: 9px; padding: 1px 7px; }
+    .eh-stop { display: flex; align-items: center; gap: 8px; margin-top: 5px; min-height: 18px; text-transform: none; letter-spacing: 0; }
+    #edit-stop-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 13px; font-weight: 600; }
+    #edit-unsaved { flex: none; font-size: 11px; color: #ffd27f; }
+    #edit-unsaved::before { content: '\25CF'; margin-right: 4px; }
+    #edit-scroll { overflow-y: auto; min-height: 0; padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; }
+    #edit-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #edit-quick:not(:has(.edit-tool-btn:not([style*="display: none"]):not([style*="display:none"]))) { display: none; }
+    #edit-quick #pin-match-help { grid-column: 1 / -1; color: #d8c8f0; font-size: 11px; line-height: 1.4; }
+    #edit-tabs { display: flex; gap: 3px; padding: 3px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); }
+    .edit-tab { flex: 1 1 0; padding: 6px 4px; border: 0; border-radius: 6px; background: transparent; color: #cdb6ee; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .edit-tab:hover { color: #fff; background: rgba(179, 102, 255, 0.22); }
+    .edit-tab.on { background: #b366ff; color: #1a0e33; }
+    #edit-tools-panel .edit-group { display: none !important; border: 0; padding: 0; }
+    #edit-tools-panel[data-tab="hotspots-group"] #hotspots-group,
+    #edit-tools-panel[data-tab="position-group"] #position-group,
+    #edit-tools-panel[data-tab="heading-group"] #heading-group { display: block !important; }
+    .edit-group > summary { display: none; }
+    .edit-group-body { gap: 8px; padding-top: 0; }
+    #edit-tools-panel .edit-tool-btn { background: rgba(179, 102, 255, 0.10); border: 1px solid rgba(179, 102, 255, 0.65); color: #f1e4ff;
+      padding: 7px 10px; font-weight: 600; text-align: center; box-shadow: none; border-radius: 6px; }
+    #edit-tools-panel .edit-tool-btn:hover { background: #b366ff; color: #1a0e33; }
+    #edit-tools-panel .edit-tool-btn.primary { background: #b366ff; border-color: #b366ff; color: #1a0e33; }
+    #edit-tools-panel .edit-tool-btn.primary:hover { background: #c78cff; border-color: #c78cff; }
+    #edit-tools-panel .edit-tool-btn.danger { border-color: rgba(224, 85, 85, 0.8); color: #ffb3b3; background: transparent; }
+    #edit-tools-panel .edit-tool-btn.danger:hover { background: #e05555; color: #fff; }
+    #edit-tools-panel .edit-tool-btn.active { background: #b366ff; color: #1a0e33; border-color: #fff; }
+    .eg-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .eg-row2 > .edit-tool-btn[style*="display: none"], .eg-row2 > .edit-tool-btn[style*="display:none"] { display: none; }
+    .eg-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid rgba(179, 102, 255, 0.3); border-radius: 8px; background: rgba(0, 0, 0, 0.18); }
+    #link-all-types { color: #d8c8f0; font-size: 12px; }
+    #la-details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+    #la-details > summary::-webkit-details-marker { display: none; }
+    #la-summary { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #cdb6ee; }
+    .la-edit { flex: none; color: #d9b3ff; font-weight: 600; font-size: 11px; text-decoration: underline; }
+    #la-details[open] .la-edit::after { content: ' (hide)'; }
+    .la-body { display: flex; flex-direction: column; gap: 7px; padding: 8px 0 2px; }
+    .la-row { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+    .la-lab { color: #b9a3d9; margin-right: 2px; }
+    .la-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid rgba(179, 102, 255, 0.5); border-radius: 12px; cursor: pointer; }
+    .la-pill:has(input:checked) { background: rgba(179, 102, 255, 0.28); border-color: #b366ff; color: #fff; }
+    .la-two { gap: 12px; }
+    .la-two label { display: inline-flex; align-items: center; gap: 4px; }
+    .la-body input[type=number] { width: 54px; background: #0A1428; color: #fff; border: 1px solid #5b3a8c; border-radius: 4px; padding: 2px 4px; }
+    .la-check { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    #link-all-preview { margin-top: 4px; padding: 5px 8px; border-radius: 5px; background: rgba(124, 252, 154, 0.10); color: #b8f5c8; font-size: 12px; }
+    #link-all-preview.none { background: rgba(255, 255, 255, 0.06); color: #b9a3d9; }
+    #hotspot-list-content { max-height: 260px; margin-top: 0; padding-top: 6px; }
+    .hotspot-list-row { flex-direction: row; align-items: center; gap: 6px; padding: 4px 6px; }
+    .hotspot-list-row .hlr-top { flex: 1 1 auto; min-width: 0; }
+    .hotspot-list-row .hlr-actions { flex: none; }
+    #heading-dial-row { margin: 0; padding: 0; border: 0; }
+    .hd-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    #heading-dial-label { margin: 0; color: #cdb6ee; font-size: 12px; }
+    #heading-value-display { font-size: 24px; font-weight: 700; color: #fff; margin-left: 4px; }
+    .hd-top .edit-tool-btn { padding: 4px 10px; font-size: 11px; }
+    #heading-dial-nudges button { padding: 7px 0; font-size: 13px; }
+    #hdg-fast { margin-top: 10px; padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    #hdg-fast button { margin: 0; }
+    #hdg-fast #hdg-bar { margin: 0 0 4px; }
+    .hdg-aimrow { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .hdg-aimrow .edit-tool-btn { font-size: 11px; padding: 7px 4px; }
+    #hdg-fast.hdg-all #hdg-bar, #hdg-fast.hdg-all #hdg-nextunset-btn { display: none !important; }
+    #hdg-fast.hdg-all #hdg-progress { color: #7CFC9A; font-weight: 600; font-size: 12px; }
+    #hdg-fast.hdg-all #hdg-progress::before { content: '\2713  '; }
+    #hdg-help > summary { cursor: pointer; color: #b9a3d9; font-size: 11px; list-style: none; }
+    #hdg-help > summary::-webkit-details-marker { display: none; }
+    #hdg-help > summary::before { content: '? '; color: #d9b3ff; font-weight: 700; }
+    #hdg-help[open] > summary { margin-bottom: 4px; }
+
+    /* ---- Hotspot form v2: category chips, only the fields a pin type needs, clear footer ---- */
+    .hotspot-form { width: 304px; padding: 0; border-radius: 10px; overflow: hidden; max-height: calc(100vh - 16px); display: flex; flex-direction: column; font-size: 12px; }
+    .hf-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(1, 159, 196, 0.14); border-bottom: 1px solid rgba(1, 159, 196, 0.45); }
+    .hf-head-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .hf-x { background: none; border: 0; color: #9fb2cc; font-size: 18px; line-height: 1; cursor: pointer; padding: 0 2px; }
+    .hf-x:hover { color: #fff; }
+    .hf-body { padding: 12px 14px 4px; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+    .hf-field { display: flex; flex-direction: column; gap: 4px; }
+    .hf-cap { color: #7fa8b8; font-size: 11px; font-weight: 600; }
+    .hf-target-row .hf-cap { margin-bottom: -5px; }
+    .hf-target-row { gap: 8px; }
+    .hotspot-form .hf-field label { margin: 0; }
+    .hf-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .hf-chip { padding: 4px 10px; border: 1px solid #22346b; border-radius: 13px; background: #0a1428; color: #cbd8ec; font-size: 12px; cursor: pointer; }
+    .hf-chip:hover { border-color: #019fc4; color: #fff; }
+    .hf-chip.on { color: #fff; font-weight: 600; border-color: var(--chip, #019fc4); background: color-mix(in srgb, var(--chip, #019fc4) 38%, #0a1428); }
+    .hf-seg { display: flex; border: 1px solid #22346b; border-radius: 6px; overflow: hidden; }
+    .hf-seg button { flex: 1 1 0; padding: 5px 4px; border: 0; background: #0a1428; color: #cbd8ec; font-size: 11.5px; cursor: pointer; }
+    .hf-seg button + button { border-left: 1px solid #22346b; }
+    .hf-seg button:hover { color: #fff; }
+    .hf-seg button.on { background: #019fc4; color: #fff; font-weight: 600; }
+    .hf-hide { display: none !important; }
+    .hf-image-list:empty { display: none; }
+    .hotspot-form .hf-extra { display: flex; flex-direction: column; gap: 10px; }
+    .hotspot-form .hf-extra label { margin: 0; }
+    .hotspot-form .hf-target-row { display: none; flex-direction: column; gap: 8px; }
+    .hotspot-form .hf-target-row[style*="block"] { display: flex !important; }
+    .hotspot-form input[type="file"] { width: 100%; box-sizing: border-box; font-size: 11px; color: #9fb2cc; }
+    .hotspot-form input[type="file"]::file-selector-button { margin-right: 8px; padding: 4px 10px; border: 1px solid #019fc4; border-radius: 4px; background: #1b3f95; color: #fff; cursor: pointer; }
+    .hotspot-form-buttons { margin: 0; padding: 10px 14px 12px; border-top: 1px solid rgba(1, 159, 196, 0.25); align-items: center; }
+    .hotspot-form-buttons button { padding: 6px 14px; font-weight: 600; }
+    .hotspot-form-buttons button.hf-cancel { background: transparent; border-color: #3a4f7a; color: #cbd8ec; }
+    .hotspot-form-buttons button.hf-save { background: #019fc4; border-color: #019fc4; }
+    .hotspot-form-buttons button.hf-save:hover { background: #02b8dc; }
+    .hotspot-form-buttons button.hf-delete { background: transparent; border-color: rgba(224, 85, 85, 0.7); color: #ff9c9c; padding: 6px 10px; }
+    .hotspot-form-buttons button.hf-delete:hover { background: #e05555; color: #fff; }
+    .hf-hint { margin-left: auto; color: #6f86a6; font-size: 10.5px; }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1140,7 +1253,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-31 18:52:32</div>
+  <div id="build-timestamp">Built 2026-11-01 18:16:17</div>
 
   <div id="status-banner"></div>
 
@@ -1265,79 +1378,105 @@
     </div>
 
     <div id="edit-tools-panel" style="display:none;">
-      <div id="edit-tools-header">Editing Tools (Preview Locally)</div>
-      <button id="crosshair-toggle-btn" class="edit-tool-btn" type="button" style="display:none;">Show Center Crosshair</button>
-      <button id="use-view-btn" class="edit-tool-btn" type="button" style="display:none;">Use This View</button>
-      <button id="unlock-aim-btn" class="edit-tool-btn" type="button" style="display:none;">Unlock Independent Aim</button>
-      <button id="use-view-left-btn" class="edit-tool-btn" type="button" style="display:none;">Use Left View</button>
-      <button id="use-view-right-btn" class="edit-tool-btn" type="button" style="display:none;">Use Right View</button>
-      <button id="pin-match-btn" class="edit-tool-btn" type="button" style="display:none;">Pin Match Point (0/4)</button>
-      <button id="clear-pins-btn" class="edit-tool-btn" type="button" style="display:none;">Clear Pins</button>
-      <div id="pin-match-help" style="display:none;">Aim both panels at the same real-world
-        feature, then Pin. Do 2-4 features spread around the scene (not clustered) for the
-        best fit, then lock -- alignment will hold across the whole pano, not just at one point.</div>
-      <details class="edit-group" id="hotspots-group" style="display:none;"><summary>Hotspots</summary>
-      <div class="edit-group-body">
-      <button id="place-hotspot-btn" class="edit-tool-btn" type="button" style="display:none;">Place New Point</button>
-      <button id="link-all-btn" class="edit-tool-btn" type="button" style="display:none;">Link to All Other Stops</button>
-      <div id="link-all-types" style="display:none; padding:2px 6px 8px; font-size:12px; color:#d8c8f0;">
-        Link to:
-        <label style="margin-left:6px;"><input type="checkbox" id="link-all-overview" checked> Overview</label>
-        <label style="margin-left:6px;"><input type="checkbox" id="link-all-aerial" checked> Aerial</label>
-        <label style="margin-left:6px;"><input type="checkbox" id="link-all-ground" checked> Ground</label>
-        <label style="margin-left:6px;"><input type="checkbox" id="link-all-float" checked> Float</label>
-        <div style="margin-top:6px;">Within
-          <input type="number" id="link-all-maxdist" min="1" step="10" placeholder="any" style="width:62px; margin:0 4px; background:#0A1428; color:#fff; border:1px solid #5b3a8c; border-radius:4px; padding:2px 4px;"> m
+      <div id="edit-tools-header">
+        <div class="eh-top"><span class="eh-title">Editing tools</span><span class="eh-badge">Local preview</span></div>
+        <div class="eh-stop"><span id="edit-stop-name">No stop open</span><span id="edit-unsaved" style="display:none;"></span></div>
+      </div>
+      <div id="edit-scroll">
+        <div id="edit-quick">
+          <button id="crosshair-toggle-btn" class="edit-tool-btn" type="button" style="display:none;">Show Center Crosshair</button>
+          <button id="use-view-btn" class="edit-tool-btn" type="button" style="display:none;">Use This View</button>
+          <button id="unlock-aim-btn" class="edit-tool-btn" type="button" style="display:none;">Unlock Independent Aim</button>
+          <button id="use-view-left-btn" class="edit-tool-btn" type="button" style="display:none;">Use Left View</button>
+          <button id="use-view-right-btn" class="edit-tool-btn" type="button" style="display:none;">Use Right View</button>
+          <button id="pin-match-btn" class="edit-tool-btn" type="button" style="display:none;">Pin Match Point (0/4)</button>
+          <button id="clear-pins-btn" class="edit-tool-btn danger" type="button" style="display:none;">Clear Pins</button>
+          <div id="pin-match-help" style="display:none;">Aim both panels at the same real-world
+            feature, then Pin. Do 2-4 features spread around the scene (not clustered) for the
+            best fit, then lock -- alignment will hold across the whole pano, not just at one point.</div>
         </div>
-        <label style="display:block; margin-top:6px;"><input type="checkbox" id="link-all-tilt" checked> Tilt pins using altitude</label>
-        <label style="display:block; margin-top:6px;"><input type="checkbox" id="link-all-showdist" checked> Show the distance in the link label</label>
-        <div style="margin-top:6px;">Skip a stop within
-          <input type="number" id="link-all-prune" min="1" step="5" value="15" placeholder="off" style="width:48px; margin:0 4px; background:#0A1428; color:#fff; border:1px solid #5b3a8c; border-radius:4px; padding:2px 4px;"> degrees of a closer link
-          <div style="font-size:11px; color:#b9a6d8; margin-top:2px;">Blank keeps every link.</div>
+        <div id="edit-tabs" role="tablist" style="display:none;">
+          <button type="button" class="edit-tab" data-tab="hotspots-group" style="display:none;">Hotspots</button>
+          <button type="button" class="edit-tab" data-tab="position-group" style="display:none;">Position</button>
+          <button type="button" class="edit-tab" data-tab="heading-group" style="display:none;">Heading</button>
         </div>
-      </div>
-      <button id="link-all-undo-btn" class="edit-tool-btn" type="button" style="display:none;">Undo Link to All</button>
-      <button id="edit-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Move/Delete Points</button>
-      <button id="save-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Save Hotspots</button>
-      <button id="hotspot-list-btn" class="edit-tool-btn" type="button" style="display:none;">Show Hotspot List</button>
-      <div id="hotspot-list-content" style="display:none;"></div>
-      </div>
-      </details>
-      <details class="edit-group" id="position-group" style="display:none;"><summary>Position</summary>
-      <div class="edit-group-body">
-      <div id="position-row" style="display:none;">
-        <div id="position-coords">No position for this stop.</div>
-        <button id="pos-move-btn" class="edit-tool-btn" type="button">Move This Pin</button>
-        <div id="pos-help">Drag this stop's pin on the map, or click the map to put it there. Zoom in for fine placement. Pins turn the stop's sidebar entry blue until saved.</div>
-        <button id="pos-save-btn" class="edit-tool-btn" type="button" style="display:none;">Save Position</button>
-        <button id="pos-revert-btn" class="edit-tool-btn" type="button" style="display:none;">Revert This Stop</button>
-      </div>
-      </div>
-      </details>
-      <details class="edit-group" id="heading-group" style="display:none;"><summary>Heading</summary>
-      <div class="edit-group-body">
-      <div id="heading-dial-row" style="display:none;">
-        <div id="heading-dial-label">Heading: <span id="heading-value-display">0</span>&deg;</div>
-        <div id="heading-dial-nudges">
-          <button id="heading-minus5" type="button">-5</button>
-          <button id="heading-minus1" type="button">-1</button>
-          <button id="heading-plus1" type="button">+1</button>
-          <button id="heading-plus5" type="button">+5</button>
+        <details class="edit-group" id="hotspots-group" style="display:none;" open><summary>Hotspots</summary>
+        <div class="edit-group-body">
+          <div class="eg-row2">
+            <button id="place-hotspot-btn" class="edit-tool-btn" type="button" style="display:none;">Place New Point</button>
+            <button id="edit-hotspots-btn" class="edit-tool-btn" type="button" style="display:none;">Move/Delete Points</button>
+          </div>
+          <div class="eg-card">
+            <button id="link-all-btn" class="edit-tool-btn" type="button" style="display:none;">Link to All Other Stops</button>
+            <div id="link-all-types" style="display:none;">
+              <details id="la-details">
+                <summary><span id="la-summary"></span><span class="la-edit">Options</span></summary>
+                <div class="la-body">
+                  <div class="la-row"><span class="la-lab">Link to</span>
+                    <label class="la-pill"><input type="checkbox" id="link-all-overview" checked> Overview</label>
+                    <label class="la-pill"><input type="checkbox" id="link-all-aerial" checked> Aerial</label>
+                    <label class="la-pill"><input type="checkbox" id="link-all-ground" checked> Ground</label>
+                    <label class="la-pill"><input type="checkbox" id="link-all-float" checked> Float</label>
+                  </div>
+                  <div class="la-row la-two">
+                    <label>Within <input type="number" id="link-all-maxdist" min="1" step="10" placeholder="any"> m</label>
+                    <label title="Blank keeps every link">Skip within <input type="number" id="link-all-prune" min="1" step="5" value="15" placeholder="off"> deg of a closer link</label>
+                  </div>
+                  <label class="la-check"><input type="checkbox" id="link-all-tilt" checked> Tilt pins using altitude</label>
+                  <label class="la-check"><input type="checkbox" id="link-all-showdist" checked> Show the distance in the link label</label>
+                </div>
+              </details>
+              <div id="link-all-preview"></div>
+            </div>
+            <button id="link-all-undo-btn" class="edit-tool-btn danger" type="button" style="display:none;">Undo Link to All</button>
+          </div>
+          <button id="save-hotspots-btn" class="edit-tool-btn primary" type="button" style="display:none;">Save Hotspots</button>
+          <button id="hotspot-list-btn" class="edit-tool-btn" type="button" style="display:none;">Show Hotspot List</button>
+          <div id="hotspot-list-content" style="display:none;"></div>
         </div>
-        <button id="save-heading-btn" class="edit-tool-btn" type="button">Save Heading</button>
-        <div id="hdg-fast">
-          <div id="hdg-progress"></div>
-          <div id="hdg-bar"><div id="hdg-bar-fill"></div></div>
-          <button id="hdg-map-btn" class="edit-tool-btn" type="button">Aim at Map Point (M)</button>
-          <button id="hdg-aim-btn" class="edit-tool-btn" type="button">Aim at Next Stop (A)</button>
-          <button id="hdg-saveadv-btn" class="edit-tool-btn" type="button">Save Dial Heading (Enter)</button>
-          <button id="hdg-nextunset-btn" class="edit-tool-btn" type="button">Jump to Next Unset Stop (U)</button>
-          <label><input type="checkbox" id="hdg-autoadv" checked> Auto jump to next stop after saving</label>
-          <div id="hdg-keys">Center a landmark in the photo, press M, click that landmark on the map. Each of these saves the heading and shows the cone. [ ] nudge 1, { } nudge 5 (then Enter). Esc cancels.</div>
+        </details>
+        <details class="edit-group" id="position-group" style="display:none;" open><summary>Position</summary>
+        <div class="edit-group-body">
+        <div id="position-row" style="display:none;">
+          <div id="position-coords">No position for this stop.</div>
+          <button id="pos-move-btn" class="edit-tool-btn" type="button">Move This Pin</button>
+          <div id="pos-help">Drag this stop's pin on the map, or click the map to put it there. Zoom in for fine placement. Pins turn the stop's sidebar entry blue until saved.</div>
+          <button id="pos-save-btn" class="edit-tool-btn primary" type="button" style="display:none;">Save Position</button>
+          <button id="pos-revert-btn" class="edit-tool-btn danger" type="button" style="display:none;">Revert This Stop</button>
         </div>
+        </div>
+        </details>
+        <details class="edit-group" id="heading-group" style="display:none;" open><summary>Heading</summary>
+        <div class="edit-group-body">
+        <div id="heading-dial-row" style="display:none;">
+          <div class="hd-top">
+            <div id="heading-dial-label">Heading <span id="heading-value-display">0</span>&deg;</div>
+            <button id="save-heading-btn" class="edit-tool-btn" type="button">Save Heading</button>
+          </div>
+          <div id="heading-dial-nudges">
+            <button id="heading-minus5" type="button">-5</button>
+            <button id="heading-minus1" type="button">-1</button>
+            <button id="heading-plus1" type="button">+1</button>
+            <button id="heading-plus5" type="button">+5</button>
+          </div>
+          <div id="hdg-fast">
+            <div id="hdg-progress"></div>
+            <div id="hdg-bar"><div id="hdg-bar-fill"></div></div>
+            <div class="hdg-aimrow">
+              <button id="hdg-map-btn" class="edit-tool-btn" type="button">Aim at Map Point (M)</button>
+              <button id="hdg-aim-btn" class="edit-tool-btn" type="button">Aim at Next Stop (A)</button>
+            </div>
+            <button id="hdg-saveadv-btn" class="edit-tool-btn primary" type="button">Save Dial Heading (Enter)</button>
+            <button id="hdg-nextunset-btn" class="edit-tool-btn" type="button">Jump to Next Unset Stop (U)</button>
+            <label><input type="checkbox" id="hdg-autoadv" checked> Auto jump to next stop after saving</label>
+            <details id="hdg-help"><summary>How aiming works</summary>
+              <div id="hdg-keys">Center a landmark in the photo, press M, click that landmark on the map. Each of these saves the heading and shows the cone. [ ] nudge 1, { } nudge 5 (then Enter). Esc cancels.</div>
+            </details>
+          </div>
+        </div>
+        </div>
+        </details>
       </div>
-      </div>
-      </details>
     </div>
   </div>
 
@@ -1639,20 +1778,87 @@
     // for this page (the code below shows and hides the tools one at a time).
     (function () {
       var panel = document.getElementById('edit-tools-panel');
+      // A tool counts as in use when it and everything around it up to its block is not hidden by the code that
+      // switches tools on for this page.
+      function toolOn(el, stop) {
+        for (var n = el; n && n !== stop; n = n.parentElement) { if (n.style.display === 'none') return false; }
+        return true;
+      }
       function syncEditGroups() {
         ['hotspots-group', 'position-group', 'heading-group'].forEach(function (id) {
           var g = document.getElementById(id);
           var body = g && g.querySelector('.edit-group-body');
           if (!body) return;
-          var any = Array.from(body.children).some(function (c) {
-            return c.id !== 'hotspot-list-content' && c.style.display !== 'none';
+          var any = Array.from(body.querySelectorAll('.edit-tool-btn, #position-row, #heading-dial-row')).some(function (c) {
+            return c.id !== 'hotspot-list-content' && toolOn(c, body);
           });
           var want = any ? '' : 'none';
           if (g.style.display !== want) g.style.display = want;
+          if (!g.open) g.open = true;
         });
       }
       new MutationObserver(syncEditGroups).observe(panel, { attributes: true, subtree: true, attributeFilter: ['style'] });
       syncEditGroups();
+
+      // Tabs: only one block shows at a time, and the last one used is remembered.
+      var tabIds = ['hotspots-group', 'position-group', 'heading-group'];
+      var tabBar = document.getElementById('edit-tabs');
+      var curTab = null;
+      try { curTab = localStorage.getItem('editToolsTab'); } catch (e) { /* storage blocked */ }
+      function applyTabs() {
+        var live = tabIds.filter(function (id) { var g = document.getElementById(id); return g && g.style.display !== 'none'; });
+        if (live.indexOf(curTab) === -1) curTab = live[0] || null;
+        panel.dataset.tab = curTab || '';
+        Array.prototype.forEach.call(tabBar.querySelectorAll('.edit-tab'), function (b) {
+          var id = b.getAttribute('data-tab');
+          b.style.display = live.indexOf(id) === -1 ? 'none' : '';
+          b.classList.toggle('on', id === curTab);
+        });
+        tabBar.style.display = live.length > 1 ? 'flex' : 'none';
+      }
+      Array.prototype.forEach.call(tabBar.querySelectorAll('.edit-tab'), function (b) {
+        b.addEventListener('click', function () {
+          curTab = b.getAttribute('data-tab');
+          try { localStorage.setItem('editToolsTab', curTab); } catch (e) { /* storage blocked */ }
+          applyTabs();
+        });
+      });
+      var tabObs = new MutationObserver(applyTabs);
+      tabIds.forEach(function (id) { tabObs.observe(document.getElementById(id), { attributes: true, attributeFilter: ['style'] }); });
+      applyTabs();
+
+      // Header: which stop is open, and how much is waiting to be saved.
+      function updateEditHeader() {
+        try {
+          var nameEl = document.getElementById('edit-stop-name');
+          var name = 'No stop open';
+          if (typeof activeTourSiteId !== 'undefined' && activeTourSiteId && typeof tourSiteOptions !== 'undefined' && tourSiteOptions) {
+            var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+            var idx = tourSiteOptions.findIndex(function (o) { return norm(o.site_id) === norm(activeTourSiteId); });
+            name = idx >= 0 ? ((tourSiteOptions[idx].display_name || activeTourSiteId) + '  (' + (idx + 1) + ' of ' + tourSiteOptions.length + ')') : String(activeTourSiteId);
+          } else if (typeof siteId !== 'undefined' && siteId) name = String(siteId);
+          if (nameEl.textContent !== name) nameEl.textContent = name;
+          var hs = (typeof dirtyHotspotSlots !== 'undefined') ? Object.keys(dirtyHotspotSlots).length : 0;
+          var ps = document.querySelectorAll('.tour-stop-link.pos-unsaved').length;
+          var parts = [];
+          if (hs) parts.push(hs + ' hotspot' + (hs > 1 ? 's' : ''));
+          if (ps) parts.push(ps + ' position' + (ps > 1 ? 's' : ''));
+          var u = document.getElementById('edit-unsaved');
+          u.textContent = parts.length ? 'Unsaved: ' + parts.join(', ') : '';
+          u.style.display = parts.length ? '' : 'none';
+        } catch (e) { /* header is only a convenience */ }
+      }
+      setInterval(updateEditHeader, 700);
+      updateEditHeader();
+
+      // Heading progress: once every stop has one, the bar and the jump button give way to a single line.
+      var hp = document.getElementById('hdg-progress');
+      function syncHeadingDone() {
+        var m = /(\d+)\s+of\s+(\d+)/.exec(hp.textContent || '');
+        document.getElementById('hdg-fast').classList.toggle('hdg-all', !!m && +m[2] > 0 && +m[1] >= +m[2]);
+      }
+      new MutationObserver(syncHeadingDone).observe(hp, { childList: true, characterData: true, subtree: true });
+      syncHeadingDone();
     })();
 
     function sendViewCapture(yawRad, pitchRad, photoIndex, siteIdOverride) {
@@ -4180,7 +4386,7 @@
           { id: 'coolwarm', label: 'Cool to warm', stops: [[0, [59, 76, 192, 225]], [0.25, [141, 176, 254, 225]], [0.5, [221, 221, 221, 225]], [0.75, [244, 154, 123, 230]], [1, [180, 4, 38, 235]]] }
         ]
       };
-      var RAMP_DEFAULT = { depth: 'blues2', velocity: 'viridis' };
+      var RAMP_DEFAULT = { depth: 'blues2', velocity: 'rainbow' };
       function rampValid(mode, id) {
         var l = RAMP_DEFS[mode];
         for (var i = 0; i < l.length; i++) if (l[i].id === id) return id;
@@ -4224,6 +4430,11 @@
       function merc2ll(x, y) { var R = 6378137; return L.latLng((2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * 180 / Math.PI, x / R * 180 / Math.PI); }
 
       // ---- data ----
+      // Water thinner than this is left out of the shading and flow lines, like the flow viewer's default (0.05 ft, 0.015 m).
+      function minD16() {
+        var ft = /ft|feet/i.test(String((manifest.units && manifest.units.length) || 'ft'));
+        return Math.ceil((ft ? 0.05 : 0.015) / manifest.maxDepth * 65535);
+      }
       function loadImg(url) {
         return new Promise(function (resolve, reject) {
           function attempt(cors) {
@@ -4242,10 +4453,22 @@
           attempt(true);
         });
       }
+      // GitHub Pages can serve a new manifest next to old pictures for a few minutes after a publish, so each picture is
+      // asked for by build number, checked against the size the manifest promises, and fetched fresh once if it differs.
+      function loadChecked(name) {
+        var u = base + 'sites/' + encodeURIComponent(siteId) + '/' + name;
+        var ok = function (im) { return im.width === manifest.width && im.height === manifest.height; };
+        return loadImg(u + '?v=' + (manifest.built || '')).then(function (im) {
+          if (ok(im)) return im;
+          return loadImg(u + '?v=r' + Date.now()).then(function (im2) {
+            if (ok(im2)) return im2;
+            throw new Error('The flow pictures do not match their description. GitHub Pages may still be updating after a publish. Wait a few minutes and reload.');
+          });
+        });
+      }
       function loadScenario(id) {
         if (cache[id]) return Promise.resolve(cache[id]);
-        return Promise.all([loadImg(base + 'sites/' + encodeURIComponent(siteId) + '/depth_' + encodeURIComponent(id) + '.png'),
-                            loadImg(base + 'sites/' + encodeURIComponent(siteId) + '/flow_' + encodeURIComponent(id) + '.png')]).then(function (r) {
+        return Promise.all([loadChecked('depth_' + encodeURIComponent(id) + '.png'), loadChecked('flow_' + encodeURIComponent(id) + '.png')]).then(function (r) {
           var meta = manifest.discharges.filter(function (d) { return d.id === id; })[0] || { id: id, label: id };
           cache[id] = { id: id, meta: meta, depth: r[0], flow: r[1], fills: {} };
           cacheOrder.push(id);
@@ -4257,10 +4480,11 @@
         var fkey = mode + ':' + rampSel[mode];
         if (scn.fills[fkey]) return scn.fills[fkey];
         var W = manifest.width, H = manifest.height, c = document.createElement('canvas'); c.width = W; c.height = H;
-        var x = c.getContext('2d'), out = x.createImageData(W, H), o = out.data, rgba = [0, 0, 0, 0], d = scn.depth.data, f = scn.flow.data;
+        var x = c.getContext('2d'), out = x.createImageData(W, H), o = out.data, rgba = [0, 0, 0, 0], d = scn.depth.data, f = scn.flow.data, md16 = minD16();
         for (var i = 0, n = W * H; i < n; i++) {
           var p = i * 4;
           if (d[p + 3] === 0) continue;
+          if (md16 && (d[p] * 256 + d[p + 1]) < md16) continue;
           if (mode === 'depth') depthColor((d[p] * 256 + d[p + 1]) / 65535, rgba); else velColor(f[p + 2] / 255, rgba);
           o[p] = rgba[0]; o[p + 1] = rgba[1]; o[p + 2] = rgba[2]; o[p + 3] = rgba[3];
         }
@@ -4294,7 +4518,7 @@
         if (!shown || !cur || fillMode === 'none') return;
         var v = computeView();
         if (!v.ok) return;
-        fctx.globalAlpha = 0.8; fctx.imageSmoothingEnabled = true;
+        fctx.globalAlpha = 1; fctx.imageSmoothingEnabled = true;
         fctx.drawImage(fillFor(cur, fillMode), v.tlx, v.tly, v.sx * manifest.width, v.sy * manifest.height);
         fctx.globalAlpha = 1;
       }
@@ -4332,7 +4556,7 @@
         var vw = computeView();
         if (!vw.ok) return;
         if (++frameNo % 8 === 1 || !particles.length) resizeParticles(vw);
-        var W = manifest.width, H = manifest.height, f = cur.flow.data, perPx = (Math.abs(vw.sx) + Math.abs(vw.sy)) / 2, buckets = {};
+        var W = manifest.width, H = manifest.height, f = cur.flow.data, dd = cur.depth.data, md16 = minD16(), perPx = (Math.abs(vw.sx) + Math.abs(vw.sy)) / 2, buckets = {};
         for (var n = 0; n < particles.length; n++) {
           var p = particles[n];
           if (p.life <= 0) { spawn(p, vw); if (p.life <= 0) continue; }
@@ -4340,8 +4564,9 @@
           if (ii < 0 || jj < 0 || ii >= W || jj >= H) { p.life = 0; continue; }
           var idx = (jj * W + ii) * 4;
           if (f[idx + 3] === 0) { p.life = 0; continue; }
+          if (md16 && (dd[idx] * 256 + dd[idx + 1]) < md16) { p.life = 0; continue; }
           var ux = f[idx] / 255 * 2 - 1, uy = f[idx + 1] / 255 * 2 - 1, sp = f[idx + 2] / 255;
-          var step = 1.6 * (0.25 + 2.2 * Math.sqrt(sp)) / perPx;
+          var step = 4.0 * sp / perPx;   // proportional to velocity
           p.pi = p.i; p.pj = p.j; p.i += ux * step; p.j += uy * step; p.life--;
           var c = Math.min(31, (sp * 31) | 0); (buckets[c] || (buckets[c] = [])).push(p);
         }
@@ -4512,7 +4737,7 @@
           if (!bound) { bindMap(); bound = true; }
           fillPane.style.display = linePane.style.display = '';
           if (manifest) { box.style.display = 'block'; place(); drawFill(); startLoop(); return Promise.resolve(); }
-          return fetch(base + 'sites/' + encodeURIComponent(siteId) + '/manifest.json', { cache: 'no-store' })
+          return fetch(base + 'sites/' + encodeURIComponent(siteId) + '/manifest.json?t=' + Date.now(), { cache: 'no-store' })
             .then(function (r) { if (!r.ok) throw new Error('missing'); return r.json(); })
             .then(function (m) { manifest = m; buildBox(); box.style.display = 'block'; legend(); choose(); })
             .catch(function () { shown = false; fillPane.style.display = linePane.style.display = 'none'; throw new Error('The flow site "' + siteId + '" could not be loaded.'); });
@@ -5850,9 +6075,8 @@
         // text alone would (which is often just the target's name
         // anyway, thanks to the auto-fill, so this makes the arrow
         // explicit rather than relying on that always being true).
-        titleSpan.textContent = spot.category === 'link' && spot.target
-            ? (spot.title || '(untitled)') + ' \u2192 ' + spot.target
-            : (spot.title || '(untitled)');
+        titleSpan.textContent = spot.title || '(untitled)';
+        if (spot.category === 'link' && spot.target) row.title = (spot.title || '(untitled)') + ' \u2192 ' + spot.target;
         var jumpBtn = document.createElement('button');
         jumpBtn.type = 'button';
         jumpBtn.textContent = 'Jump';
@@ -6433,6 +6657,114 @@
         });
     }
 
+    // Reshapes the hotspot form (new or edit) after it is built: category as chips, text, link and photos only for pin
+    // types that use them, pin style and icon as one tap choices, a title bar, and Esc / Ctrl+Enter keys. The original
+    // selects stay in the form, hidden, and are what the save code reads, so nothing about saving changes.
+    function enhanceHotspotForm(form, mode) {
+      var CAT_COLORS = { note: '#019fc4', issue: '#e05555', measurement: '#4caf6d', link: '#b366ff', photo: '#e0a030' };
+      var first = form.firstChild;
+      var head = document.createElement('div');
+      head.className = 'hf-head';
+      head.innerHTML = '<span class="hf-head-title">' + (mode === 'new' ? 'New hotspot' : 'Edit hotspot') + '</span><button type="button" class="hf-x" aria-label="Close">\u00d7</button>';
+      var body = document.createElement('div');
+      body.className = 'hf-body';
+      var buttons = form.querySelector('.hotspot-form-buttons');
+      // pull every piece out of the form in order
+      var kids = Array.prototype.slice.call(form.childNodes).filter(function (n) { return n !== buttons; });
+      var labels = {}, cur = null;
+      kids.forEach(function (n) {
+        if (n.tagName === 'LABEL' && !n.classList.contains('hf-return-link-label')) { cur = n.textContent.replace(/\(optional\)/, '').trim(); labels[cur] = []; n.remove(); return; }
+        if (cur) labels[cur].push(n);
+        n.remove();
+      });
+      function field(cap, nodes, extraClass) {
+        var f = document.createElement('div');
+        f.className = 'hf-field' + (extraClass ? ' ' + extraClass : '');
+        if (cap) { var c = document.createElement('span'); c.className = 'hf-cap'; c.textContent = cap; f.appendChild(c); }
+        (nodes || []).forEach(function (n) { f.appendChild(n); });
+        return f;
+      }
+      var titleF = field('Title', labels['Title']);
+      var catSel = (labels['Category'] || [])[0];
+      var catF = field('Type', []);
+      var chips = document.createElement('div'); chips.className = 'hf-chips';
+      catF.appendChild(chips);
+      if (catSel) { catSel.classList.add('hf-hide'); catF.appendChild(catSel); }
+      var extra = document.createElement('div');
+      extra.className = 'hf-extra';
+      extra.appendChild(field('Text', labels['Text']));
+      extra.appendChild(field('Link (optional)', labels['Link']));
+      extra.appendChild(field('Photos (optional)', labels['Image(s)']));
+      var targetRow = (labels['Category'] || []).filter(function (n) { return n.classList && n.classList.contains('hf-target-row'); })[0];
+      var styleSel = (labels['Pin Style'] || [])[0];
+      var styleF = field('Pin style', []);
+      var styleSeg = document.createElement('div'); styleSeg.className = 'hf-seg'; styleF.appendChild(styleSeg);
+      if (styleSel) { styleSel.classList.add('hf-hide'); styleF.appendChild(styleSel); }
+      body.appendChild(catF);
+      body.appendChild(titleF);
+      if (targetRow) body.appendChild(targetRow);
+      body.appendChild(extra);
+      body.appendChild(styleF);
+      form.appendChild(head);
+      form.appendChild(body);
+      if (buttons) form.appendChild(buttons);
+
+      // chips and segmented controls that drive the original selects
+      function bindChoices(selectEl, host, kind, labelMap) {
+        if (!selectEl) return;
+        host.innerHTML = '';
+        Array.prototype.forEach.call(selectEl.options, function (o) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.setAttribute('data-v', o.value);
+          b.className = kind === 'chip' ? 'hf-chip' : '';
+          b.textContent = (labelMap && labelMap[o.value]) || o.textContent;
+          if (kind === 'chip' && CAT_COLORS[o.value]) b.style.setProperty('--chip', CAT_COLORS[o.value]);
+          b.addEventListener('click', function () { selectEl.value = o.value; selectEl.dispatchEvent(new Event('change')); sync(); });
+          host.appendChild(b);
+        });
+        function sync() { Array.prototype.forEach.call(host.children, function (b) { b.classList.toggle('on', b.getAttribute('data-v') === selectEl.value); }); }
+        selectEl.addEventListener('change', sync);
+        sync();
+        return sync;
+      }
+      bindChoices(catSel, chips, 'chip', { link: 'Link to photo' });
+      bindChoices(styleSel, styleSeg, 'seg', { label_hover: 'Label on hover', dot: 'Dot only', label_always: 'Label always' });
+      var iconSel = form.querySelector('.hf-link-icon');
+      if (iconSel) {
+        var iconSeg = document.createElement('div'); iconSeg.className = 'hf-seg';
+        iconSel.classList.add('hf-hide');
+        iconSel.parentNode.insertBefore(iconSeg, iconSel);
+        bindChoices(iconSel, iconSeg, 'seg', { ground: 'Ground', aerial: 'Aerial', float: 'Float', overview: 'Overview' });
+        var iconCap = document.createElement('span'); iconCap.className = 'hf-cap'; iconCap.textContent = 'Icon';
+        iconSeg.parentNode.insertBefore(iconCap, iconSeg);
+      }
+      if (targetRow) Array.prototype.forEach.call(targetRow.querySelectorAll('label'), function (l) { if (!l.classList.contains('hf-return-link-label')) l.remove(); });
+      var tgt = form.querySelector('.hf-target');
+      if (tgt) {
+        var tcap = document.createElement('span'); tcap.className = 'hf-cap'; tcap.textContent = 'Target stop';
+        tgt.parentNode.insertBefore(tcap, tgt);
+      }
+      // a link pin only needs a title, a target and an icon
+      function syncExtra() { extra.classList.toggle('hf-hide', catSel && catSel.value === 'link'); }
+      if (catSel) catSel.addEventListener('change', syncExtra);
+      syncExtra();
+
+      var cbtn = form.querySelector('.hf-cancel'), sbtn = form.querySelector('.hf-save');
+      if (cbtn) cbtn.title = 'Esc';
+      if (sbtn) sbtn.title = 'Ctrl+Enter';
+      head.querySelector('.hf-x').addEventListener('click', function () { var c = form.querySelector('.hf-cancel'); if (c) c.click(); });
+      form.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { e.stopPropagation(); var c = form.querySelector('.hf-cancel'); if (c) c.click(); }
+        else if ((e.key === 'Enter' && (e.ctrlKey || e.metaKey)) || (e.key === 'Enter' && e.target.classList && e.target.classList.contains('hf-title') && e.target.tagName === 'INPUT')) {
+          e.preventDefault(); var sv = form.querySelector('.hf-save'); if (sv && !sv.disabled) sv.click();
+        }
+      });
+      // keep the (now taller and wider) form on screen
+      var r = form.getBoundingClientRect();
+      form.style.left = Math.max(8, Math.min(r.left, window.innerWidth - r.width - 8)) + 'px';
+      form.style.top = Math.max(8, Math.min(r.top, window.innerHeight - r.height - 8)) + 'px';
+    }
+
     function showHotspotForm(x, y, onSave) {
       closeOpenHotspotForms();
       var form = document.createElement('div');
@@ -6497,6 +6829,7 @@
       // not the exception.
       catSelect.value = lastUsedCategory;
       syncTargetVisibility();
+      enhanceHotspotForm(form, 'new');
 
       // Auto-fill Title from the chosen stop's display name for link
       // hotspots -- only when the target field is the tour's dropdown
@@ -6634,6 +6967,7 @@
       }
       catSelect.addEventListener('change', syncTargetVisibility);
       syncTargetVisibility();
+      enhanceHotspotForm(form, 'edit');
 
       function close() { form.remove(); }
       form.querySelector('.hf-cancel').addEventListener('click', close);
@@ -6798,6 +7132,59 @@
           undoBtn.textContent = 'Removed ' + batch.items.length + ' from ' + batch.name;
           setTimeout(() => { undoBtn.textContent = o; updateLinkAllUndoVisibility(); }, 2200);
         });
+        // Live summary and count, so the options read at a glance and you see what the button will do first.
+        var laIds = ['link-all-overview', 'link-all-aerial', 'link-all-ground', 'link-all-float', 'link-all-maxdist', 'link-all-prune', 'link-all-tilt', 'link-all-showdist'];
+        function linkAllPreview() {
+          var out = document.getElementById('link-all-preview');
+          var kinds = [['overview', 'Overview'], ['aerial', 'Aerial'], ['ground', 'Ground'], ['float', 'Float']];
+          var on = kinds.filter(k => document.getElementById('link-all-' + k[0]).checked);
+          var md = parseFloat(document.getElementById('link-all-maxdist').value);
+          var pr = parseFloat(document.getElementById('link-all-prune').value);
+          var parts = [on.length === 4 ? 'All types' : (on.map(k => k[1]).join(', ') || 'No types'),
+                       md > 0 ? 'within ' + md + ' m' : 'any distance', pr > 0 ? 'skip ' + pr + '\u00B0' : 'no skipping'];
+          if (document.getElementById('link-all-tilt').checked) parts.push('tilted');
+          document.getElementById('la-summary').textContent = parts.join(' \u00B7 ');
+          var set = (t, none) => { if (out.textContent !== t) out.textContent = t; out.classList.toggle('none', !!none); };
+          var sid = activeTourSiteId;
+          if (!sid || !tourSiteOptions) { set('Open a stop to see what this will add.', true); return; }
+          if (document.getElementById('flat-stop-viewer').classList.contains('visible')) { set('Not available for flat stops.', true); return; }
+          var me = findTourSiteLatLng(sid);
+          if (!me) { set('This stop has no GPS.', true); return; }
+          if (!headingIsKnown) { set('Set this stop\u2019s heading first.', true); return; }
+          if (!on.length) { set('Tick at least one type.', true); return; }
+          var normId = (x) => String(x).trim().toLowerCase().replace(/[\s-]+/g, '_');
+          var have = {};
+          (pendingSlotHotspots[sid] || []).forEach(h => { if (h.category === 'link' && h.target) have[normId(h.target)] = true; });
+          var want = {}; on.forEach(k => { want[k[0]] = true; });
+          var cands = [];
+          tourSiteOptions.forEach(st => {
+            var tid = normId(st.site_id);
+            if (tid === sid || have[tid] || st.lat == null || st.lng == null) return;
+            var kind = st.overview ? 'overview' : (st.platform === 'aerial' ? 'aerial' : (st.platform === 'float' ? 'float' : 'ground'));
+            if (!want[kind]) return;
+            var dLat = (st.lat - me[0]) * 111320, dLng = (st.lng - me[1]) * 111320 * Math.cos(me[0] * Math.PI / 180);
+            var dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            if (dist < 0.5 || (md > 0 && dist > md)) return;
+            cands.push({ dist: dist, bearing: computeBearingJs(me[0], me[1], st.lat, st.lng) });
+          });
+          cands.sort((x, y) => x.dist - y.dist);
+          var masked = 0;
+          if (pr > 0) {
+            var kept = [];
+            cands = cands.filter(c => {
+              if (kept.some(kb => Math.abs(((c.bearing - kb + 540) % 360) - 180) < pr)) { masked++; return false; }
+              kept.push(c.bearing); return true;
+            });
+          }
+          if (!cands.length) { set('Nothing new to add with these options.', true); return; }
+          set('Will add ' + cands.length + ' link' + (cands.length > 1 ? 's' : '') + (masked ? ' (' + masked + ' skipped as overlapping)' : ''), false);
+        }
+        laIds.forEach(id => {
+          var el = document.getElementById(id);
+          el.addEventListener('input', linkAllPreview); el.addEventListener('change', linkAllPreview);
+        });
+        setInterval(linkAllPreview, 800);
+        linkAllPreview();
         linkAllBtn.addEventListener('click', () => {
           var flashMsg = (t) => {
             var o = linkAllBtn.dataset.orig || linkAllBtn.textContent;
