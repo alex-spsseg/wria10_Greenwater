@@ -98,6 +98,7 @@
         .catch(() => []),
     ]).then(([tours, locations]) => {
       tours = Array.isArray(tours) ? tours : [];
+      tours = tours.filter(function (t) { return !t.unlisted; });   // unlisted tours still open from their own link
       locations = Array.isArray(locations) ? locations : [];
 
       renderCards(document.getElementById('tours-grid'), document.getElementById('tours-heading'), tours, t => {

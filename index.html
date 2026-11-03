@@ -373,6 +373,8 @@
     #flow-box.collapsed .fsum { display: block; }
     #flow-box.collapsed select, #flow-box.collapsed .fhide { display: none !important; }
     #flow-box .fleg { height: 6px; border-radius: 3px; margin-top: 5px; }
+    #flow-box .fhere { margin-top: 6px; padding-top: 5px; border-top: 1px solid #1b3f95; color: #e8eef7; font-size: 11px; line-height: 1.35; white-space: normal; }
+    #flow-box .fhere b { color: #fff; }
     #flow-box .fnum { display: flex; justify-content: space-between; color: #9fb2cc; font-size: 10px; margin-top: 1px; }
     /* Make the map bigger, on every screen. The map grows to nearly the whole window, leaving the top clear for the
     menu and Prev and Next, and the button (or Esc) puts it back at the size it was. On a desktop, --map-left is set
@@ -1253,7 +1255,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-11-02 12:07:25</div>
+  <div id="build-timestamp">Built 2026-11-03 14:58:05</div>
 
   <div id="status-banner"></div>
 
@@ -4580,6 +4582,59 @@
       }
       function startLoop() { if (!raf && shown) raf = requestAnimationFrame(frame); }
 
+      // ---- depth and velocity where the shown stop is ----
+      // Reads the two flow pictures at the stop's map position, for the scenario in the pickers. Depth is stored in 16 bits
+      // and velocity in 8 bits (capped at the site maximum), so the numbers are good to about a tenth.
+      function stopName() {
+        var name = '';
+        if (pendingMapData && pendingMapData.type === 'tour') {
+          var s0 = (pendingMapData.sites || []).filter(function (x) { return x.site_id === activeTourSiteId; })[0];
+          name = (s0 && (s0.display_name || s0.site_id)) || '';
+        } else if (pendingMapData && pendingMapData.label) {
+          name = pendingMapData.label;
+        }
+        return name;
+      }
+      function esc2(t) { var d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; }
+      function sampleAt(i, j) {
+        var W = manifest.width, H = manifest.height;
+        if (i < 0 || j < 0 || i >= W || j >= H) return null;
+        var p = (j * W + i) * 4, d = cur.depth.data, f = cur.flow.data, d16 = d[p] * 256 + d[p + 1];
+        if (d[p + 3] === 0 || d16 < minD16()) return null;
+        return { depth: d16 / 65535 * manifest.maxDepth, vel: f[p + 2] / 255 * manifest.maxSpeed, capped: f[p + 2] >= 255 };
+      }
+      function updateHere() {
+        if (!els.here) return;
+        var ll = (typeof currentSiteLatLng === 'function') ? currentSiteLatLng() : null;
+        if (!cur || !manifest || !ll || ll[0] == null || ll[1] == null) { els.here.style.display = 'none'; return; }
+        var R = 6378137, x = ll[1] * Math.PI / 180 * R, y = Math.log(Math.tan(Math.PI / 4 + ll[0] * Math.PI / 360)) * R;
+        var b = manifest.bounds3857, W = manifest.width, H = manifest.height;
+        var fi = (x - b[0]) / (b[2] - b[0]) * W, fj = (b[3] - y) / (b[3] - b[1]) * H, i = Math.floor(fi), j = Math.floor(fj);
+        var nm = stopName(), lead = '<b>' + (nm ? 'At ' + esc2(nm) : 'At this stop') + ':</b> ', u = manifest.units || { length: 'ft', velocity: 'ft/s' }, txt;
+        if (fi < 0 || fj < 0 || fi >= W || fj >= H) {
+          txt = lead + 'outside the modeled area';
+        } else {
+          var hit = sampleAt(i, j);
+          if (hit) {
+            txt = lead + 'depth ' + hit.depth.toFixed(1) + ' ' + u.length + ', velocity ' + (hit.capped ? '\u2265 ' : '') + hit.vel.toFixed(1) + ' ' + u.velocity;
+          } else {
+            // dry here: say how far the nearest water is, if it is close
+            var mpp = (b[2] - b[0]) / W * Math.cos(ll[0] * Math.PI / 180), rmax = Math.max(1, Math.min(60, Math.ceil(60 / mpp))), best = null;
+            for (var dj = -rmax; dj <= rmax; dj++) for (var di = -rmax; di <= rmax; di++) {
+              var dist = Math.sqrt(di * di + dj * dj);
+              if (dist > rmax || (best !== null && dist >= best)) continue;
+              if (sampleAt(i + di, j + dj)) best = dist;
+            }
+            txt = lead + 'dry at this flow';
+            if (best !== null) {
+              var meters = best * mpp, ft = /ft|feet/i.test(String(u.length)), shown = ft ? meters * 3.281 : meters;
+              txt += ', water about ' + (shown < 10 ? shown.toFixed(0) : Math.round(shown / 5) * 5) + ' ' + (ft ? 'ft' : 'm') + ' away';
+            }
+          }
+        }
+        els.here.innerHTML = txt; els.here.title = els.here.textContent; els.here.style.display = 'block';
+      }
+
       // ---- choosing a scenario ----
       function buildGrid() {
         var items = [];
@@ -4621,7 +4676,7 @@
           if (my !== token) return;
           cur = scn; particles = []; els.stat.textContent = '';
           els.noflow.style.display = scn.meta.flow === false ? 'inline' : 'none';
-          legend(); place(); clearLines(); drawFill(); startLoop();
+          legend(); place(); clearLines(); drawFill(); startLoop(); updateHere();
         }).catch(function (e) { if (my === token) els.stat.textContent = e.message || 'Could not load the flow data.'; });
       }
       // The controls fold away to a one line summary and the legend, so the box does not cover a small map.
@@ -4673,9 +4728,10 @@
           '<button type="button" class="ficon" id="flow-open" title="Open the full flow viewer in a new tab">&#8599;</button></div>' +
           '<div class="frow fhide" id="flow-ramprow"><select id="flow-ramp" aria-label="Color scheme" title="Color scheme"></select></div>' +
           '<div class="fleg" id="flow-leg"></div><div class="fnum" id="flow-nums"><span>0</span><span id="flow-max"></span></div>' +
+          '<div class="fhere" id="flow-here" style="display:none"></div>' +
           '<div class="fstat"><span id="flow-stat"></span><span id="flow-noflow" style="display:none;color:#f2b36b">No flow direction for this scenario.</span></div>';
         document.getElementById('site-map-panel').appendChild(box);
-        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'ramp', 'ramprow', 'sum', 'collapse', 'leg', 'nums', 'max', 'stat', 'noflow'].forEach(function (k) {
+        ['flow', 'scen', 'seg', 'lines', 'fit', 'open', 'ramp', 'ramprow', 'sum', 'collapse', 'leg', 'nums', 'max', 'here', 'stat', 'noflow'].forEach(function (k) {
           els[k] = box.querySelector(k === 'flow' || k === 'scen' ? '#flow-sel-' + k : '#flow-' + k);
         });
         ['mousedown', 'dblclick', 'wheel', 'touchstart', 'pointerdown'].forEach(function (ev) { box.addEventListener(ev, function (e) { e.stopPropagation(); }); });
@@ -4737,7 +4793,7 @@
           shown = true;
           if (!bound) { bindMap(); bound = true; }
           fillPane.style.display = linePane.style.display = '';
-          if (manifest) { box.style.display = 'block'; place(); drawFill(); startLoop(); return Promise.resolve(); }
+          if (manifest) { box.style.display = 'block'; place(); drawFill(); startLoop(); updateHere(); return Promise.resolve(); }
           return fetch(base + 'sites/' + encodeURIComponent(siteId) + '/manifest.json?t=' + Date.now(), { cache: 'no-store' })
             .then(function (r) { if (!r.ok) throw new Error('missing'); return r.json(); })
             .then(function (m) { manifest = m; buildBox(); box.style.display = 'block'; legend(); choose(); })
@@ -4749,6 +4805,7 @@
           if (raf) { cancelAnimationFrame(raf); raf = null; }
         },
         isOn: function () { return shown; },
+        refreshHere: function () { if (shown) updateHere(); },
         ramps: function () { return { depth: rampSel.depth, velocity: rampSel.velocity, def: RAMP_DEFAULT }; },
         zoomToFlow: function () { if (manifest) map.fitBounds(L.latLngBounds(manifest.bounds4326), { padding: [20, 20] }); }
       };
@@ -7918,6 +7975,7 @@
         updateTourUrl(sid);
         updateLinkAllUndoVisibility();
         updateActiveMapMarker();
+        try { if (flowLayer && flowLayer.isOn()) flowLayer.refreshHere(); } catch (e) { /* flow layer not ready */ }
         updateTourCompareButton(null);
 
         if (sceneCache[sid] && sceneCache[sid].flat) {
