@@ -43,6 +43,15 @@
     .tour-card h2 { font-size: 16px; font-weight: 600; color: #ffffff; margin-bottom: 6px; }
     .tour-card .meta { font-size: 12px; color: #9fb2cc; }
 
+    /* the 3D terrain link sits beside the card, not inside it, because a link cannot hold a link */
+    .tour-wrap { position: relative; }
+    .tour-badge {
+      position: absolute; top: 12px; right: 12px; z-index: 2; font-size: 11px; font-weight: 600; text-decoration: none;
+      color: #ffffff; background: #0e1b33; border: 1px solid #019fc4; border-radius: 12px; padding: 3px 10px;
+    }
+    .tour-badge:hover { background: #019fc4; }
+    .tour-wrap.has-badge .tour-card h2 { padding-right: 92px; }
+
     h2.section-heading {
       max-width: 1000px; margin: 36px auto 14px; font-size: 15px; font-weight: 600;
       color: #9fb2cc; text-transform: uppercase; letter-spacing: 0.06em;
@@ -89,6 +98,36 @@
       items.forEach(item => gridEl.appendChild(buildCard(item)));
     }
 
+    // A "3D terrain" link on each tour the repo's terrain site covers. The terrain link is set in the publisher (Tours Page Settings) and
+    // saved in landing_config.json; the tour's stops are checked against the terrain site's area, so only tours it covers get the link.
+    function addTerrainBadges(tours) {
+      fetch('landing_config.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }).then(function (cfg) {
+        var link = String((cfg && cfg.terrain_url) || '').trim();
+        if (!/^https?:\/\//i.test(link) || !tours.length) return;
+        var u; try { u = new URL(link, location.href); } catch (e) { return; }
+        var site = u.searchParams.get('site');
+        var bounds = site ? fetch(new URL('sites/' + encodeURIComponent(site) + '/manifest.json', u).toString(), { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; }).then(function (m) { return (m && m.bounds4326) || null; }).catch(function () { return null; }) : Promise.resolve(null);
+        bounds.then(function (b) {
+          tours.slice(0, 12).forEach(function (t) {
+            fetch('tours/' + encodeURIComponent(t.tour_id) + '.json').then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (tj) {
+              var pts = ((tj && tj.sites) || []).filter(function (s) { return s.lat != null && s.lng != null; });
+              if (!pts.length) return;
+              var bb = [Infinity, Infinity, -Infinity, -Infinity];
+              pts.forEach(function (s) { bb[0] = Math.min(bb[0], s.lng); bb[1] = Math.min(bb[1], s.lat); bb[2] = Math.max(bb[2], s.lng); bb[3] = Math.max(bb[3], s.lat); });
+              if (b && (bb[2] < b[0] || bb[0] > b[2] || bb[3] < b[1] || bb[1] > b[3])) return;     // this tour is somewhere the terrain site does not cover
+              var wrap = document.querySelector('.tour-wrap[data-tour="' + String(t.tour_id).replace(/"/g, '') + '"]');
+              if (!wrap || wrap.querySelector('.tour-badge')) return;
+              var go = new URL(link, location.href);
+              go.searchParams.set('tour', new URL('index.html?tour=' + encodeURIComponent(t.tour_id), location.href).toString());
+              var a = document.createElement('a'); a.className = 'tour-badge'; a.href = go.toString(); a.textContent = '3D terrain'; a.title = 'Open this place on the 3D terrain';
+              wrap.appendChild(a); wrap.classList.add('has-badge');
+            });
+          });
+        });
+      });
+    }
+
     Promise.all([
       fetch('tours/_index.json', { cache: 'no-store' })
         .then(res => res.ok ? res.json() : [])
@@ -119,8 +158,12 @@
           '<h2>' + escapeHtml(t.name || t.tour_id) + '</h2>' +
           '<div class="meta">' + siteCount + ' stop' + (siteCount === 1 ? '' : 's') +
           (dateLabel ? ' &middot; ' + escapeHtml(dateLabel) : '') + '</div>';
-        return a;
+        var wrap = document.createElement('div');
+        wrap.className = 'tour-wrap'; wrap.setAttribute('data-tour', t.tour_id);
+        wrap.appendChild(a);
+        return wrap;
       });
+      addTerrainBadges(tours);
 
       // Places photographed on more than one date: opens the compare page
       // (side by side, swipe or toggle between any two dates).

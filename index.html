@@ -284,6 +284,19 @@
     repo has a flow link saved in the publisher (Tours Page Settings). */
     #site-map-flow-btn { right: 224px; display: none; }
     #site-map-flow-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
+    /* The 3D button opens this place in the terrain viewer. Hidden until the repo has a terrain link saved in the publisher
+    (Tours Page Settings), and while the stop is outside that terrain site. */
+    #site-map-terrain-btn {
+      position: absolute; z-index: 1600; top: 8px; right: 260px; width: 30px; height: 30px; border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.2); background: #fff; color: #333; cursor: pointer; padding: 0;
+      display: none; align-items: center; justify-content: center;
+    }
+    #site-map-terrain-btn:hover { background: #f4f4f4; }
+    #container.swapped #site-map-terrain-btn { top: 64px; }
+    .terrain-rem-legend { background: rgba(14,27,51,0.92); color: #e8eef7; border: 1px solid #1b3f95; border-radius: 6px; padding: 6px 8px; min-width: 150px; font: 11px/1.25 -apple-system, Segoe UI, Roboto, sans-serif; }
+    .terrain-rem-legend .trl-title { font-weight: 600; margin-bottom: 4px; }
+    .terrain-rem-legend .trl-bar { height: 10px; border-radius: 2px; }
+    .terrain-rem-legend .trl-labels { display: flex; justify-content: space-between; margin-top: 2px; color: #b8c6dc; }
     /* Swap: the map takes the big screen (placed exactly like the enlarged map) and the 360 view moves into the inset,
     at the size the map inset was. The swap button sits under the make the map bigger button on a desktop. */
     #site-map-swap-btn { left: 10px; top: 118px; }
@@ -460,7 +473,8 @@
       #site-map-follow-btn { right: 140px; }
       #site-map-expand-btn { right: 184px; left: auto; top: 8px; }
       #site-map-flow-btn { right: 228px; }
-      #site-map-swap-btn { right: 272px; left: auto; top: 8px; }
+      #site-map-terrain-btn { width: 38px; height: 38px; right: 272px; }
+      #site-map-swap-btn { right: 316px; left: auto; top: 8px; }
       #site-map-panel .leaflet-top.leaflet-right { margin-top: 54px; }
       #site-map-panel .leaflet-bar a { width: 38px; height: 38px; line-height: 38px; }
       #site-map-panel .leaflet-control-layers-toggle { width: 38px; height: 38px; background-size: 22px 22px; }
@@ -506,6 +520,13 @@
     }
     #view-menu.open #view-menu-list { display: flex; }
     #view-menu-list .ctrl-btn { text-align: left; white-space: nowrap; }
+    /* The Tour, Terrain, Flow pill: the same switcher the terrain and flow viewers show. Terrain and Flow appear only when the repo
+    has those links (Tours Page Settings), and Terrain only for stops inside the terrain site. */
+    #linked-pill { display: flex; align-items: center; background: rgba(14,27,51,0.94); border: 1px solid #1b3f95; border-radius: 22px; padding: 3px; }
+    #linked-pill .on, #linked-pill button { padding: 5px 12px; border-radius: 16px; font-size: 12px; font-weight: bold; border: 0; font-family: inherit; }
+    #linked-pill .on { background: #019fc4; color: #fff; }
+    #linked-pill button { background: transparent; color: #e8eef7; cursor: pointer; }
+    #linked-pill button:hover { background: #132447; }
 
     .ctrl-btn {
       background: #1b3f95; color: #ffffff; border: 1px solid #019fc4;
@@ -1255,7 +1276,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-11-03 14:58:05</div>
+  <div id="build-timestamp">Built 2026-11-09 15:22:48</div>
 
   <div id="status-banner"></div>
 
@@ -1312,6 +1333,11 @@
       <button id="control-bar-toggle" class="ctrl-btn" type="button" title="Menu">&#8942;</button>
       <div id="control-bar-buttons">
         <button id="toggle-btn" class="ctrl-btn" type="button" style="display:none;">Toggle</button>
+        <div id="linked-pill" style="display:none" role="navigation" aria-label="Other viewers for this place">
+          <span class="on" title="You are in the 360 tour">Tour</span>
+          <button id="lp-terrain" type="button" style="display:none" title="Open this stop on the 3D terrain">Terrain</button>
+          <button id="lp-flow" type="button" style="display:none" title="Open this place in the flow viewer">Flow</button>
+        </div>
         <button id="hotspots-toggle-btn" class="ctrl-btn" type="button" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span class="lbl">Hide Hotspots</span></button>
         <button id="map-toggle-btn" class="ctrl-btn" type="button" style="display:none;"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></span><span class="lbl">Show Map</span></button>
         <div id="view-menu">
@@ -1362,6 +1388,7 @@
       <button id="site-map-swap-btn" type="button" title="Swap: show the map big and the 360 view in the inset"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button>
       <div id="swap-tools"><button type="button" id="swap-zoom-in" title="Zoom in" aria-label="Zoom in">+</button><button type="button" id="swap-zoom-out" title="Zoom out" aria-label="Zoom out">&#8722;</button><button type="button" id="swap-tools-back" title="Swap back: 360 view big, map in the inset" aria-label="Swap back"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h11l-3-3 1.4-1.4L22 8l-5.6 5.4L15 12l3-3H7zM17 17H6l3 3-1.4 1.4L2 16l5.6-5.4L9 12l-3 3h11z"/></svg></button></div>
       <button id="site-map-flow-btn" type="button" title="Show the animated water flow on this map"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c2 0 2-2 4.5-2S10 8 12 8s2.5-2 4.5-2S19 8 21 8"/><path d="M3 13c2 0 2-2 4.5-2S10 13 12 13s2.5-2 4.5-2S19 13 21 13"/><path d="M3 18c2 0 2-2 4.5-2S10 18 12 18s2.5-2 4.5-2S19 18 21 18"/></svg></button>
+      <button id="site-map-terrain-btn" type="button" title="Open this place in the 3D terrain viewer"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19l6-10 4 6 3-4 5 8z"/><path d="M3 19h18"/></svg></button>
       <button id="site-map-coords-btn" type="button" title="Coordinates: go to a position, or copy the cursor position (right click the map to drop a pin)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg></button>
       <div id="site-map-coords-box">
         <input id="site-map-coords-input" type="text" placeholder="Go to lat, lng" autocomplete="off" spellcheck="false" aria-label="Go to coordinates, latitude then longitude">
@@ -1393,9 +1420,11 @@
           <button id="use-view-right-btn" class="edit-tool-btn" type="button" style="display:none;">Use Right View</button>
           <button id="pin-match-btn" class="edit-tool-btn" type="button" style="display:none;">Pin Match Point (0/4)</button>
           <button id="clear-pins-btn" class="edit-tool-btn danger" type="button" style="display:none;">Clear Pins</button>
-          <div id="pin-match-help" style="display:none;">Aim both panels at the same real-world
-            feature, then Pin. Do 2-4 features spread around the scene (not clustered) for the
-            best fit, then lock -- alignment will hold across the whole pano, not just at one point.</div>
+          <div id="pin-match-help" style="display:none;">How to line up two dates: 1) click the lock button
+            so it says UNLOCKED. 2) Drag each panel until the same far away feature (bridge, pier, ridge) is in the
+            center of both. 3) Click Pin. 4) Repeat for 2 to 4 features spread around the scene. 5) Click the lock
+            button so it says LOCKED. Pins save for this pair of dates, and other dates line up through the pairs you have done.</div>
+          <div id="align-status" style="display:none; font-size:12px; margin-top:6px; line-height:1.4; color:#f3e8ff; font-weight:600;"></div>
         </div>
         <div id="edit-tabs" role="tablist" style="display:none;">
           <button type="button" class="edit-tab" data-tab="hotspots-group" style="display:none;">Hotspots</button>
@@ -2013,6 +2042,56 @@
       var d = det3(matMul(Vm, matTranspose(U))) > 0 ? 1 : -1;
       var D = [[1, 0, 0], [0, 1, 0], [0, 0, d]];
       return matMul(matMul(Vm, D), matTranspose(U));
+    }
+
+    // Alignment between dates of a location. Every pair you pin is saved as a link (config.align_links:
+    // {a, b, anchors}) between two photo ids. Any two dates are lined up by chaining the saved links
+    // between them (A to B, B to C gives A to C), so 4 dates need 3 pinned pairs, not 6.
+    function alignEdgeRotation(link, fromId) {
+      var aList = link.anchors.map(function (p) { return dirFromYawPitch(p.yaw_a, p.pitch_a); });
+      var bList = link.anchors.map(function (p) { return dirFromYawPitch(p.yaw_b, p.pitch_b); });
+      var R = kabschRotation(aList, bList); // maps link.a's frame to link.b's frame
+      return link.a === fromId ? R : matTranspose(R);
+    }
+    // Returns { rot, path } (path = photo ids from the left photo to the right one) or null when no chain exists.
+    function resolveAlignRotation(links, fromId, toId) {
+      links = (links || []).filter(function (l) { return l && l.anchors && l.anchors.length >= 2; });
+      var seen = {};
+      seen[fromId] = { rot: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], path: [fromId] };
+      var queue = [fromId];
+      while (queue.length) {
+        var cur = queue.shift();
+        if (cur === toId) break;
+        for (var i = 0; i < links.length; i++) {
+          var l = links[i];
+          var other = l.a === cur ? l.b : (l.b === cur ? l.a : null);
+          if (other == null || seen[other]) continue;
+          seen[other] = { rot: matMul(alignEdgeRotation(l, cur), seen[cur].rot), path: seen[cur].path.concat([other]) };
+          queue.push(other);
+        }
+      }
+      return seen[toId] || null;
+    }
+
+    function sendAlignLink(siteIdArg, aId, bId, anchors, btn) {
+      var payload = anchors.map(function (a) {
+        return { yaw_a: a.l.yaw * 180 / Math.PI, pitch_a: a.l.pitch * 180 / Math.PI,
+                 yaw_b: a.r.yaw * 180 / Math.PI, pitch_b: a.r.pitch * 180 / Math.PI };
+      });
+      var original = btn ? btn.textContent : null;
+      fetch('/__save_align_link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id: siteIdArg, a: aId, b: bId, anchors: payload }),
+      }).then(function (res) {
+        if (!btn) return;
+        btn.textContent = res.ok ? 'Saved!' : 'Failed, try again';
+        setTimeout(function () { btn.textContent = original; }, 1400);
+      }).catch(function () {
+        if (!btn) return;
+        btn.textContent = 'Preview server not reachable';
+        setTimeout(function () { btn.textContent = original; }, 1800);
+      });
     }
 
     function sendLockAnchors(anchors, siteIdOverride, btn) {
@@ -2963,10 +3042,30 @@
           // pinned.
           var lockYawOffset = 0, lockPitchOffset = 0;
           var lockRotation = null; // 3x3 matrix, left-to-right, once 2 points are pinned
+          // Locking must never move either panel. The solved rotation is only a best fit (the drone is in a
+          // different spot on each date), so at the moment of locking we record the small leftover rotation
+          // between where the rotation predicts the right panel and where it actually is, and keep applying it.
+          var lockCorr = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+          function rotationBetween(a, b) {
+            a = vNormalize(a); b = vNormalize(b);
+            var c = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+            var ax = vCross(a, b), s = Math.hypot(ax[0], ax[1], ax[2]);
+            if (s < 1e-9) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+            var k = [ax[0] / s, ax[1] / s, ax[2] / s];
+            var K = [[0, -k[2], k[1]], [k[2], 0, -k[0]], [-k[1], k[0], 0]];
+            var K2 = matMul(K, K), R = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+            for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) R[i][j] += s * K[i][j] + (1 - c) * K2[i][j];
+            return R;
+          }
           function captureLockOffset() {
             var pL = viewL.parameters(), pR = viewR.parameters();
             lockYawOffset = pR.yaw - pL.yaw;
             lockPitchOffset = pR.pitch - pL.pitch;
+            lockCorr = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+            if (lockRotation) {
+              var pred = matApply(lockRotation, dirFromYawPitch(pL.yaw, pL.pitch));
+              lockCorr = rotationBetween(pred, dirFromYawPitch(pR.yaw, pR.pitch));
+            }
           }
           function computeLockRotation(anchors) {
             if (!anchors || anchors.length < 2) { lockRotation = null; return; }
@@ -2974,7 +3073,22 @@
             var bList = anchors.map(a => dirFromYawPitch(a.r.yaw, a.r.pitch));
             lockRotation = kabschRotation(aList, bList);
           }
-          if (config.lock_anchors && config.lock_anchors.length >= 2) {
+          var alignLinks = (config._alignLinks || []).slice();
+          var alignIdA = config._locA, alignIdB = config._locB;
+          var alignInfo = null;
+          function refreshAlign() {
+            alignInfo = (config._location && alignIdA && alignIdB) ? resolveAlignRotation(alignLinks, alignIdA, alignIdB) : null;
+            lockRotation = alignInfo ? alignInfo.rot : null;
+          }
+          if (config._location && alignIdA && alignIdB) {
+            refreshAlign();
+            if (lockRotation) {
+              // Start the right photo already lined up with the left one.
+              var p0 = viewL.parameters();
+              var o0 = yawPitchFromDir(matApply(lockRotation, dirFromYawPitch(p0.yaw, p0.pitch)));
+              viewR.setParameters({ yaw: o0.yaw, pitch: o0.pitch, fov: p0.fov });
+            }
+          } else if (config.lock_anchors && config.lock_anchors.length >= 2) {
             computeLockRotation(config.lock_anchors.map(a => ({
               l: { yaw: a.yaw_l, pitch: a.pitch_l }, r: { yaw: a.yaw_r, pitch: a.pitch_r },
             })));
@@ -2986,7 +3100,8 @@
             var sp = src.parameters();
             if (lockRotation) {
               var dir = dirFromYawPitch(sp.yaw, sp.pitch);
-              var outDir = srcIsLeft ? matApply(lockRotation, dir) : matApply(matTranspose(lockRotation), dir);
+              var eff = matMul(lockCorr, lockRotation); // left to right, including the leftover from the moment of locking
+              var outDir = srcIsLeft ? matApply(eff, dir) : matApply(matTranspose(eff), dir);
               var outYp = yawPitchFromDir(outDir);
               tgt.setParameters({ yaw: outYp.yaw, pitch: outYp.pitch, fov: sp.fov });
             } else {
@@ -3051,14 +3166,32 @@
             useLeftBtn.style.display = 'inline-block';
             useRightBtn.style.display = 'inline-block';
           }
+          function setLockLabel() {
+            unlockBtn.textContent = aimLocked ? 'Views LOCKED (click to unlock)' : 'Views UNLOCKED (click to lock)';
+            unlockBtn.classList.toggle('active', !aimLocked);
+          }
+          setLockLabel();
+          var alignStatus = document.getElementById('align-status');
+          function dateTextFor(id) {
+            var d = (config._locDates || []).filter(function (x) { return x.id === id; })[0];
+            return d ? d.text : id;
+          }
+          function updateAlignStatus() {
+            if (!alignStatus || !config._location) return;
+            var msg;
+            if (!alignInfo) msg = 'This pair is not aligned yet. Unlock, aim both panels at the same far feature, Pin, repeat 2 to 4 times, then lock.';
+            else if (alignInfo.path.length === 2) msg = 'Aligned: pinned directly for this pair.';
+            else msg = 'Aligned through ' + alignInfo.path.slice(1, -1).map(dateTextFor).join(', ') + '. Pin this pair to refine it.';
+            alignStatus.textContent = msg;
+          }
+          updateAlignStatus();
           unlockBtn.addEventListener('click', () => {
             aimLocked = !aimLocked;
             // Re-locking should preserve whatever offset independent
             // aim was just used to set up, not snap back to a plain
             // 1:1 match -- see captureLockOffset above.
             if (aimLocked) captureLockOffset();
-            unlockBtn.textContent = aimLocked ? 'Unlock Independent Aim' : 'Lock Views Together';
-            unlockBtn.classList.toggle('active', !aimLocked);
+            setLockLabel();
           });
           useLeftBtn.addEventListener('click', () => {
             var v = viewL.parameters();
@@ -3075,6 +3208,7 @@
             pinMatchBtn.style.display = 'inline-block';
             clearPinsBtn.style.display = 'inline-block';
             pinHelp.style.display = 'block';
+            if (alignStatus && config._location) alignStatus.style.display = 'block';
           }
           // Persisted anchors from config.json, if this site already has
           // some saved, seed both the in-memory pin list (so the count
@@ -3082,13 +3216,61 @@
           // (already computed above from the same config value, kept
           // here only so both stay in sync going forward).
           var MAX_PINS = 4;
-          var pinnedAnchors = (config.lock_anchors && config.lock_anchors.length >= 2)
-              ? config.lock_anchors.map(a => ({
-                  l: { yaw: a.yaw_l, pitch: a.pitch_l }, r: { yaw: a.yaw_r, pitch: a.pitch_r },
-                }))
-              : [];
+          var pinnedAnchors = [];
+          if (config._location && alignIdA && alignIdB) {
+            var direct = alignLinks.filter(function (l) {
+              return l.anchors && l.anchors.length >= 2 && ((l.a === alignIdA && l.b === alignIdB) || (l.a === alignIdB && l.b === alignIdA));
+            })[0];
+            if (direct) {
+              pinnedAnchors = direct.anchors.map(function (a) {
+                var fwd = direct.a === alignIdA;
+                return fwd
+                  ? { l: { yaw: a.yaw_a, pitch: a.pitch_a }, r: { yaw: a.yaw_b, pitch: a.pitch_b } }
+                  : { l: { yaw: a.yaw_b, pitch: a.pitch_b }, r: { yaw: a.yaw_a, pitch: a.pitch_a } };
+              });
+            }
+          } else if (config.lock_anchors && config.lock_anchors.length >= 2) {
+            pinnedAnchors = config.lock_anchors.map(a => ({
+              l: { yaw: a.yaw_l, pitch: a.pitch_l }, r: { yaw: a.yaw_r, pitch: a.pitch_r },
+            }));
+          }
+          // Locations save the pins as a link between these two dates (see resolveAlignRotation).
+          function savePinsForPair(btn) {
+            alignLinks = alignLinks.filter(function (l) {
+              return !((l.a === alignIdA && l.b === alignIdB) || (l.a === alignIdB && l.b === alignIdA));
+            });
+            if (pinnedAnchors.length >= 2) {
+              alignLinks.push({ a: alignIdA, b: alignIdB, anchors: pinnedAnchors.map(function (p) {
+                return { yaw_a: p.l.yaw, pitch_a: p.l.pitch, yaw_b: p.r.yaw, pitch_b: p.r.pitch };
+              }) });
+            }
+            refreshAlign();
+            captureLockOffset();
+            updateAlignStatus();
+            sendAlignLink(siteId, alignIdA, alignIdB, pinnedAnchors.length >= 2 ? pinnedAnchors : [], btn);
+          }
+          // Numbered markers on both panels at every pinned point, so you can see what has been pinned.
+          // They are drawn only in the local editing preview, never on the published page.
+          var pinMarkers = [];
+          function redrawPinMarkers() {
+            pinMarkers.forEach(function (m) { try { m.scene.hotspotContainer().destroyHotspot(m.hs); } catch (e) { /* already gone */ } });
+            pinMarkers = [];
+            if (!isLocalPreview) return;
+            pinnedAnchors.forEach(function (p, i) {
+              [[sceneL, p.l], [sceneR, p.r]].forEach(function (pair) {
+                var el = document.createElement('div');
+                el.textContent = String(i + 1);
+                el.style.cssText = 'width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#e8590c;' +
+                  'border:2px solid #fff;color:#fff;font:700 12px/18px sans-serif;text-align:center;pointer-events:none;' +
+                  'box-shadow:0 0 0 1px rgba(0,0,0,0.6);';
+                var hs = pair[0].hotspotContainer().createHotspot(el, { yaw: pair[1].yaw, pitch: pair[1].pitch });
+                pinMarkers.push({ scene: pair[0], hs: hs });
+              });
+            });
+          }
           function updatePinUI() {
             pinMatchBtn.textContent = 'Pin Match Point (' + pinnedAnchors.length + '/' + MAX_PINS + ')';
+            redrawPinMarkers();
           }
           updatePinUI();
           pinMatchBtn.addEventListener('click', () => {
@@ -3104,15 +3286,24 @@
             // improves the least-squares fit, and saving as you go
             // means you keep whatever you've got if you stop early.
             if (pinnedAnchors.length >= 2) {
-              computeLockRotation(pinnedAnchors);
-              sendLockAnchors(pinnedAnchors, null, pinMatchBtn);
+              if (config._location && alignIdA && alignIdB) {
+                savePinsForPair(pinMatchBtn);
+              } else {
+                computeLockRotation(pinnedAnchors);
+                captureLockOffset();
+                sendLockAnchors(pinnedAnchors, null, pinMatchBtn);
+              }
             }
           });
           clearPinsBtn.addEventListener('click', () => {
             pinnedAnchors = [];
-            lockRotation = null;
             updatePinUI();
-            sendLockAnchors([], null, clearPinsBtn);
+            if (config._location && alignIdA && alignIdB) {
+              savePinsForPair(clearPinsBtn);
+            } else {
+              lockRotation = null;
+              sendLockAnchors([], null, clearPinsBtn);
+            }
           });
           document.getElementById('pano-left').addEventListener('click', (e) => {
             if (!placingHotspot) return;
@@ -4040,6 +4231,7 @@
         _imgNameL: A.path || ('img' + (ia + 1)), _imgNameR: B.path || ('img' + (ib + 1)),
         _photoIndex: ia, _locSlots: { '1': ia, '2': ib },
         _locView: view, _locDates: locationDatesList(cfg), _locA: A.id, _locB: B.id,
+        _alignLinks: cfg.align_links || [],
       });
     }
 
@@ -4313,11 +4505,12 @@
     function updateFlowButton() {
       var b = document.getElementById('site-map-flow-btn');
       if (b) b.style.display = flowLink ? 'flex' : 'none';
+      try { refreshLinkedButtons(); } catch (e) { /* terrain buttons not ready yet */ }
     }
     fetch('landing_config.json', { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : {}; })
       .catch(function () { return {}; })
-      .then(function (c) { flowLink = String((c && c.flow_url) || '').trim(); updateFlowButton(); });
+      .then(function (c) { flowLink = String((c && c.flow_url) || '').trim(); updateFlowButton(); setTerrainLink(String((c && c.terrain_url) || '').trim()); });
 
     function flowInfo() {
       var u;
@@ -4352,8 +4545,119 @@
         if (rr.depth !== rr.def.depth) u.searchParams.set('rd', rr.depth); else u.searchParams.delete('rd');
         if (rr.velocity !== rr.def.velocity) u.searchParams.set('rv', rr.velocity); else u.searchParams.delete('rv');
       }
+      try { u.searchParams.set('tour', tourReturnUrl()); if (terrainLink) u.searchParams.set('terrain', terrainLink); } catch (e) { /* no way back to send */ }
       window.open(u.toString(), '_blank', 'noopener');
     }
+
+    // ---- Linked viewers: the 3D terrain viewer (and the flow viewer above), when this repo has them --------------------
+    // landing_config.json can hold terrain_url, set in the publisher under Tours Page Settings. It shows the Tour, Terrain, Flow pill in the
+    // control bar and a 3D button on the map, only for stops that fall inside that terrain site. The hand off carries the stop
+    // and its position, and a link back to exactly this stop, so the terrain viewer can offer Back to tour.
+    var terrainLink = '', terrainBounds = null, terrainManifest = null, terrainSiteBase = '', insetLayersControl = null, terrainLayersAdded = false;
+    function tourKey() { try { return (typeof tourId !== 'undefined' && tourId) ? tourId : 'single'; } catch (e) { return 'single'; } }
+    function setTerrainLink(cfg) {
+      var link = cfg;
+      if (!link) {           // a repo without the setting still works when the terrain viewer sent the address, and remembers it
+        try {
+          var q = new URLSearchParams(window.location.search).get('terrain');
+          if (q && /^https?:\/\//i.test(q)) { link = q; try { localStorage.setItem('terrainLink:' + tourKey(), q); } catch (e) {} }
+          else { try { link = localStorage.getItem('terrainLink:' + tourKey()) || ''; } catch (e) { link = ''; } }
+        } catch (e) { link = ''; }
+      }
+      terrainLink = /^https?:\/\//i.test(link || '') ? link : '';
+      terrainBounds = null; terrainManifest = null; terrainSiteBase = '';
+      if (terrainLink) {
+        try {
+          var u = new URL(terrainLink, location.href), site = u.searchParams.get('site');
+          if (site) {
+            var siteUrl = new URL('sites/' + encodeURIComponent(site) + '/', u).toString();
+            fetch(siteUrl + 'manifest.json', { cache: 'no-store' })
+              .then(function (r) { return r.ok ? r.json() : null; })
+              .then(function (m) {
+                if (!m) return;
+                terrainManifest = m; terrainSiteBase = siteUrl;
+                if (m.bounds4326) terrainBounds = m.bounds4326;
+                refreshLinkedButtons();
+                try { addTerrainLayersToInset(); } catch (e) { console.error('Terrain layers', e); }
+              })
+              .catch(function () { /* no bounds: the button just shows */ });
+          }
+        } catch (e) { /* not a usable address */ }
+      }
+      refreshLinkedButtons();
+    }
+    // Height above channel (the REM) and shaded relief from the terrain site, as plain tile layers in the map inset. They are
+    // ordinary map tiles, so the inset needs no 3D engine. Both start off; the layers button turns them on, and the REM brings a legend.
+    function addTerrainLayersToInset() {
+      if (!siteMap || !terrainManifest || terrainLayersAdded) return;
+      terrainLayersAdded = true;
+      var m = terrainManifest, base = terrainSiteBase, items = [];
+      var b = terrainBounds ? L.latLngBounds([terrainBounds[1], terrainBounds[0]], [terrainBounds[3], terrainBounds[2]]) : null;
+      if (m.relief) {
+        items.push({ label: 'Shaded relief', layer: L.tileLayer(base + 'relief/{z}/{x}/{y}.jpg', {
+          minNativeZoom: m.minzoom || 0, maxNativeZoom: m.maxzoom || 17, maxZoom: 22, opacity: 0.75, bounds: b, zIndex: 3, attribution: 'Terrain: SPSSEG' }) });
+      }
+      if (m.rem && m.rem.color) {
+        var r = m.rem, rem = L.tileLayer(base + r.color, {
+          minNativeZoom: r.minzoom || 0, maxNativeZoom: r.zoom || 17, maxZoom: 22, opacity: Math.max(0.6, r.opacity || 0.6), bounds: b, zIndex: 4, attribution: 'Terrain: SPSSEG' });
+        var legend = L.control({ position: 'bottomleft' });
+        legend.onAdd = function () {
+          var d = L.DomUtil.create('div', 'terrain-rem-legend'), cols = r.classes || [], n = cols.length || 1, br = r.breaks || [], unit = r.unit || 'ft';
+          var stops = cols.map(function (c, i) { return c + ' ' + (i * 100 / n) + '% ' + ((i + 1) * 100 / n) + '%'; }).join(',');
+          var first = br.length ? br[0] : 1, mid = br.length ? br[Math.floor(br.length / 2) - 1] : 10, last = br.length ? br[br.length - 1] : 20;
+          d.innerHTML = '<div class="trl-title">Height above channel</div><div class="trl-bar" style="background:linear-gradient(to right,' + stops + ')"></div>' +
+                        '<div class="trl-labels"><span>&lt; ' + first + ' ' + unit + '</span><span>' + mid + '</span><span>' + last + ' ' + unit + '</span></div>';
+          L.DomEvent.disableClickPropagation(d);
+          return d;
+        };
+        rem.on('add', function () { legend.addTo(siteMap); });
+        rem.on('remove', function () { legend.remove(); });
+        items.push({ label: 'Height above channel', layer: rem });
+      }
+      if (!items.length) return;
+      if (!insetLayersControl) insetLayersControl = L.control.layers(null, {}, { collapsed: true }).addTo(siteMap);
+      items.forEach(function (it) { insetLayersControl.addOverlay(it.layer, it.label); });
+    }
+    function stopInTerrain() {
+      if (!terrainBounds) return true;
+      var ll = currentSiteLatLng(); if (!ll) return true;
+      var b = terrainBounds; return ll[0] >= b[1] && ll[0] <= b[3] && ll[1] >= b[0] && ll[1] <= b[2];
+    }
+    function refreshLinkedButtons() {
+      var t = !!terrainLink && stopInTerrain(), f = !!flowLink;
+      var inset = document.getElementById('site-map-terrain-btn'); if (inset) inset.style.display = t ? 'flex' : 'none';
+      var pill = document.getElementById('linked-pill'); if (!pill) return;
+      document.getElementById('lp-terrain').style.display = t ? '' : 'none';
+      document.getElementById('lp-flow').style.display = f ? '' : 'none';
+      pill.style.display = (t || f) ? 'flex' : 'none';
+    }
+    function tourReturnUrl() {                // this tour page, at this stop, without the passing view parameters
+      var u = new URL(location.href); u.hash = '';
+      ['terrain', 'yaw', 'pitch', 'fov'].forEach(function (k) { u.searchParams.delete(k); });
+      return u.toString();
+    }
+    function currentStopName() {
+      if (pendingMapData && pendingMapData.type === 'tour') {
+        var s = (pendingMapData.sites || []).filter(function (x) { return x.site_id === activeTourSiteId; })[0];
+        return (s && (s.display_name || s.site_id)) || '';
+      }
+      return (pendingMapData && pendingMapData.label) || '';
+    }
+    function goTerrain() {
+      var u; try { u = new URL(terrainLink, location.href); } catch (e) { return; }
+      var ll = currentSiteLatLng();
+      if (ll) { u.searchParams.set('lat', ll[0].toFixed(6)); u.searchParams.set('lng', ll[1].toFixed(6)); }
+      var name = currentStopName(); if (name) u.searchParams.set('stop', name);
+      u.searchParams.set('tour', tourReturnUrl());
+      if (flowLink) u.searchParams.set('flow', flowLink);
+      window.location.href = u.toString();
+    }
+    (function () {
+      var t1 = document.getElementById('site-map-terrain-btn'), t2 = document.getElementById('lp-terrain'), f2 = document.getElementById('lp-flow');
+      if (t1) t1.addEventListener('click', goTerrain);
+      if (t2) t2.addEventListener('click', goTerrain);
+      if (f2) f2.addEventListener('click', function () { openFlowViewer(); });
+    })();
 
     function createFlowLayer(map, info) {
       var base = info.base, siteId = info.site;
@@ -5304,9 +5608,10 @@
           if (o.default_on !== false) layer.addTo(siteMap);
         });
         if (Object.keys(overlayLayers).length) {
-          L.control.layers(null, overlayLayers, { collapsed: true }).addTo(siteMap);
+          insetLayersControl = L.control.layers(null, overlayLayers, { collapsed: true }).addTo(siteMap);
         }
       }
+      try { addTerrainLayersToInset(); } catch (e) { console.error('Terrain layers', e); }
       // Scale bar, metric and imperial, lower left.
       // One line on a touch screen (feet), both units on a desktop.
       var touchScale = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -7973,6 +8278,7 @@
         var fallbackLabel = linkEl ? linkEl.textContent : sid;
         activeTourSiteId = sid;
         updateTourUrl(sid);
+        try { refreshLinkedButtons(); } catch (e) { /* not ready */ }
         updateLinkAllUndoVisibility();
         updateActiveMapMarker();
         try { if (flowLayer && flowLayer.isOn()) flowLayer.refreshHere(); } catch (e) { /* flow layer not ready */ }
